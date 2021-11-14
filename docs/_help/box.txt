@@ -1,0 +1,25 @@
+10,20,30,40     left,top,right,bottom
+
++-              increment or decrement
+                to the (first) boxes of currently selected pages
+
+                E.g. when box is -3,-3,+3,+3:
+
+                    Page 1: 20,20,400,400  ->  17,17,403,403
+                    Page 2: 30,30,600,600  ->  27,27,603,603
+
+                Numbers outside of the source cropbox coordinates
+                are clipped.
+
+min, max        min or max numbers
+                of the boxes of currently selected pages
+
+                E.g. min,min,max,+0
+                (select the broadest rectangle
+                 for left, top and right,
+                 but do not change the bottoms.)
+
+:               remove previously created boxes
+                (that is, revert to the original source cropbox)
+
+~               the same box as the previous command
