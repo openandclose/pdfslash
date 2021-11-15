@@ -2859,7 +2859,7 @@ class PDFSlashCmd(_PipeCmd):
 
         Run Python interpreter,
         with two variables exposed: ``doc`` and ``pages``
-        (current ``Document`` and ``Document.pages`` onject).
+        (current ``Document`` and ``Document.pages`` object).
 
         You are supposed to know the source code.
         And even I am not sure when this command is useful.

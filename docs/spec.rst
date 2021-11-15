@@ -5,7 +5,7 @@ Spec
 General
 -------
 
-rotation:
+**rotation**:
 
 The program treats rotation-applied PDF cropboxes as given coordinates.
 Operations are always done in this coordinates, ignoring rotations
@@ -55,6 +55,7 @@ Page numbers:
 .. literalinclude:: _help/nstr.txt
     :language: none
 
+
 Box:
 
 .. literalinclude:: _help/box.txt
@@ -73,6 +74,13 @@ Commands
 
   But note that you can safely ignore them if you don't use them.
 
+* Interpreter and GUI are using the same undo and redo stack data.
+
+  So in interpreter, you can go all back to the initial state,
+  through any changes done in GUI.
+  But in GUI, undo is bound to the GUI invocation,
+  you can't go back past the changes done in the current GUI.
+
 .. include:: _help/cmds.txt
 
 
@@ -90,10 +98,8 @@ Intended for a few basic things. E.g.:
     info 1-100 | cat > log.txt
 
 
-
 GUI
 ---
 
 .. literalinclude:: _help/gui.txt
     :language: none
-
