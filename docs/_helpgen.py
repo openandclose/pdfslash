@@ -5,6 +5,7 @@
 import os
 import re
 import runpy
+import sys
 import textwrap
 
 SOURCE = os.path.normpath(os.path.join(
@@ -78,8 +79,7 @@ def get_box(mod):
     DATA['box'] = text.lstrip()
 
 
-# NG
-def get_cmds__(mod):
+def get_cmds(mod):
     c = mod['PDFSlashCmd']
     new = []
     append = new.append
@@ -92,30 +92,12 @@ def get_cmds__(mod):
             doc = doc.strip('\n')
             doc = textwrap.dedent(doc)
 
-            append(name + ':')
-            # append('^' * len(name))
+            append('**%s**' % name)
             append('')
             append(doc)
             append('')
 
     text = '\n'.join(new)
-    DATA['cmds'] = text
-
-
-def get_cmds(mod):
-    c = mod['PDFSlashCmd']
-    d = {}
-
-    # for m in sorted(c.__dict__):
-    for m in c.__dict__:
-        if m.startswith('do_'):
-            name = m[3:]
-            doc = c.__dict__[m].__doc__
-            doc = doc.strip('\n')
-            doc = textwrap.dedent(doc)
-            d[name] = doc
-
-    text = str(d)
     DATA['cmds'] = text
 
 
@@ -159,6 +141,24 @@ def build(mod, source):
     get_commandline(mod)
 
 
+# not used
+def check():
+    getmtime = os.path.getmtime
+    boxfile = os.path.join(OUTDIR, 'box.txt')
+    return getmtime(SOURCE) > getmtime(boxfile)
+
+
+# not used
+def rst_format():
+    text = []
+    for k, v in DATA.items():
+        t = '.. |%s| replace:: %s\n\n\n' % (k, v)
+        text.append(t)
+    text = ''.join(text)
+    text = '"""%s"""' % text
+    return text
+
+
 def write():
     for k, v in DATA.items():
         fname = os.path.join(OUTDIR, k + '.txt')
@@ -166,16 +166,16 @@ def write():
             f.write(v)
 
 
-def check():
-    getmtime = os.path.getmtime
-    boxfile = os.path.join(OUTDIR, 'box.txt')
-    return getmtime(SOURCE) > getmtime(boxfile)
-
+def delete_files():
+    with os.scandir(OUTDIR) as it:
+        for entry in it:
+            if entry.name.endswith('.txt') and entry.is_file():
+                os.remove(entry.path)
 
 def main():
-    if not check():
-        print('no chnage -- _helpgen.py')
-        return
+    # if not check():
+    #     print('no chnage -- _helpgen.py')
+    #     return
 
     mod = runpy.run_path(SOURCE)
     with open(SOURCE) as f:
@@ -186,4 +186,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) == 2 and sys.argv[1] == '-d':
+        delete_files()
+    else:
+        main()

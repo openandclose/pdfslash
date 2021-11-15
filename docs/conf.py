@@ -50,31 +50,3 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-
-
-
-
-## me ---------------------------------------------------------------------
-
-import os
-import sys
-sys.path.insert(0, os.path.abspath('.'))
-
-extensions = [
-    '_rstjinja',
-]
-
-cmds_file = os.path.join('.', '_help', 'cmds.txt')
-with open(cmds_file) as f:
-    text = f.read()
-cmds = eval(text)
-
-commandline_file = os.path.join('.', '_help', 'commandline.txt')
-with open(commandline_file) as f:
-    commandline = f.read()
-
-
-html_context = {
-    'j_cmds': cmds,
-    'j_commandline': commandline,
-}

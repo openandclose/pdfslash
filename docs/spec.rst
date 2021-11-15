@@ -39,7 +39,7 @@ The defaults are:
 Commandline
 -----------
 
-{{j_commandline}}
+.. include:: _help/commandline.txt
 
 
 Interpreter
@@ -73,14 +73,7 @@ Commands
 
   But note that you can safely ignore them if you don't use them.
 
-
-{% for key, val in j_cmds.items() %}
-**{{key}}**
-
-{{val}}
-
-{% endfor %}
-
+.. include:: _help/cmds.txt
 
 
 **'|' (pipe)**
