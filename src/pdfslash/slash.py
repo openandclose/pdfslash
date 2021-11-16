@@ -90,12 +90,6 @@ _CONF = {
 }
 
 
-MSGS = {
-    'err_undo': 'cannot undo (reached the first).',
-    'err_redo': 'cannot redo (reached the last).',
-}
-
-
 COLORS = {
     # https://en.wikipedia.org/wiki/Web_colors#Extended_colors
     'blue': '#0000ff',  # Blue
@@ -1407,6 +1401,11 @@ class Document(object):
 
     SUFFIX = '.slashed'
 
+    MSGS = {
+        'err_undo': 'cannot undo (reached the first).',
+        'err_redo': 'cannot redo (reached the last).',
+    }
+
     def __init__(self, fname, conf,
             backend=None,
             numparser=None,
@@ -2168,7 +2167,7 @@ class TkRunner(object):
     def _undo(self, event):
         msg = self.i.undo()
         if msg is None:
-            msg = MSGS['err_undo']
+            msg = self._doc.MSGS['err_undo']
             print('[gui] %s' % msg)
             self._notify(msg)
             return
@@ -2178,7 +2177,7 @@ class TkRunner(object):
     def _redo(self, event):
         msg = self.i.redo()
         if msg is None:
-            msg = MSGS['err_redo']
+            msg = self._doc.MSGS['err_redo']
             print('[gui] %s' % msg)
             self._notify(msg)
             return
@@ -2830,7 +2829,7 @@ class PDFSlashCmd(_PipeCmd):
         """
         msg = self._doc.pages.undo()
         if msg is None:
-            msg = MSGS['err_undo']
+            msg = self._doc.MSGS['err_undo']
         print(msg, file=self.stdout)
 
     def do_redo(self, args):
@@ -2841,7 +2840,7 @@ class PDFSlashCmd(_PipeCmd):
         """
         msg = self._doc.pages.redo()
         if msg is None:
-            msg = MSGS['err_redo']
+            msg = self._doc.MSGS['err_redo']
         print(msg, file=self.stdout)
 
     def do_Set(self, args):
