@@ -662,6 +662,12 @@ class _Pages(object):
         else:
             self.boxdata.overwrite(numbers, box)
 
+    def crop_each(self, numbers, boxes):
+        numbers = self.modifiable(numbers)
+        for n, box in zip(numbers, boxes):
+            self.verify((n,), box)
+        self.boxdata.overwrite_each(numbers, boxes)
+
     def modify(self, numbers, old_box, new_box):
         self.verify(numbers, new_box)
         self.boxdata.modify(numbers, new_box, old_box)
@@ -736,12 +742,6 @@ class _Pages(object):
     def tostring(self, numbers=None):
         numbers = numbers or self.numbers
         return '\n'.join([self[n].tostring() for n in numbers])
-
-    def crop_each(self, numbers, boxes):
-        numbers = self.modifiable(numbers)
-        for n, box in zip(numbers, boxes):
-            self.verify((n,), box)
-        self.boxdata.overwrite_each(numbers, boxes)
 
 
 class _ImgProxy(object):
