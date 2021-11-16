@@ -39,12 +39,17 @@ try:
 except ImportError:
     readline = None
 
-import numpy
-import numpy.lib.stride_tricks
+try:
+    import numpy
+except ImportError:
+    numpy = None
 
-numpy.seterr(all='raise')
-DTYPE = numpy.uint8
-EPS = numpy.finfo(float).eps
+if numpy:
+    import numpy.lib.stride_tricks
+
+    numpy.seterr(all='raise')
+    DTYPE = numpy.uint8
+    EPS = numpy.finfo(float).eps
 
 try:
     import fitz
