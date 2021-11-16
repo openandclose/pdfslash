@@ -61,6 +61,7 @@ _CONFIG_FILENAME = 'pdfslash.ini'
 
 _CONFIGFUNC = {
     'str': str,
+    'int': int,
     'float': float,
     'two_floats': lambda s: tuple(map(float, s.split(',', maxsplit=1))),
 }
@@ -74,6 +75,12 @@ _CONF = {
     # 0.5, 0.5: center
     # 1.0, 1.0: bottom-right aligned
     'winpos': ((0.5, 0.5), 'two_floats'),
+
+    # Max pages to sample, to create a merge image (one group) in GUI.
+    # So even when running 'preview 1-600',
+    # the program is acutually showing only this number of arbitrary pages.
+    # '15' is briss' default.
+    'max_merge_pages': (15, 'int'),
 
     # not used
     # Non-scale window size range (min and max) in ratio to the display size.
@@ -969,7 +976,7 @@ class _ImgSet(object):
             return self._doc.imgmerger.merge(imgs)
 
     def _select_imgs(self, imgs):
-        max_ = self._doc.MAX_MERGE_PAGES
+        max_ = self._doc.conf['max_merge_pages']
         length = len(imgs._indices)
         if length <= max_:
             return imgs
@@ -1398,7 +1405,6 @@ class PyMuPDFBackend(Backend):
 class Document(object):
     """Manage page and img objects."""
 
-    MAX_MERGE_PAGES = 15
     SUFFIX = '.slashed'
 
     def __init__(self, fname, conf,
