@@ -24,6 +24,7 @@ OUTDIR = os.path.normpath(os.path.join(
 ))
 
 DATA = {}
+prefix = '_fromsource_'
 
 
 def part(text, start='', start_next='', end='', end_before=''):
@@ -64,19 +65,19 @@ def get_conf(source):
             newline = re.sub(r'\((.+?)\)', r'\1', newline)  # parenthesis
             new.append(newline)
     text = '\n'.join(new)
-    DATA['conf'] = text
+    DATA[prefix + 'conf'] = format_code(text, 'ini')
 
 
 def get_nstr(mod):
     text = mod['NumParser'].__doc__
     text = part(text, start_next='Spec:', end_before='"""')
-    DATA['nstr'] = text.lstrip()
+    DATA[prefix + 'nstr'] = format_code(text.lstrip())
 
 
 def get_box(mod):
     text = mod['BoxParser'].__doc__
     text = part(text, start_next='Spec:', end_before='"""')
-    DATA['box'] = text.lstrip()
+    DATA[prefix + 'box'] = format_code(text.lstrip())
 
 
 def get_cmds(mod):
@@ -98,13 +99,13 @@ def get_cmds(mod):
             append('')
 
     text = '\n'.join(new)
-    DATA['cmds'] = text
+    DATA[prefix + 'cmds'] = text
 
 
 def get_gui(mod):
     text = mod['_tk_help']
     text = part(text, start_next='preview help:', end_before='-------')
-    DATA['gui'] = text
+    DATA[prefix + 'gui'] = format_code(text)
 
 
 # from tosixinch/tests/dev/argparse2rst.py
@@ -129,7 +130,16 @@ def get_commandline(mod):
             append('        choices=%s\n' % ', '.join(c))
 
     text = '\n'.join(text)
-    DATA['commandline'] = text
+    DATA[prefix + 'commandline'] = text
+
+
+def format_code(text, lang='none'):
+    t = []
+    t.append('.. code-block:: %s'  % lang)
+    t.append('')
+    t.append('')
+    t.append(textwrap.indent(text, '    '))
+    return '\n'.join(t)
 
 
 def build(mod, source):
@@ -141,52 +151,14 @@ def build(mod, source):
     get_commandline(mod)
 
 
-# not used
-def check():
-    getmtime = os.path.getmtime
-    boxfile = os.path.join(OUTDIR, 'box.txt')
-    return getmtime(SOURCE) > getmtime(boxfile)
-
-
-# not used
-def rst_format():
-    text = []
-    for k, v in DATA.items():
-        t = '.. |%s| replace:: %s\n\n\n' % (k, v)
-        text.append(t)
-    text = ''.join(text)
-    text = '"""%s"""' % text
-    return text
-
-
-def write():
-    for k, v in DATA.items():
-        fname = os.path.join(OUTDIR, k + '.txt')
-        with open(fname, 'w') as f:
-            f.write(v)
-
-
-def delete_files():
-    with os.scandir(OUTDIR) as it:
-        for entry in it:
-            if entry.name.endswith('.txt') and entry.is_file():
-                os.remove(entry.path)
-
 def main():
-    # if not check():
-    #     print('no chnage -- _helpgen.py')
-    #     return
-
     mod = runpy.run_path(SOURCE)
     with open(SOURCE) as f:
         source = f.read()
 
     build(mod, source)
-    write()
+    return DATA
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2 and sys.argv[1] == '-d':
-        delete_files()
-    else:
-        main()
+    main()

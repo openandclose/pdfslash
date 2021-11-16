@@ -32,14 +32,13 @@ the program reads it and update the configuration.
 
 The defaults are:
 
-.. literalinclude:: _help/conf.txt
-    :language: ini
+{{ _fromsource_conf }}
 
 
 Commandline
 -----------
 
-.. include:: _help/commandline.txt
+{{ _fromsource_commandline }}
 
 
 Interpreter
@@ -52,14 +51,12 @@ Page numbers and Box have some special syntax.
 
 Page numbers:
 
-.. literalinclude:: _help/nstr.txt
-    :language: none
+{{ _fromsource_nstr }}
 
 
 Box:
 
-.. literalinclude:: _help/box.txt
-    :language: none
+{{ _fromsource_box }}
 
 
 Commands
@@ -81,7 +78,7 @@ Commands
   But in GUI, undo is bound to the GUI invocation,
   you can't go back past the changes done in the current GUI.
 
-.. include:: _help/cmds.txt
+{{ _fromsource_cmds }}
 
 
 **'|' (pipe)**
@@ -101,5 +98,4 @@ Intended for a few basic things. E.g.:
 GUI
 ---
 
-.. literalinclude:: _help/gui.txt
-    :language: none
+{{ _fromsource_gui }}
