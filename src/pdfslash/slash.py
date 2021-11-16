@@ -478,41 +478,23 @@ class _BoxData(object):
             return dict(value)
         return value
 
-    def _format_msg(self, commandname, numbers, box=None, old_box=None):
-        fmt = '%s: page: %s'
-        if box:
-            fmt += ', box: %s'
-            if old_box:
-                fmt += ', old_box: %s'
-                return fmt % (commandname, numbers, box, old_box)
-            else:
-                return fmt % (commandname, numbers, box)
-        else:
-            return fmt % (commandname, numbers)
-
     def append(self, numbers, box, msg=None):
-        msg = msg or self._format_msg('append', numbers, box)
         self.set(self._append, numbers, box, msg=msg)
 
     def overwrite(self, numbers, box, msg=None):
-        msg = msg or self._format_msg('overwrite', numbers, box)
         self.set(self._overwrite, numbers, box, msg=msg)
 
     def overwrite_each(self, numbers, boxes, msg=None):
-        msg = msg or self._format_msg('overwrite_each', numbers, '...')
         old_boxes = (None for _ in range(len(boxes)))
         self.set_each(self._overwrite, numbers, boxes, old_boxes, msg=msg)
 
     def modify(self, numbers, box, old_box, msg=None):
-        msg = msg or self._format_msg('modify', numbers, box, old_box)
         self.set(self._modify, numbers, box, old_box, msg=msg)
 
     def discard(self, numbers, box, msg=None):
-        msg = msg or self._format_msg('discard', numbers, box)
         self.set(self._delete, numbers, None, box, msg=msg)
 
     def clear(self, numbers, msg=None):
-        msg = msg or self._format_msg('clear', numbers)
         self.set(self._clear, numbers, msg=msg)
 
     def _append(self, i, box, old_box):
