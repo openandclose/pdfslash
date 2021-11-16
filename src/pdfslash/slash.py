@@ -470,14 +470,6 @@ class _BoxData(object):
 
         self.stacker.set(command_set, msg)
 
-    # not used
-    def _copy(self, value):
-        if isinstance(value, list):
-            return list(value)
-        if isinstance(value, dict):
-            return dict(value)
-        return value
-
     def append(self, numbers, box, msg=None):
         self.set(self._append, numbers, box, msg=msg)
 
