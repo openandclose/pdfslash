@@ -476,7 +476,7 @@ class _BoxData(object):
     def overwrite(self, numbers, box, msg=None):
         self.set(self._overwrite, numbers, box, msg=msg)
 
-    def overwrite_each(self, numbers, boxes, msg=None):
+    def crop_each(self, numbers, boxes, msg=None):
         old_boxes = (None for _ in range(len(boxes)))
         self.set_each(self._overwrite, numbers, boxes, old_boxes, msg=msg)
 
@@ -682,7 +682,7 @@ class _Pages(object):
         for n, box in zip(numbers, boxes):
             self.verify((n,), box)
         msg = msg or self.format_msg('crop_each', numbers, '...')
-        self.boxdata.overwrite_each(numbers, boxes, msg=msg)
+        self.boxdata.crop_each(numbers, boxes, msg=msg)
 
     def modify(self, numbers, old_box, new_box, msg=None):
         self.verify(numbers, new_box)
