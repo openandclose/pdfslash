@@ -2627,16 +2627,16 @@ class PDFSlashCmd(_PipeCmd):
             self._end_readline(self.hisfile)
 
     def _parse_opts(self, args_):
-        args, opts = [], []
+        opts, args = [], []
         for a in args_.split():
             if a.startswith('--'):  # include exact '--'
                 opts.append(a)
             else:
                 args.append(a)
-        return args, opts
+        return opts, args
 
     def _parse_num(self, args_, allow_blank=False):
-        args, opts = self._parse_opts(args_)
+        opts, args = self._parse_opts(args_)
         error = (None, opts)
 
         if len(args) > 1:
@@ -2735,7 +2735,7 @@ class PDFSlashCmd(_PipeCmd):
         (Add box as cropbox to specified pages,
         removing previously added cropboxes.)
         """
-        args, opts = self._parse_opts(args_)
+        opts, args = self._parse_opts(args_)
 
         if len(args) != 2:
             fmt = 'more or less than two arguments (numbers and box): %r\n'
