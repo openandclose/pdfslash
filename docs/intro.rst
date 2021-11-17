@@ -111,14 +111,14 @@ With ``Shift + Enter``,
 the new one is appended. The previous boxes are preserved.
 
 You can cycle 'active' box.
-Initially the active box is a virtual box
-(one with dotted lines created by mouse click, or nothing).
+Initially the active box is ``sel``, a virtual box,
+(one with dotted lines created by mouse click, or non-existent).
 
 But Pressing ``a``,
 the active box cycles to one of previous boxes in order, if any.
 The color changes to orange.
-In this state, you can edit previous boxes with cursor and ``Enter`` keys.
-(But don't forget to move back to the virtual box).
+In this state, you can edit previous boxes with cursor and ``Enter`` keys
+(Other previous boxes are preserved).
 
 With ``u`` and ``r``, the program performs undo and redo.
 They are only for box registrations, other states are initialized.
