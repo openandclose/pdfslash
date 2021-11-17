@@ -2074,13 +2074,16 @@ class TkRunner(object):
         self._move_rect(rect, box)
         self._set_info()
 
+    def _print_msg(self, op, numbers, box='', new_box=''):
+        msg = self._doc.pages.format_msg(op, numbers, box, new_box)
+        print('[gui]: %s' % msg)
+
     def _crop(self, event):
         if not self.i.numbers:  # no page, gui is showing a black image
             self._notify('no page')
             return
 
         rect = self.i.rects.get_active()
-        nstr = self.i._numparser.unparse(rect.numbers)
         modifier = self._get_modifier(event)
         append = True if modifier == 'shift' else False
 
@@ -2096,8 +2099,7 @@ class TkRunner(object):
                 self._draw_rects()
             self._draw_rect(self._sel)
             op = 'append' if append else 'crop'
-            fmt = '[gui] %s: %s  %d,%d,%d,%d'
-            print(fmt % (op, nstr, *rect.box))
+            self._print_msg(op, rect.numbers, rect.box)
             self.i._set()
 
         else:
@@ -2110,8 +2112,7 @@ class TkRunner(object):
             self._draw_rect(rect)
             # self._move_rect(rect, rect.box)
             self._draw_rect(newrect)
-            fmt = '[gui] modify: %s  %d,%d,%d,%d -> %d,%d,%d,%d'
-            print(fmt % (nstr, *old, *new))
+            self._print_msg('modify', rect.numbers, old, new)
             self.i._set()
 
     def _remove(self, event):
@@ -2120,12 +2121,10 @@ class TkRunner(object):
             self._notify('no box to remove')
             return
 
-        nstr = self.i._numparser.unparse(rect.numbers)
         box = rect.box
         self.i.rects.discard(rect)
         self._draw_rect(rect)
-        fmt = '[gui] remove: %s  %d,%d,%d,%d'
-        print(fmt % (nstr, *box))
+        self._print_msg('remove', rect.numbers, box)
         self.i._set()
 
     def _cycle_view(self, event):
