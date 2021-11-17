@@ -2806,6 +2806,8 @@ class PDFSlashCmd(_PipeCmd):
         Take one argument, page numbers (optional).
 
         Show current cropboxes for pages.
+
+        (selected or fixed pages are shown with headers 's' and 'f').
         """
         numbers, opts = self._parse_num(args, allow_blank=True)
         if numbers:
