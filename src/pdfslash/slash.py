@@ -617,6 +617,8 @@ class _Pages(object):
         self.numbers = tuple(range(1, len(boxes) + 1))
         self.pages = [_Page(self, n) for n in self.numbers]
 
+        self.numparser = NumParser(len(boxes))
+
         self.selected = [1 for _ in range(len(self.numbers))]
         self.fixed = [0 for _ in range(len(self.numbers))]
 
@@ -654,29 +656,44 @@ class _Pages(object):
         for n in numbers:
             self.fixed[n - 1] = 0
 
-    def crop(self, numbers, box, append=False):
+    def format_msg(self, op, numbers, box='', new_box=''):
+        nstr = self.numparser.unparse(numbers)
+        if box:
+            box = '%d,%d,%d,%d' % box
+        if new_box:
+            new_box = '%d,%d,%d,%d' % new_box
+        ret = [op, nstr, box, new_box]
+        return ' '.join(ret).strip()
+
+    def crop(self, numbers, box, append=False, msg=None):
         numbers = self.modifiable(numbers)
         self.verify(numbers, box)
         if append:
-            self.boxdata.append(numbers, box)
+            msg = msg or self.format_msg('append', numbers, box)
+            self.boxdata.append(numbers, box, msg=msg)
         else:
-            self.boxdata.overwrite(numbers, box)
+            msg = msg or self.format_msg('overwrite', numbers, box)
+            self.boxdata.overwrite(numbers, box, msg=msg)
 
-    def crop_each(self, numbers, boxes):
+    def crop_each(self, numbers, boxes, msg=None):
         numbers = self.modifiable(numbers)
         for n, box in zip(numbers, boxes):
             self.verify((n,), box)
-        self.boxdata.overwrite_each(numbers, boxes)
+        msg = msg or self.format_msg('crop_each', numbers, '...')
+        self.boxdata.overwrite_each(numbers, boxes, msg=msg)
 
-    def modify(self, numbers, old_box, new_box):
+    def modify(self, numbers, old_box, new_box, msg=None):
         self.verify(numbers, new_box)
-        self.boxdata.modify(numbers, new_box, old_box)
+        msg = msg or self.format_msg('modify', numbers, old_box, new_box)
+        self.boxdata.modify(numbers, new_box, old_box, msg=msg)
 
-    def discard(self, numbers, box):
-        self.boxdata.discard(numbers, box)
+    def discard(self, numbers, box, msg=None):
+        msg = msg or self.format_msg('discard', numbers, box)
+        self.boxdata.discard(numbers, box, msg=msg)
 
-    def clear(self, numbers):
-        self.boxdata.clear(numbers)
+    def clear(self, numbers, msg=None):
+        msg = msg or self.format_msg('clear', numbers)
+        self.boxdata.clear(numbers, msg=msg)
 
     def undo(self):
         return self.boxdata.undo()
