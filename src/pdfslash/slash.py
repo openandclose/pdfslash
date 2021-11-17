@@ -2439,7 +2439,7 @@ class BoxParser(object):
 
     def parse(self, numbers, bstr):
         if bstr == ':':
-            return 'clear', numbers
+            return 'clear', numbers, None
 
         if bstr == '~':
             if self._prev is None:
@@ -2669,6 +2669,28 @@ class PDFSlashCmd(_PipeCmd):
             self.stdout.write('Error on parsing numbers: %s\n' % str(e))
             return error
 
+    def _parse_num_and_box(self, args_):
+        opts, args = self._parse_opts(args_)
+
+        if len(args) != 2:
+            fmt = 'more or less than two arguments (numbers and box): %r\n'
+            self.stdout.write(fmt % args_)
+            return
+
+        nstr, bstr = args
+        try:
+            numbers = self.numparser.parse(nstr)
+        except ValueError as e:
+            self.stdout.write('Error on parsing numbers: %s\n' % str(e))
+            return
+
+        if numbers:
+            try:
+                return self.boxparser.parse(numbers, bstr), bstr
+            except ValueError as e:
+                self.stdout.write('Error on parsing box: %s\n' % str(e))
+                return
+
     def do_select(self, args):
         """
         Take one argument, page numbers.
@@ -2737,7 +2759,7 @@ class PDFSlashCmd(_PipeCmd):
         if numbers:
             self._pages.unfix(numbers)
 
-    def do_crop(self, args_):
+    def do_crop(self, args):
         """
         Take two argument, page numbers and box.
 
@@ -2745,31 +2767,15 @@ class PDFSlashCmd(_PipeCmd):
         (Add box as cropbox to specified pages,
         removing previously added cropboxes.)
         """
-        opts, args = self._parse_opts(args_)
-
-        if len(args) != 2:
-            fmt = 'more or less than two arguments (numbers and box): %r\n'
-            self.stdout.write(fmt % args_)
-            return
-
-        nstr, bstr = args
+        (op, numbers, box_or_boxes), bstr = self._parse_num_and_box(args)
+        if op == 'crop':
+            op = 'overwrite'
+        op = getattr(self._pages, op)
         try:
-            numbers = self.numparser.parse(nstr)
-        except ValueError as e:
-            self.stdout.write('Error on parsing numbers: %s\n' % str(e))
-            return
-
-        if numbers:
-            try:
-                ret = self.boxparser.parse(numbers, bstr)
-            except ValueError as e:
-                self.stdout.write('Error on parsing box: %s\n' % str(e))
-                return
-
-        command, *args = ret
-        func = getattr(self._pages, command)
-        try:
-            func(*args)
+            if not box_or_boxes:
+                op(numbers)
+            else:
+                op(numbers, box_or_boxes)
         except Exception as e:  # TODO
             self.stdout.write('Error on processing box: %s\n' % str(e))
             return
