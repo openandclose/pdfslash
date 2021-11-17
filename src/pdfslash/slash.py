@@ -2763,6 +2763,30 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take two argument, page numbers and box.
 
+        Append cropbox.
+        (Add box as cropbox to specified pages,
+        keeping previously added cropboxes.)
+        """
+        (op, numbers, box_or_boxes), bstr = self._parse_num_and_box(args)
+        if op == 'clear':
+            msg = "Error: ':' for box is illegal. Use 'overwrite' or 'Crop'.\n"
+            self.stdout.write(msg)
+            return
+        if op == 'crop':
+            op = 'append'
+        op = getattr(self._pages, op)
+        try:
+            op(numbers, box_or_boxes)
+        except Exception as e:  # TODO
+            self.stdout.write('Error on processing box: %s\n' % str(e))
+            return
+
+        self.boxparser.set_prev(bstr)
+
+    def do_Crop(self, args):
+        """
+        Take two argument, page numbers and box.
+
         Replace cropbox.
         (Add box as cropbox to specified pages,
         removing previously added cropboxes.)
