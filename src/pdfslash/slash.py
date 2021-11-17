@@ -2628,11 +2628,16 @@ class PDFSlashCmd(_PipeCmd):
 
     def _parse_opts(self, args_):
         opts, args = [], []
+        maybe_opts = True
         for a in args_.split():
-            if a.startswith('--'):  # include exact '--'
-                opts.append(a)
-            else:
-                args.append(a)
+            if a == '--':
+                maybe_opts = False
+                continue
+            if a.startswith('--'):
+                if maybe_opts:
+                    opts.append(a)
+                    continue
+            args.append(a)
         return opts, args
 
     def _parse_num(self, args_, allow_blank=False):
