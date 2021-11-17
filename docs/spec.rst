@@ -62,7 +62,8 @@ Box:
 Commands
 ^^^^^^^^
 
-* commands are case sensitive (e.g. ``Set`` and ``Python`` start with capital letters).
+* commands are case sensitive
+  (e.g. ``Crop``, ``Set`` and ``Python`` start with capital letters).
 
 * When commands take *optional* page numbers and they are omitted,
   selected pages are used.
@@ -80,6 +81,21 @@ Commands
 
 {{ _fromsource_cmds }}
 
+**do_crop**
+
+Alias for ``do_append``
+
+**do_Crop**
+
+Alias for ``do_overwrite``
+
+**do_quit**
+
+Alias for ``do_exit``
+
+**do_EOF**
+
+Alias for ``do_exit``
 
 **'|' (pipe)**
 

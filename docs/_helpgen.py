@@ -26,6 +26,13 @@ OUTDIR = os.path.normpath(os.path.join(
 DATA = {}
 prefix = '_fromsource_'
 
+SKIP_COMMANDS = (
+    'do_crop',
+    'do_Crop',
+    'do_quit',
+    'do_EOF',
+)
+
 
 def part(text, start='', start_next='', end='', end_before=''):
     new = []
@@ -87,7 +94,7 @@ def get_cmds(mod):
 
     # for m in sorted(c.__dict__):
     for m in c.__dict__:
-        if m.startswith('do_'):
+        if m.startswith('do_') and m not in SKIP_COMMANDS:
             name = m[3:]
             doc = c.__dict__[m].__doc__
             doc = doc.strip('\n')

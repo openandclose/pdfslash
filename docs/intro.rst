@@ -56,7 +56,7 @@ Upon invocation, users are faced with a commandline prompt.
     (pdfslash) <-- this
 
 Most commands only take one argument (page numbers),
-``crop`` takes two (page numbers and cropbox).
+box commands take two (page numbers and cropbox).
 
 .. code-block:: none
 
@@ -66,7 +66,7 @@ Most commands only take one argument (page numbers),
 
     (pdfslash) crop 6-9 30,30,400,500
 
-        # Replace with new cropbox (left,top,right,bottom),
+        # Append new cropbox (left,top,right,bottom),
         # for page 6,7,8,9.
 
 To run GUI, use ``preview``.

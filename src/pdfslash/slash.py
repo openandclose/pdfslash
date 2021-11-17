@@ -2759,7 +2759,7 @@ class PDFSlashCmd(_PipeCmd):
         if numbers:
             self._pages.unfix(numbers)
 
-    def do_crop(self, args):
+    def do_append(self, args):
         """
         Take two argument, page numbers and box.
 
@@ -2783,7 +2783,7 @@ class PDFSlashCmd(_PipeCmd):
 
         self.boxparser.set_prev(bstr)
 
-    def do_Crop(self, args):
+    def do_overwrite(self, args):
         """
         Take two argument, page numbers and box.
 
@@ -2946,6 +2946,9 @@ class PDFSlashCmd(_PipeCmd):
 
     def emptyline(self):
         pass
+
+    do_crop = do_append
+    do_Crop = do_overwrite
 
     do_quit = do_exit
     do_EOF = do_exit
