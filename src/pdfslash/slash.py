@@ -2470,7 +2470,7 @@ class BoxParser(object):
 
     def parse_plusminus(self, numbers, box):
         pageboxes = self._get_pageboxes(numbers)
-        new = [boxes.data for boxes in pageboxes]  # copy
+        new = [list(boxes.data) for boxes in pageboxes]  # copy
 
         coords = []
         for i, b in enumerate(box):
