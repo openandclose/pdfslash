@@ -448,7 +448,7 @@ class _BoxData(object):
     """
 
     def __init__(self, cboxes):
-        self.cboxes = cboxes
+        self.cboxes = [tuple(cbox) for cbox in cboxes]
         self.boxdict = _Boxdict(self)
         self.numbers = tuple(range(1, len(cboxes) + 1))
         self.boxes = [_Boxes(n, self.boxdict) for n in self.numbers]
@@ -598,13 +598,13 @@ class _Page(object):
     def tostring(self):
         selected = 's' if self.selected else ' '
         fixed = 'f' if self.fixed else ' '
-        box = '%d,%d,%d,%d' % tuple(self.cbox)
+        box = '%d,%d,%d,%d' % self.cbox
         fmt = '%s%s %4d  source: %s'
         if not self.boxes:
             return fmt % (selected, fixed, self.number, box)
         else:
             fmt += '  now: %s'
-            newbox = ['%d,%d,%d,%d' % tuple(box) for box in self.boxes]
+            newbox = ['%d,%d,%d,%d' % box for box in self.boxes]
             newbox = '; '.join(newbox)
             return fmt % (selected, fixed, self.number, box, newbox)
 
