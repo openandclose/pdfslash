@@ -2215,7 +2215,8 @@ class TkRunner(object):
         else:
             name = 'box'
 
-        text = add_space(text) + '%s: %d,%d,%d,%d' % (name, *box)
+        fmt = '%s: %d,%d,%d,%d (%dx%d)'
+        text = add_space(text) + fmt % (name, *box, *getsize(box))
         return text
 
     def _notify(self, text, duration=2000):
