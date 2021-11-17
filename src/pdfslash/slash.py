@@ -665,15 +665,17 @@ class _Pages(object):
         ret = [op, nstr, box, new_box]
         return ' '.join(ret).strip()
 
-    def crop(self, numbers, box, append=False, msg=None):
+    def append(self, numbers, box, msg=None):
         numbers = self.modifiable(numbers)
         self.verify(numbers, box)
-        if append:
-            msg = msg or self.format_msg('append', numbers, box)
-            self.boxdata.append(numbers, box, msg=msg)
-        else:
-            msg = msg or self.format_msg('overwrite', numbers, box)
-            self.boxdata.overwrite(numbers, box, msg=msg)
+        msg = msg or self.format_msg('append', numbers, box)
+        self.boxdata.append(numbers, box, msg=msg)
+
+    def overwrite(self, numbers, box, msg=None):
+        numbers = self.modifiable(numbers)
+        self.verify(numbers, box)
+        msg = msg or self.format_msg('overwrite', numbers, box)
+        self.boxdata.overwrite(numbers, box, msg=msg)
 
     def crop_each(self, numbers, boxes, msg=None):
         numbers = self.modifiable(numbers)
@@ -1625,7 +1627,10 @@ class _Rects(object):
     def crop(self, append=True):  # always from self.sel
         box, numbers = self.sel.box, self.sel.numbers
         self.sel.box = None
-        self.pages.crop(numbers, box, append=append)
+        if append:
+            self.pages.append(numbers, box)
+        else:
+            self.pages.overwrite(numbers, box)
         self.update()
         return self.rects[box]
 
@@ -2098,7 +2103,7 @@ class TkRunner(object):
             else:
                 self._draw_rects()
             self._draw_rect(self._sel)
-            op = 'append' if append else 'crop'
+            op = 'append' if append else 'overwrite'
             self._print_msg(op, rect.numbers, rect.box)
             self.i._set()
 

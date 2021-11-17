@@ -170,11 +170,11 @@ class TestBoxParser:
         """
         cboxes = [(0, 0, 595, 842) for _ in range(8)]
         pages = slash._Pages(cboxes)
-        pages.crop((1,), (100, 110, 120, 130))
-        pages.crop((2,), (200, 210, 220, 230))
-        pages.crop((3,), (300, 310, 320, 330))
-        pages.crop((3,), (340, 350, 360, 370), append=True)
-        pages.crop((4,), (400, 410, 420, 430))
+        pages.overwrite((1,), (100, 110, 120, 130))
+        pages.overwrite((2,), (200, 210, 220, 230))
+        pages.overwrite((3,), (300, 310, 320, 330))
+        pages.append((3,), (340, 350, 360, 370))
+        pages.overwrite((4,), (400, 410, 420, 430))
         return pages
 
     def test_parse(self):
