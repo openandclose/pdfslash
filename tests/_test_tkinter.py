@@ -161,7 +161,7 @@ def test_rects():
     # append
     box2 = 300, 320, 500, 520
     create_sel(t, box2)
-    press_key(t, '<Shift-Return>')
+    press_key(t, '<Return>')
     check_tk_boxes(t, (1, 2, 3), [box1, box2])
     check_tk_rects(t, ((box1, 'blue'), (box2, 'blue')))
 
@@ -173,7 +173,7 @@ def test_rects():
     # overwrite
     box3 = 105, 126, 207, 228
     create_sel(t, box3)
-    press_key(t, '<Return>')
+    press_key(t, '<Shift-Return>')
     check_tk_boxes(t, (1, 2, 3), [box3])
     check_tk_rects(t, ((box3, 'blue'),))
 
@@ -181,7 +181,7 @@ def test_rects():
     press_key(t, '<v>')  # odds
     box4 = 310, 330, 510, 530
     create_sel(t, box4)
-    press_key(t, '<Shift-Return>')
+    press_key(t, '<Return>')
     check_tk_boxes(t, (1, 3), [box3, box4])
     check_tk_boxes(t, (2, 4), [box3])
     check_tk_rects(t, ((box3, 'blue'), (box4, 'blue')))

@@ -2085,7 +2085,7 @@ class TkRunner(object):
 
         rect = self.i.rects.get_active()
         modifier = self._get_modifier(event)
-        append = True if modifier == 'shift' else False
+        append = False if modifier == 'shift' else True
 
         if rect.box is None:  # when self._sel is active and no tempbox
             self._notify('no selection')

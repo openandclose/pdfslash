@@ -104,11 +104,11 @@ the box is now registered. Until then, the box existed only as GUI graphic.
 The dotted lines of box change to solid lines.
 
 Just pressing ``Enter``,
-the new one replaces all the previous boxes.
-That is, if any, they were removed.
+the new one is appended. The previous boxes are preserved.
 
 With ``Shift + Enter``,
-the new one is appended. The previous boxes are preserved.
+the new one replaces all the previous boxes.
+That is, if any, they were removed.
 
 You can cycle 'active' box.
 Initially the active box is ``sel``, a virtual box,
