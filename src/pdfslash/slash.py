@@ -656,13 +656,13 @@ class _Pages(object):
         for n in numbers:
             self.fixed[n - 1] = 0
 
-    def format_msg(self, op, numbers, box='', new_box=''):
+    def format_msg(self, op, numbers, box='', new_box='', aux=''):
         nstr = self.numparser.unparse(numbers)
         if box:
             box = '%d,%d,%d,%d' % box
         if new_box:
             new_box = '%d,%d,%d,%d' % new_box
-        ret = [op, nstr, box, new_box]
+        ret = [s for s in (op, nstr, box, new_box, aux) if s]
         return ' '.join(ret).strip()
 
     def append(self, numbers, box, msg=None):
@@ -681,7 +681,7 @@ class _Pages(object):
         numbers = self.modifiable(numbers)
         for n, box in zip(numbers, boxes):
             self.verify((n,), box)
-        msg = msg or self.format_msg('crop_each', numbers, '...')
+        msg = msg or self.format_msg('crop_each', numbers, aux='...')
         self.boxdata.crop_each(numbers, boxes, msg=msg)
 
     def modify(self, numbers, old_box, new_box, msg=None):
