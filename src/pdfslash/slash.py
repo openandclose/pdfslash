@@ -2120,6 +2120,8 @@ class TkRunner(object):
             self._print_msg('modify', rect.numbers, old, new)
             self.i._set()
 
+        self._set_info()
+
     def _remove(self, event):
         rect = self.i.rects.get_active()
         if rect.box is None:  # when self._sel is active and no tempbox
