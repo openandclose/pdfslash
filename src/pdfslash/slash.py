@@ -703,20 +703,15 @@ class _Pages(object):
     def redo(self):
         return self.boxdata.redo()
 
-    # provide either 'box' or 'pageboxes'
-    def verify(self, numbers, box=None, pageboxes=None):
+    def verify(self, numbers, box=None):
         if not numbers:
             raise ValueError('No page numbers')
-        self._verify_crop(numbers, box, pageboxes)
-
-    def _verify_crop(self, numbers, box, pageboxes):
-        bound = self._get_bound(numbers)
         if box:
-            self._verify_box(bound, box)
-        else:
-            for boxes in pageboxes:
-                for box in boxes:
-                    self._verify_box(bound, box)
+            self._verify_crop(numbers, box)
+
+    def _verify_crop(self, numbers, box):
+        bound = self._get_bound(numbers)
+        self._verify_box(bound, box)
 
     def _verify_box(self, bound, box):
         fmt = 'box is not inside source cropbox. box: %d,%d,%d,%d.'
