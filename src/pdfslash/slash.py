@@ -2208,11 +2208,11 @@ class TkRunner(object):
 
         text = ''
         if group:
-            text = 'group: %d/%d' % group
+            text = '%d/%d' % group
         if imstate:
-            text = add_space(text, False) + '(%s)' % imstate
+            text = add_space(text, False) + '%s' % imstate
         if size:
-            text = add_space(text) + 'size: %dx%d' % size
+            text = add_space(text, False) + '%dx%d' % size
 
         if self.i.rects.active_index == 0:
             name = 'sel'
