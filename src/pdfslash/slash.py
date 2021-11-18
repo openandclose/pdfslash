@@ -462,11 +462,14 @@ class _BoxData(object):
 
         self.stacker.set(command_set, msg)
 
-    def set_each(self, method, numbers, boxes, old_boxes, msg=None):
+    def crop_each(self, numbers, pageboxes, msg=None):
         command_set = []
-        for n, box, old_box in zip(numbers, boxes, old_boxes):
-            command = method, n - 1, box, old_box
+        for n, boxes in zip(numbers, pageboxes):
+            command = self._overwrite, n - 1, boxes[0], None
             command_set.append(command)
+            for box in boxes[1:]:
+                command = self._append, n - 1, box, None
+                command_set.append(command)
 
         self.stacker.set(command_set, msg)
 
@@ -475,10 +478,6 @@ class _BoxData(object):
 
     def overwrite(self, numbers, box, msg=None):
         self.set(self._overwrite, numbers, box, msg=msg)
-
-    def crop_each(self, numbers, boxes, msg=None):
-        old_boxes = (None for _ in range(len(boxes)))
-        self.set_each(self._overwrite, numbers, boxes, old_boxes, msg=msg)
 
     def modify(self, numbers, box, old_box, msg=None):
         self.set(self._modify, numbers, box, old_box, msg=msg)
@@ -677,12 +676,13 @@ class _Pages(object):
         msg = msg or self.format_msg('overwrite', numbers, box)
         self.boxdata.overwrite(numbers, box, msg=msg)
 
-    def crop_each(self, numbers, boxes, msg=None):
+    def crop_each(self, numbers, pageboxes, msg=None):
         numbers = self.modifiable(numbers)
-        for n, box in zip(numbers, boxes):
-            self.verify((n,), box)
+        for n, boxes in zip(numbers, pageboxes):
+            for box in boxes:
+                self.verify((n,), box)
         msg = msg or self.format_msg('crop_each', numbers, aux='...')
-        self.boxdata.crop_each(numbers, boxes, msg=msg)
+        self.boxdata.crop_each(numbers, pageboxes, msg=msg)
 
     def modify(self, numbers, old_box, new_box, msg=None):
         self.verify(numbers, new_box)
@@ -1432,12 +1432,12 @@ class Document(object):
 
     def autocrop(self, numbers):  # c.f. 0.8s for 600p
         numbers = self.pages.modifiable(numbers)
-        boxes = []
+        pageboxes = []
         for num in numbers:
             box = self.pages._get_box(num, fallback=True)[0]
             box = self._autocrop(num, box)
-            boxes.append(box)
-        self.pages.crop_each(numbers, boxes)
+            pageboxes.append([box])
+        self.pages.crop_each(numbers, pageboxes)
 
     def _autocrop(self, num, box):
         img = self.imgs[num - 1].load()[0]
