@@ -1264,7 +1264,7 @@ class BrissCropFinder(CropFinder):
 
         min_ = max(array.min() - 1, min_)  # min - 1
         max_ = min(array.max() + wsize, max_)  # max + 1
-        return min_, max_
+        return int(min_), int(max_)  # int: numpy to Python
 
 
 class Backend(object):
