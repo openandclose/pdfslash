@@ -1812,7 +1812,7 @@ _tk_help = """
 class TkRunner(object):
     """Run tkinter gui."""
 
-    _title = 'pdfslash preview'
+    _title = 'pdfslash'
 
     def __init__(self, imagedata, doc):
         self.i = imagedata
