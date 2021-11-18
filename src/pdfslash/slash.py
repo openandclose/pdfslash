@@ -2104,9 +2104,7 @@ class TkRunner(object):
                 self._draw_rects()
             self._draw_rect(self._sel)
             op = 'append' if append else 'overwrite'
-            self._print_msg(op, rect.numbers, rect.box)
-            self.i._set()
-
+            args = (op, rect.numbers, rect.box)
         else:
             if rect.box == rect._box:  # when rect is not moved
                 self._notify('not modified')
@@ -2117,10 +2115,11 @@ class TkRunner(object):
             self._draw_rect(rect)
             # self._move_rect(rect, rect.box)
             self._draw_rect(newrect)
-            self._print_msg('modify', rect.numbers, old, new)
-            self.i._set()
+            args = ('modify', rect.numbers, old, new)
 
+        self.i._set()
         self._set_info()
+        self._print_msg(*args)
 
     def _remove(self, event):
         rect = self.i.rects.get_active()
