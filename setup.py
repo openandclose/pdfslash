@@ -3,14 +3,8 @@
 
 from setuptools import setup, find_packages
 
-description = """Crop pdf margins from interactive interpreter."""
-
-readme = description + """
-
-See https://github.com/openandclose/pdfslash
-
-License: MIT
-"""
+with open('README.rst') as f:
+    readme = f.read()
 
 with open('VERSION') as f:
     version = f.read().strip()
@@ -23,7 +17,7 @@ setup(
     license='MIT',
     author='Open Close',
     author_email='openandclose23@gmail.com',
-    description=description,
+    description='Crop pdf margins from interactive interpreter.',
     long_description=readme,
     classifiers=[
         'Development Status :: 4 - Beta',
