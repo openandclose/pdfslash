@@ -10,6 +10,8 @@ Various commands, including GUI, are called from there.
 Intended to create more readable PDF documents for e-reader devices,
 for personal reading.
 
+(Now it is very alpha. I'm not even bothering writing Changelog.)
+
 .. image:: screen.png
     :alt: pdfslash gui window
     :width: 308px
