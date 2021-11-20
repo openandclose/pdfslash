@@ -77,13 +77,15 @@ _CONF = {
     'winpos': ((0.5, 0.5), 'two_floats'),
 
     # Max pages to sample, to create a merge image (one group) in GUI.
-    # So even when running 'preview 1-600',
-    # the program is acutually showing only this number of arbitrary pages.
+    # So when running 'preview 1-600',
+    # the program is acutually showing
+    # only this number of arbitrarily selected pages.
     # '15' is briss' default.
     'max_merge_pages': (15, 'int'),
 
     # not used
-    # Non-scale window size range (min and max) in ratio to the display size.
+    # Non-scale window size range (min and max)
+    # in ratio to the display size.
     # Only when below min or above max, either in x or y direction,
     # the program adjusts the window size (to min or max).
     # 'winrange': ((0.4, 0.95), 'two_floats'),
