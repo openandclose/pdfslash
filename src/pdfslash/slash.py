@@ -1576,6 +1576,8 @@ class _SelRect(_Rect):
 class _Rects(object):
     """Manage rectangle data."""
 
+    msg_prefix = '[gui] '
+
     def __init__(self, imagedata):
         self.i = imagedata
         self.pages = self.i._doc.pages
@@ -1621,24 +1623,34 @@ class _Rects(object):
         elif state == 2:
             return filter_numbers(numbers, 2)  # evens
 
+    def format_msg(self, op, numbers, box='', new_box=''):
+        msg = self.i._doc.pages.format_msg(op, numbers, box, new_box)
+        return '%s%s' % (self.msg_prefix, msg)
+
     def append(self):  # always from self.sel
         box, numbers = self.sel.box, self.sel.numbers
         self.sel.box = None
-        self.pages.append(numbers, box)
+        msg = self.format_msg('append', numbers, box)
+        self.pages.append(numbers, box, msg=msg)
+        print(msg)
         self.update()
         return self.rects[box]
 
     def overwrite(self):  # always from self.sel
         box, numbers = self.sel.box, self.sel.numbers
         self.sel.box = None
-        self.pages.overwrite(numbers, box)
+        msg = self.format_msg('overwrite', numbers, box)
+        self.pages.overwrite(numbers, box, msg=msg)
+        print(msg)
         self.update()
         return self.rects[box]
 
     def modify(self, rect):
         old, new = rect._box, rect.box
         rect.box = None
-        self.pages.modify(rect.numbers, old, new)
+        msg = self.format_msg('modify', rect.numbers, old, new)
+        self.pages.modify(rect.numbers, old, new, msg=msg)
+        print(msg)
         self.reset_active()
         self.update()
         return self.rects[new]
@@ -1648,7 +1660,9 @@ class _Rects(object):
             self.sel.box = None
             return
         box, numbers = rect.box, rect.numbers
-        self.pages.discard(numbers, box)
+        msg = self.format_msg('discard', numbers, box)
+        self.pages.discard(numbers, box, msg=msg)
+        print(msg)
         self.update()
         self.reset_active()
 
@@ -2080,10 +2094,6 @@ class TkRunner(object):
         self._move_rect(rect, box)
         self._set_info()
 
-    def _print_msg(self, op, numbers, box='', new_box=''):
-        msg = self._doc.pages.format_msg(op, numbers, box, new_box)
-        print('[gui]: %s' % msg)
-
     def _crop(self, event):
         if not self.i.numbers:  # no page, gui is showing a black image
             self._notify('no page')
@@ -2105,23 +2115,18 @@ class TkRunner(object):
                 rect = self.i.rects.overwrite()
                 self._draw_rects()
             self._draw_rect(self._sel)
-            op = 'append' if append else 'overwrite'
-            args = (op, rect.numbers, rect.box)
         else:
             if rect.box == rect._box:  # when rect is not moved
                 self._notify('not modified')
                 return
 
-            old, new = rect._box, rect.box
             newrect = self.i.rects.modify(rect)
             self._draw_rect(rect)
             # self._move_rect(rect, rect.box)
             self._draw_rect(newrect)
-            args = ('modify', rect.numbers, old, new)
 
         self.i._set()
         self._set_info()
-        self._print_msg(*args)
 
     def _remove(self, event):
         rect = self.i.rects.get_active()
@@ -2129,10 +2134,8 @@ class TkRunner(object):
             self._notify('no box to remove')
             return
 
-        box = rect.box
         self.i.rects.discard(rect)
         self._draw_rect(rect)
-        self._print_msg('remove', rect.numbers, box)
         self.i._set()
 
     def _cycle_view(self, event):
