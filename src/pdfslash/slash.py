@@ -1621,13 +1621,17 @@ class _Rects(object):
         elif state == 2:
             return filter_numbers(numbers, 2)  # evens
 
-    def crop(self, append=True):  # always from self.sel
+    def append(self):  # always from self.sel
         box, numbers = self.sel.box, self.sel.numbers
         self.sel.box = None
-        if append:
-            self.pages.append(numbers, box)
-        else:
-            self.pages.overwrite(numbers, box)
+        self.pages.append(numbers, box)
+        self.update()
+        return self.rects[box]
+
+    def overwrite(self):  # always from self.sel
+        box, numbers = self.sel.box, self.sel.numbers
+        self.sel.box = None
+        self.pages.overwrite(numbers, box)
         self.update()
         return self.rects[box]
 
@@ -2094,10 +2098,11 @@ class TkRunner(object):
             return
 
         if rect == self._sel:
-            rect = self.i.rects.crop(append)
             if append:
+                rect = self.i.rects.append()
                 self._draw_rect(rect)
             else:
+                rect = self.i.rects.overwrite()
                 self._draw_rects()
             self._draw_rect(self._sel)
             op = 'append' if append else 'overwrite'
