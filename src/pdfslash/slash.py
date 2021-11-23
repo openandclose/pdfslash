@@ -2137,6 +2137,7 @@ class TkRunner(object):
         self.i.rects.discard(rect)
         self._draw_rect(rect)
         self.i._set()
+        self._set_info()
 
     def _cycle_view(self, event):
         if event.keysym == 'v':
