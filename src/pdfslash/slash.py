@@ -446,7 +446,7 @@ class _BoxData(object):
     """Manage a collection of _Boxes (PDF pages of new cropboxes).
 
     Define additional operations (op):
-    'append', 'overwrite', 'modify', 'discard' and 'clear'.
+    'append', 'overwrite', 'modify', 'discard', 'clear' and 'crop_each'.
     """
 
     def __init__(self, cboxes):
