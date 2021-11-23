@@ -496,7 +496,7 @@ class _BoxData(object):
 
     def _overwrite(self, i, box, old_box):
         commands = self._clear(i, box, old_box)
-        commands2 = self._append(i, box, old_box)
+        commands2 = [('add', (i, 0), tuple(box))]
         return commands + commands2
 
     def _modify(self, i, box, old_box):

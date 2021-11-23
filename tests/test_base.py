@@ -77,6 +77,16 @@ class TestBoxData:
         self.check_rects(boxdata, [(box1, [1, 2, 3])])
 
         # 2
+        boxdata.overwrite((1, 2, 3), box2, msg='msg2')
+        self.check(boxdata, (1, 2, 3), [box2])
+        self.check_rects(boxdata, [(box2, [1, 2, 3])])
+
+        # undo: back to 1
+        assert boxdata.undo() == 'msg2'
+        self.check(boxdata, (1, 2, 3), [box1])
+        self.check_rects(boxdata, [(box1, [1, 2, 3])])
+
+        # 2
         boxdata.append((2, 3, 4), box2, msg='msg2')
         self.check(boxdata, (1,), [box1])
         self.check(boxdata, (2, 3), [box1, box2])
@@ -110,6 +120,7 @@ class TestBoxData:
         assert boxdata.undo() == 'msg2'
         assert boxdata.undo() == 'msg1'
         assert [b.data for b in boxdata.boxes] == [[] for _ in range(8)]
+
 
 class TestNumParser:
 
