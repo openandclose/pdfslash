@@ -2006,7 +2006,7 @@ class TkRunner(object):
         def configure(rect):
             self.canvas.itemconfig(
                 rect.gid, dash=rect.dash, outline=rect.color, state='normal')
-            self._move_rect(rect, rect.box)
+            self.canvas.coords(rect.gid, *rect.sbox)
 
         def hide(rect):
             self.canvas.itemconfig(rect.gid, state='hidden')
