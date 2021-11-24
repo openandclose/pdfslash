@@ -189,16 +189,6 @@ class NoBoxToRemoveError(UserInputError):
     msg = 'cannot remove non-existent box; page: %d, box: %s'
 
 
-class _Counter(object):
-    """Generate incremental numbers (simplest kind of ids).
-
-    Use ``self.next()`` to get a number.
-    """
-
-    def __init__(self, start=0, stop=1000000, step=1):
-        self.next = iter(range(start, stop, step)).__next__
-
-
 class _Stack(object):
     """Implement a stack for single branch undo and redo."""
 
