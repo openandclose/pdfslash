@@ -2027,9 +2027,13 @@ class TkRunner(object):
         rect.box = box
         self.canvas.coords(rect.gid, *rect.sbox)
 
-    def _get_unscaled_points(self, x, y):
+    def _get_inside_points(self, x, y):
         x = max(0, min(x, self.i.width))
         y = max(0, min(y, self.i.height))
+        return x, y
+
+    def _get_unscaled_points(self, x, y):
+        x, y = self._get_inside_points(x, y)
         return self.i._scaling.get_unscaled((x, y))
 
     def _set_start(self, event):
