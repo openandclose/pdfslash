@@ -2090,9 +2090,11 @@ class TkRunner(object):
         if modifier == 'shift':
             x1 += incx
             y1 += incy
+            x1, y1 = self._get_inside_points(x1, y1)
         else:
             x0 += incx
             y0 += incy
+            x0, y0 = self._get_inside_points(x0, y0)
 
         box = x0, y0, x1, y1
         self._move_rect(rect, box)
