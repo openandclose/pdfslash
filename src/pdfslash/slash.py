@@ -1507,11 +1507,16 @@ class _Rect(object):
 
     @property
     def box(self):
-        return self._tempbox if self._tempbox else self._box
+        if self._tempbox:
+            return self._rects.clip_box(self._tempbox)
+        return self._box
 
     @box.setter
     def box(self, box):
-        self._tempbox = box
+        if box is None:
+            self._tempbox = None
+        else:
+            self._tempbox = self._rects.clip_box(box)
 
     @property
     def sbox(self):  # current scale applied box
@@ -1598,6 +1603,17 @@ class _Rects(object):
         for box in self.boxdict:
             if box not in self.rects:
                 self.rects[box] = _Rect(self, box)
+
+    def unscale_box(self, sbox):
+        return self.i._scaling.get_unscaled(sbox)
+
+    def clip_box(self, box):
+        x0, y0, x1, y1 = box
+        x0 = max(0, min(x0, self.i._width))
+        y0 = max(0, min(y0, self.i._height))
+        x1 = max(0, min(x1, self.i._width))
+        y1 = max(0, min(y1, self.i._height))
+        return x0, y0, x1, y1
 
     @property
     def _numbers(self):
@@ -2027,15 +2043,6 @@ class TkRunner(object):
         rect.box = box
         self.canvas.coords(rect.gid, *rect.sbox)
 
-    def _get_inside_points(self, x, y):
-        x = max(0, min(x, self.i.width))
-        y = max(0, min(y, self.i.height))
-        return x, y
-
-    def _get_unscaled_points(self, x, y):
-        x, y = self._get_inside_points(x, y)
-        return self.i._scaling.get_unscaled((x, y))
-
     def _set_start(self, event):
         self._start = event.x, event.y
         if self._sel.box:
@@ -2047,10 +2054,8 @@ class TkRunner(object):
             self._draw_rects()
 
     def _set_selection(self, event):
-        self._end = event.x, event.y
-        start = self._get_unscaled_points(*self._start)
-        end = self._get_unscaled_points(*self._end)
-        box = *start, *end
+        sbox = *self._start, event.x, event.y
+        box = self.i.rects.unscale_box(sbox)
         if not self._sel.box:
             self._sel.box = box
             self._draw_rect(self._sel)
@@ -2090,11 +2095,9 @@ class TkRunner(object):
         if modifier == 'shift':
             x1 += incx
             y1 += incy
-            x1, y1 = self._get_inside_points(x1, y1)
         else:
             x0 += incx
             y0 += incy
-            x0, y0 = self._get_inside_points(x0, y0)
 
         box = x0, y0, x1, y1
         self._move_rect(rect, box)
@@ -2128,7 +2131,6 @@ class TkRunner(object):
 
             newrect = self.i.rects.modify(rect)
             self._draw_rect(rect)
-            # self._move_rect(rect, rect.box)
             self._draw_rect(newrect)
 
         self.i._set()
