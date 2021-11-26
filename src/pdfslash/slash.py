@@ -1797,8 +1797,8 @@ _tk_help = """
 
         <Arrow>:        move top-left point
         Shift+<Arrow>:  move bottom-right point
-        Return:         crop by present selection (replace)
-        Shift+Return:   crop by present selection (append)
+        Return:         crop by present selection (append)
+        Shift+Return:   crop by present selection (replace)
 
         n:              next image group
         p:              previous image group
