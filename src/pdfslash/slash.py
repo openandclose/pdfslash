@@ -25,6 +25,7 @@ import code
 import configparser
 import cmd
 import os
+import re
 import subprocess
 import shlex
 import sys
@@ -3068,10 +3069,23 @@ class Runner(object):
         cmdqueue = []
         for command in commands.split('\n'):
             for c in command.split(';'):
-                c = c.strip()
-                if c and not c.startswith('#'):
+                c = self.parse_command(c)
+                if c is not None:
                     cmdqueue.append(c)
+
         self.pcmd.cmdqueue = cmdqueue
+
+    def parse_command(self, line):
+        line = line.strip()
+        if not line:
+            return
+        if line.startswith('#'):
+            return
+
+        m = re.match(r'\[[a-z]+\] ', line)
+        if m:
+            return line[m.end():]
+        return line
 
     def run(self):
         return self.pcmd.cmdloop()

@@ -44,17 +44,22 @@ Commandline
 Interpreter
 -----------
 
-Token separator is space,
-so any command or argument must not have spaces.
+* Token separator is space,
+  so any command or argument must not have spaces.
 
-Page numbers and Box have some special syntax.
+* When the command string starts with ``'#'``,
+  it is ignored.
 
-Page numbers:
+* When the command string starts with Python regex ``'\[[a-z]\] '``,
+  the matched part is stripped.
+
+  (e.g. ``'[gui] crop 1 10,10,400,500'`` -> ``'crop 1 10,10,400,500'``).
+
+* Page number syntax is as follows.
 
 {{ _fromsource_nstr }}
 
-
-Box:
+* Box syntax is as follows.
 
 {{ _fromsource_box }}
 
