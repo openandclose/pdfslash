@@ -293,3 +293,29 @@ def test_rects():
     check_tk_rects(t, ((box11ZZ, 'blue'),))
 
     close(t)
+
+
+def test_rects__bug_img_group_mix_up_on_second_tk_invocation():
+    numbers = tuple(i for i in range(1, 22))
+    doc = build()
+    t = run(doc, numbers)
+    pump_events(t.root)
+
+    press_key(t, '<q>')
+
+    t = run(doc, numbers)
+    pump_events(t.root)
+
+    # img groups
+    shape1 = (595, 841)  # 1-13,21
+    shape2 = (530, 780)  # 14-16
+    shape3 = (500, 750)  # 17-20
+    check_tk_image(t, shape1)
+    press_key(t, '<n>')  # next
+    check_tk_image(t, shape2)
+    press_key(t, '<n>')  # next
+    check_tk_image(t, shape3)
+    press_key(t, '<n>')  # next
+    check_tk_image(t, shape1)
+
+    close(t)

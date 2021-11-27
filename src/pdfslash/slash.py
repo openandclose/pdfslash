@@ -1011,7 +1011,7 @@ class _ImageData(object):
         if index == self.g_num:
             index = 0
 
-        if index >= len(self._d_cache):
+        if index >= len(self._cache):
             data = next(self._it)
             if not self._d_metadata:
                 self._d_metadata.update(data[0])
