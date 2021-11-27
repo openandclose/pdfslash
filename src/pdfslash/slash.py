@@ -3049,13 +3049,16 @@ class Runner(object):
         return Conf().create()
 
     def get_doc(self):
-        return Document(self.args.file, self.conf)
+        return Document(self.args.pdffile, self.conf)
 
     def get_pcmd(self):
         return PDFSlashCmd(doc=self.doc)
 
     def queue_commands(self):
-        if self.args.Command:
+        if self.args.cmdfile:
+            with open(self.args.cmdfile) as f:
+                commands = f.read()
+        elif self.args.Command:
             commands = sys.stdin.read()
         elif self.args.command:
             commands = self.args.command
@@ -3085,7 +3088,7 @@ def _build_argument_parser():
     parser = argparse.ArgumentParser(description=__doc__)
 
     h = 'PDF filename to process'
-    parser.add_argument('file', metavar='FILE', help=h)
+    parser.add_argument('pdffile', metavar='PDFFILE', help=h)
 
     h = ('run initial commands before showing prompt '
         "(split multiple commands with ';').")
@@ -3094,6 +3097,10 @@ def _build_argument_parser():
     h = ('run initial commands before showing prompt '
         "(from standard input).")
     parser.add_argument('--Command', '-C', action='store_true', help=h)
+
+    h = ('run initial commands before showing prompt '
+        "(reading from a file).")
+    parser.add_argument('--cmdfile', '-f', help=h)
 
     h = argparse.SUPPRESS
     parser.add_argument('--_time', action='store_true', help=h)
