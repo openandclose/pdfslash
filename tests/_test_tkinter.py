@@ -71,11 +71,14 @@ def pump_events(root):
 
 
 def build(numbers=None):
-    numbers = numbers or (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     parser = slash._build_argument_parser()
     args = parser.parse_args([PDFF])
     runner = slash.DefaultRunner(args)
-    doc = runner.doc
+    return runner.doc
+
+
+def run(doc, numbers=None):
+    numbers = numbers or (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     tkrunner = doc.preview(numbers, do_run=False)
     return tkrunner
 
@@ -148,7 +151,8 @@ def get_scaled(t, coords):
 
 def test_rects():
     numbers = tuple(i for i in range(1, 22))
-    t = build(numbers)
+    doc = build()
+    t = run(doc, numbers)
     pump_events(t.root)
 
     # create
@@ -287,3 +291,5 @@ def test_rects():
     box11ZZ = get_scaled(t, box11)
     check_tk_boxes(t, (14, 15, 16), [box11])
     check_tk_rects(t, ((box11ZZ, 'blue'),))
+
+    close(t)
