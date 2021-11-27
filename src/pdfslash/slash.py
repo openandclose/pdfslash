@@ -880,6 +880,7 @@ class _ImgGroup(object):
         sizes = [self._sizes[index] for index in indices]
         return len(set(sizes))
 
+    # not used, not making sense in the present code
     def get_subgroups(self, indices):
         """Yield subgroup (same cropboxes) selected from indices."""
         boxes = self._get_boxes(indices)
@@ -889,14 +890,17 @@ class _ImgGroup(object):
                 subg_indices = [self._table[index][1] for index in indices]
                 yield meta, indices, array[subg_indices]
 
+    # not used
     def _get_boxes(self):
         return [tuple(b) for b in self._doc.pages.get_boxes(fallback=False)]
 
+    # not used
     def _subgroupby(self, indices, boxes):
         # Note: tupled cropboxes are used as key, so the ordering matters.
         key = lambda x: boxes[x]
         yield from groupby(indices, key=key)
 
+    # not used
     def _get_number_of_subgroups(self, indices, boxes):
         """Pre-calculate the number of subgroups."""
         boxes = [boxes[index] for index in indices]
