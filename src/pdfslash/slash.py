@@ -2777,17 +2777,10 @@ class PDFSlashCmd(_PipeCmd):
         if numbers:
             self._pages.unfix(numbers)
 
-    def do_append(self, args):
-        """
-        Take two argument, page numbers and box.
-
-        Append cropbox.
-        (Add box as cropbox to specified pages,
-        keeping previously added cropboxes.)
-        """
+    def _append_or_overwrite(self, args, which):
         (op, numbers, box_or_boxes), bstr = self._parse_num_and_box(args)
         if op == 'crop':
-            op = 'append'
+            op = which  # 'append' or 'overwrite'
         op = getattr(self._pages, op)
         try:
             op(numbers, box_or_boxes)
@@ -2797,6 +2790,16 @@ class PDFSlashCmd(_PipeCmd):
 
         self.boxparser.set_prev(bstr)
 
+    def do_append(self, args):
+        """
+        Take two argument, page numbers and box.
+
+        Append cropbox.
+        (Add box as cropbox to specified pages,
+        keeping previously added cropboxes.)
+        """
+        self._append_or_overwrite(args, which='append')
+
     def do_overwrite(self, args):
         """
         Take two argument, page numbers and box.
@@ -2805,20 +2808,7 @@ class PDFSlashCmd(_PipeCmd):
         (Add box as cropbox to specified pages,
         removing previously added cropboxes.)
         """
-        (op, numbers, box_or_boxes), bstr = self._parse_num_and_box(args)
-        if op == 'crop':
-            op = 'overwrite'
-        op = getattr(self._pages, op)
-        try:
-            if not box_or_boxes:
-                op(numbers)
-            else:
-                op(numbers, box_or_boxes)
-        except Exception as e:  # TODO
-            self.stdout.write('Error on processing box: %s\n' % str(e))
-            return
-
-        self.boxparser.set_prev(bstr)
+        self._append_or_overwrite(args, which='overwrite')
 
     def do_clear(self, args):
         """
