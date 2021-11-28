@@ -2520,7 +2520,7 @@ class _NoErrorCmd(cmd.Cmd):
     def onecmd(self, line):
         try:
             ret = super().onecmd(line)
-        except (ValueError, LookupError):
+        except (LookupError, ValueError, TypeError):
             traceback.print_exc()
             return False
         return ret
