@@ -2433,9 +2433,6 @@ class BoxParser(object):
                      for left, top and right,
                      but do not change the bottoms.)
 
-    :               remove previously created boxes
-                    (that is, revert to the original source cropbox)
-
     ~               the same box as the previous command
     """
 
@@ -2450,9 +2447,6 @@ class BoxParser(object):
         return self._pages.get_boxes(numbers)  # TODO: is 'fallback=True' OK?
 
     def parse(self, numbers, bstr):
-        if bstr == ':':
-            return 'clear', numbers, None
-
         if bstr == '~':
             if self._prev is None:
                 raise ValueError("no previous box for '~'\n")
@@ -2792,10 +2786,6 @@ class PDFSlashCmd(_PipeCmd):
         keeping previously added cropboxes.)
         """
         (op, numbers, box_or_boxes), bstr = self._parse_num_and_box(args)
-        if op == 'clear':
-            msg = "Error: ':' for box is illegal. Use 'overwrite' or 'Crop'.\n"
-            self.stdout.write(msg)
-            return
         if op == 'crop':
             op = 'append'
         op = getattr(self._pages, op)
@@ -2829,6 +2819,16 @@ class PDFSlashCmd(_PipeCmd):
             return
 
         self.boxparser.set_prev(bstr)
+
+    def do_clear(self, args):
+        """
+        Take one argument, page numbers.
+
+        Claer all added cropboxes (revert to the original source cropbox).
+        """
+        numbers, opts = self._parse_num(args)
+        if numbers:
+            self._pages.clear(numbers)
 
     def do_auto(self, args):
         """
