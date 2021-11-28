@@ -115,6 +115,12 @@ Intended for a few basic things. E.g.:
 
     info 1-100 | cat > log.txt
 
+(Currently, in the shell command string after ``'|'``,
+only ``'>'``, ``'>>'`` and ``'|'`` are considered
+as shell special tokens.
+All other special characters are quoted,
+so they may not work as expected).
+
 
 GUI
 ---

@@ -2576,8 +2576,20 @@ class _PipeCmd(_NoErrorCmd):
         if '|' in words:
             pipe_index = words.index('|')
             line = shlex.join(words[:pipe_index])
-            command = shlex.join(words[pipe_index + 1:])
+            command = self._join_tokens(words[pipe_index + 1:])
         return line, command
+
+    def _join_tokens(self, tokens):
+        # basically the same as ``shlex.join``,
+        # but special-cases some tokens.
+        line = []
+        specials = ('>', '>>', '|')
+        for token in tokens:
+            if token in specials:
+                line.append(token)
+            else:
+                line.append(shlex.quote(token))
+        return ' '.join(line)
 
 
 _cmd_intro = """
