@@ -2447,7 +2447,7 @@ class BoxParser(object):
         self._prev = bstr
 
     def _get_pageboxes(self, numbers):
-        return self._pages.get_boxes(numbers)  # TODO: is fallback OK?
+        return self._pages.get_boxes(numbers)  # TODO: is 'fallback=True' OK?
 
     def parse(self, numbers, bstr):
         if bstr == ':':
