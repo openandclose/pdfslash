@@ -2432,26 +2432,15 @@ class BoxParser(object):
                     (select the broadest rectangle
                      for left, top and right,
                      but do not change the bottoms.)
-
-    ~               the same box as the previous command
     """
 
     def __init__(self, pages):
         self._pages = pages
-        self._prev = None
-
-    def set_prev(self, bstr):
-        self._prev = bstr
 
     def _get_pageboxes(self, numbers):
         return self._pages.get_boxes(numbers)  # TODO: is 'fallback=True' OK?
 
     def parse(self, numbers, bstr):
-        if bstr == '~':
-            if self._prev is None:
-                raise ValueError("no previous box for '~'\n")
-            return self.parse(numbers, self._prev)
-
         box = [b for b in bstr.split(',')]
         if len(box) != 4:
             fmt = 'more or less than four box coordinates: %r\n'
@@ -2787,8 +2776,6 @@ class PDFSlashCmd(_PipeCmd):
         except Exception as e:  # TODO
             self.stdout.write('Error on processing box: %s\n' % str(e))
             return
-
-        self.boxparser.set_prev(bstr)
 
     def do_append(self, args):
         """
