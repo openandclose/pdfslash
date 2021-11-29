@@ -2414,6 +2414,10 @@ class BoxParser(object):
 
     10,20,30,40     left,top,right,bottom
 
+    (currently the followings are quite broken,
+    but I think better to keep them here,
+    to show the plan and the design intensions.)
+
     +-              increment or decrement
                     to the (first) boxes of currently selected pages
 
