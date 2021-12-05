@@ -2198,7 +2198,11 @@ class TkRunner(object):
 
     def _set_title(self):
         pages = self.i.nstr if self.i.numbers else '(none)'
-        self.root.title('%s: %s' % (self._title, pages))
+        if self.i._scaling.scale == 1.0:
+            scale = ''
+        else:
+            scale = ' (%g%%)' % (self.i._scaling.scale * 100)
+        self.root.title('%s: %s%s' % (self._title, pages, scale))
 
     def _set_label(self):
         group = self.i.g_index + 1, self.i.g_num
