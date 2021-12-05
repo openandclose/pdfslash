@@ -50,6 +50,7 @@ if numpy:
 
     numpy.seterr(all='raise')
     DTYPE = numpy.uint8
+    INT = numpy.int_
 
 try:
     import fitz
@@ -958,7 +959,7 @@ class _ImgSet(object):
         length = len(imgs._indices)
         if length <= max_:
             return imgs
-        indices = numpy.linspace(0, length - 1, num=max_, dtype=numpy.uint16)
+        indices = numpy.linspace(0, length - 1, num=max_, dtype=INT)
         return imgs[indices]
 
 
@@ -1748,8 +1749,8 @@ class _Rects(object):
 def scale_img(img, scale):
     # basic nearest-neighbor interpolation
     new_shape = [int(s * scale) for s in img.shape]  # floors
-    rows = (numpy.arange(new_shape[0]) / scale).astype(numpy.uint32)
-    cols = (numpy.arange(new_shape[1]) / scale).astype(numpy.uint32)
+    rows = (numpy.arange(new_shape[0]) / scale).astype(INT)
+    cols = (numpy.arange(new_shape[1]) / scale).astype(INT)
     return img[rows][:, cols]
 
 
