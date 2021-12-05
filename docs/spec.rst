@@ -125,4 +125,43 @@ so they may not work as expected).
 GUI
 ---
 
+Info
+^^^^
+
+title bar and label show some information.
+
+title bar example:
+
+.. code-block:: none
+
+    pdfslash: 1-13,21 (110%)
+
+``1-13,21``: current page numbers (in current group and current view).
+
+``(110%)``: current image zoom (when 100%, it is omitted).
+
+label example:
+
+.. code-block:: none
+
+    1/3 both 595x841, sel: 100,100,400,500 (300x400, 1.333)
+
+``1/3``: current group number (``1``) and the number of groups (``3``).
+
+``both``: current view (``both``, ``odds``, or ``evens``).
+
+``595x842``: current source cropbox size. ``left`` and ``top`` are always zeros.([0, 0, 595, 841]).
+
+``sel``: active box (``sel`` or ``box``).
+
+``100,100,400,500``: active box coordinates.
+
+``300x400``: active box size
+
+``1.333``: ratio of height / width of active box.
+
+
+Keyboard
+^^^^^^^^
+
 {{ _fromsource_gui }}
