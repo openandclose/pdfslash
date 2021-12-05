@@ -1748,9 +1748,13 @@ class _Rects(object):
 
 def scale_img(img, scale):
     # basic nearest-neighbor interpolation
-    new_shape = [int(s * scale) for s in img.shape]  # floors
-    rows = (numpy.arange(new_shape[0]) / scale).astype(INT)
-    cols = (numpy.arange(new_shape[1]) / scale).astype(INT)
+    def get_indices(size, new_size):
+        ratio = new_size / size
+        return ((numpy.arange(new_size) + 0.5) / ratio).astype(INT)
+
+    new_shape = [max(int(s * scale), 1) for s in img.shape]  # floors
+    rows = get_indices(img.shape[0], new_shape[0])
+    cols = get_indices(img.shape[1], new_shape[1])
     return img[rows][:, cols]
 
 
