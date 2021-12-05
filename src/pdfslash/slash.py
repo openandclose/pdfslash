@@ -49,7 +49,7 @@ if numpy:
     import numpy.lib.stride_tricks
 
     numpy.seterr(all='raise')
-    DTYPE = numpy.uint8
+    UINT8 = numpy.uint8
     INT = numpy.int_
 
 try:
@@ -800,7 +800,7 @@ class _ImgProxy(object):
     def load_zeros(self):
         if self._zero_image is None:
             shape = self.array.shape[1:]
-            self._zero_image = numpy.zeros(shape, dtype=DTYPE)
+            self._zero_image = numpy.zeros(shape, dtype=UINT8)
         return self._zero_image
 
     def __len__(self):
@@ -836,7 +836,7 @@ class _ImgGroup(object):
         table, groups = {}, {}
         for size, indices in self._groupby(self._indices):
             shape = len(indices), *size
-            array = numpy.zeros(shape, dtype=DTYPE)
+            array = numpy.zeros(shape, dtype=UINT8)
             for i, index in enumerate(indices):
                 table[index] = (size, i)
             array = _ImgProxy(array, self._get_img, indices)
@@ -1150,7 +1150,7 @@ class ImgMerger(object):
     # return similar-looking img rather than the original.
     def singlepage(self, imgs):
         img = 255 - (255 - imgs[0]) // 3
-        return img.astype(DTYPE)
+        return img.astype(UINT8)
 
 
 class BrissImgMerger(ImgMerger):
@@ -1165,7 +1165,7 @@ class BrissImgMerger(ImgMerger):
 
         # c.f. 4.2s for 600p (without _select_imgs)
         img = 255 - numpy.std(imgs, axis=0)
-        return img.astype(DTYPE)
+        return img.astype(UINT8)
 
 
 class CropFinder(object):
@@ -1318,7 +1318,7 @@ class PyMuPDFBackend(Backend):
         clip = (0, 0, width, height)
         bytes_ = page.getPixmap(
             colorspace='gray', alpha=False, clip=clip, annots=False).samples
-        array = numpy.frombuffer(bytes_, dtype=DTYPE)
+        array = numpy.frombuffer(bytes_, dtype=UINT8)
         array.shape = (height, width)
         return array
 
