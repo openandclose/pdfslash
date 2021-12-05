@@ -1746,7 +1746,7 @@ class _Rects(object):
         return msg
 
 
-def _scale_img(img, scale):
+def scale_img(img, scale):
     # basic nearest-neighbor interpolation
     # row, col = numpy.ceil(numpy.array(img.shape) * scale)
     row, col = numpy.ceil(numpy.array(img.shape) * scale + EPS)
@@ -1772,7 +1772,7 @@ class _Scaling(object):
     def get_img(self, img):  # get new scaled img
         if self.scale == 1.0:
             return img
-        return _scale_img(img, self.scale)
+        return scale_img(img, self.scale)
 
     def get_scaled(self, coords):  # get scaled coords (point or box)
         if self.scale == 1.0:
