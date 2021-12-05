@@ -2068,6 +2068,7 @@ class TkRunner(object):
             if self._sel.box:
                 self._sel.box = None
                 self._draw_rect(self._sel)
+            self._set_info()
             return
 
         self._set_selection(event)
