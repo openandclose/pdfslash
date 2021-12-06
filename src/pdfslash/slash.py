@@ -2674,6 +2674,10 @@ class PDFSlashCmd(_PipeCmd):
         if self.hisfile:
             self._end_readline(self.hisfile)
 
+    def printout(self, string):
+        self.stdout.write(string)
+        self.stdout.write('\n')
+
     def _parse_opts(self, args_):
         opts, args = [], []
         maybe_opts = True
@@ -2693,15 +2697,15 @@ class PDFSlashCmd(_PipeCmd):
         error = (None, opts)
 
         if len(args) > 1:
-            fmt = 'more than one arguments (numbers): %r\n'
-            self.stdout.write(fmt % args_)
+            fmt = 'more than one arguments (numbers): %r'
+            self.printout(fmt % args_)
             return error
 
         if not args:
             if allow_blank:
                 args = ':'
             else:
-                self.stdout.write('no page numbers\n')
+                self.printout('no page numbers')
                 return error
         else:
             args = args[0]
@@ -2709,29 +2713,29 @@ class PDFSlashCmd(_PipeCmd):
         try:
             return self.numparser.parse(args), opts
         except ValueError as e:
-            self.stdout.write('Error on parsing numbers: %s\n' % str(e))
+            self.printout('Error on parsing numbers: %s' % str(e))
             return error
 
     def _parse_num_and_box(self, args_):
         opts, args = self._parse_opts(args_)
 
         if len(args) != 2:
-            fmt = 'more or less than two arguments (numbers and box): %r\n'
-            self.stdout.write(fmt % args_)
+            fmt = 'more or less than two arguments (numbers and box): %r'
+            self.printout(fmt % args_)
             return
 
         nstr, bstr = args
         try:
             numbers = self.numparser.parse(nstr)
         except ValueError as e:
-            self.stdout.write('Error on parsing numbers: %s\n' % str(e))
+            self.printout('Error on parsing numbers: %s' % str(e))
             return
 
         if numbers:
             try:
                 return self.boxparser.parse(numbers, bstr), bstr
             except ValueError as e:
-                self.stdout.write('Error on parsing box: %s\n' % str(e))
+                self.printout('Error on parsing box: %s' % str(e))
                 return
 
     def do_select(self, args):
@@ -2810,7 +2814,7 @@ class PDFSlashCmd(_PipeCmd):
         try:
             op(numbers, box_or_boxes)
         except Exception as e:  # TODO
-            self.stdout.write('Error on processing box: %s\n' % str(e))
+            self.printout('Error on processing box: %s' % str(e))
             return
 
     def do_append(self, args):
@@ -2875,7 +2879,7 @@ class PDFSlashCmd(_PipeCmd):
         """
         numbers, opts = self._parse_num(args, allow_blank=True)
         if numbers:
-            self.stdout.write('writing...\n')
+            self.printout('writing...')
             self._doc.write(numbers)
 
     def do_info(self, args):
@@ -2888,8 +2892,7 @@ class PDFSlashCmd(_PipeCmd):
         """
         numbers, opts = self._parse_num(args, allow_blank=True)
         if numbers:
-            self.stdout.write(self._pages.tostring(numbers))
-            self.stdout.write('\n')
+            self.printout(self._pages.tostring(numbers))
 
     def do_undo(self, args):
         """
@@ -2978,7 +2981,7 @@ class PDFSlashCmd(_PipeCmd):
 
         Exit the program.
         """
-        self.stdout.write('Exiting...\n')
+        self.printout('Exiting...')
         return True
 
     def emptyline(self):
