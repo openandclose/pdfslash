@@ -703,20 +703,18 @@ class _Pages(object):
             self._verify_crop(numbers, box)
 
     def _verify_crop(self, numbers, box):
-        bound = self._get_bound(numbers)
-        self._verify_box(bound, box)
+        self._verify_box(numbers, box)
 
-    def _verify_box(self, bound, box):
-        fmt = 'box is not inside source cropbox. box: %d,%d,%d,%d.'
-        if box[0] < bound[0] or box[1] < bound[1]:
-            raise ValueError(fmt % box)
-        if bound[2] < box[2] or bound[3] < box[3]:
-            raise ValueError(fmt % box)
-
-    def _get_bound(self, numbers):
+    def _verify_box(self, numbers, box):
         right = min(self[n].cbox[2] for n in numbers)
         bottom = min(self[n].cbox[3] for n in numbers)
-        return 0, 0, right, bottom
+        min_box = 0, 0, right, bottom
+
+        fmt = 'box is not inside source cropbox. box: %d,%d,%d,%d.'
+        if box[0] < min_box[0] or box[1] < min_box[1]:
+            raise ValueError(fmt % box)
+        if min_box[2] < box[2] or min_box[3] < box[3]:
+            raise ValueError(fmt % box)
 
     def _get_box(self, number, fallback=True):
         page = self[number]
