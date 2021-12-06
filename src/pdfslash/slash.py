@@ -1285,16 +1285,30 @@ class Backend(object):
         pass
 
 
-class PyMuPDFBackend(Backend):
+class _PyMuPDFBackend(Backend):
+    """Handle the library's version differences."""
+
+    def __init__(self, *args, **kwargs):
+        if not fitz:
+            raise ImportError('Failed to import PyMuPDF (fitz).')
+        super().__init__(*args, **kwargs)
+
+    # handle depreciated names
+    # https://pymupdf.readthedocs.io/en/latest/znames.html
+    def _compat(self, obj, names):
+        for name in names:
+            attr = getattr(obj, name, None)
+            if attr:
+                break
+        return attr
+
+
+class PyMuPDFBackend(_PyMuPDFBackend):
     """Implement ``Backend`` using PyMuPDF."""
 
+    # c.f.
     # PyMuPDF raises 'RuntimeError: mediabox must start at (0,0)'
     # from b469ab92 (2021/01/27 'upload v1.18.7').
-
-    # PyMuPDF changed naming convention
-    # (e.g. setCropBox -> set_cropbox)
-    # from 60d5ad15 (2021/02/02 'more update fr v1.18.7').
-    # Old names are planned to be removed in v1.20.0.
 
     def __init__(self, *args, **kwargs):
         if not fitz:
@@ -1347,7 +1361,8 @@ class PyMuPDFBackend(Backend):
         width, height = getsize(self.boxes[index])
         # sometimes source pdf uses float sizes, so clipping them to ints.
         clip = (0, 0, width, height)
-        bytes_ = page.getPixmap(
+        get_pixmap = self._compat(page, ('get_pixmap', 'getPixmap'))
+        bytes_ = get_pixmap(
             colorspace='gray', alpha=False, clip=clip, annots=False).samples
         array = numpy.frombuffer(bytes_, dtype=UINT8)
         array.shape = (height, width)
@@ -1367,7 +1382,8 @@ class PyMuPDFBackend(Backend):
             page = pdf[i]
             box = self._un_rotate(page, boxes[i])  # c.f. box is now floats
             if box:
-                page.setCropBox(box)
+                set_cropbox = self._compat(page, ('set_cropbox', 'setCropBox'))
+                set_cropbox(box)
 
         # TODO: check the effects of .save arguments on toc
         pdf.save(outfile, garbage=1)
