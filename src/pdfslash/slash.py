@@ -1300,6 +1300,7 @@ class PyMuPDFBackend(Backend):
         if not fitz:
             raise ImportError('Failed to import PyMuPDF (fitz).')
         super().__init__(*args, **kwargs)
+        self._password = None  # keep password as plaintext
 
     def load_pdf(self):
         doc = fitz.open(self.fname)
@@ -1307,9 +1308,13 @@ class PyMuPDFBackend(Backend):
 
     def decrypt(self, doc):
         if doc.is_encrypted:
+            if self._password:
+                doc.authenticate(self._password)
+        if doc.is_encrypted:
             doc.authenticate('')
         cnt = 0
         first = True
+        password = None
         while doc.is_encrypted:
             if first is True:
                 print('The document is password protected. '
@@ -1323,9 +1328,11 @@ class PyMuPDFBackend(Backend):
                     print('Authentication failed. Exiting...')
                     sys.exit(1)
 
-            p = input('Enter Password:')
-            doc.authenticate(p.strip())
+            password = input('Enter Password:').strip()
+            doc.authenticate(password)
 
+        if password is not None:
+            self._password = password
         return doc
 
     def get_boxes(self):
