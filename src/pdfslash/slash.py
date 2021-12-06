@@ -2988,7 +2988,6 @@ class PDFSlashCmd(_PipeCmd):
         pass
 
     do_crop = do_append
-    do_Crop = do_overwrite
 
     do_quit = do_exit
     do_EOF = do_exit

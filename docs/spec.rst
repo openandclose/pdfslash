@@ -68,7 +68,7 @@ Commands
 ^^^^^^^^
 
 * commands are case sensitive
-  (e.g. ``Crop``, ``Set`` and ``Python`` start with capital letters).
+  (e.g. ``Set`` and ``Python`` start with capital letters).
 
 * When commands take *optional* page numbers and they are omitted,
   selected pages are used.
@@ -89,10 +89,6 @@ Commands
 **do_crop**
 
 Alias for ``do_append``
-
-**do_Crop**
-
-Alias for ``do_overwrite``
 
 **do_quit**
 

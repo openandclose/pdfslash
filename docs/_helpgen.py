@@ -28,7 +28,6 @@ prefix = '_fromsource_'
 
 SKIP_COMMANDS = (
     'do_crop',
-    'do_Crop',
     'do_quit',
     'do_EOF',
 )
