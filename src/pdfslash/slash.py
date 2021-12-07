@@ -1300,6 +1300,39 @@ class _PyMuPDFBackend(Backend):
                 break
         return attr
 
+    # mostly the same arguments as fitz's '.ez_save' (v1.18.11)
+    def _save(self, pdf, outfile):
+        args = dict(
+            garbage=3,
+            clean=False,
+            deflate=True,
+            incremental=False,
+            ascii=False,
+            expand=False,
+            linear=False,
+            pretty=False,
+            encryption=1,  # PDF_ENCRYPT_NONE
+            permissions=4095,  # permits all
+            owner_pw=None,
+            user_pw=None,
+        )
+
+        annotations = fitz.Document.save.__annotations__
+        if 'deflate_images' in annotations:
+            new = dict(
+                deflate_images=True,
+                deflate_fonts=True,
+            )
+            args.update(new)
+
+        if 'no_new_id' in annotations:  # from v1.19.0
+            new = dict(
+                no_new_id=True,
+            )
+            args.update(new)
+
+        pdf.save(outfile, **args)
+
 
 class PyMuPDFBackend(_PyMuPDFBackend):
     """Implement ``Backend`` using PyMuPDF."""
@@ -1383,8 +1416,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                 set_cropbox = self._compat(page, ('set_cropbox', 'setCropBox'))
                 set_cropbox(box)
 
-        # TODO: check the effects of .save arguments on toc
-        pdf.save(outfile, garbage=1)
+        self._save(pdf, outfile)
         pdf.close()
 
     def _copy_pages(self, pdf, numbers, indices, boxes):
