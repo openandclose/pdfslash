@@ -57,6 +57,10 @@ try:
 except ImportError:
     fitz = None
 
+
+BOUNDNAMES = 'MediaBox', 'CropBox', 'BleedBox', 'TrimBox', 'ArtBox'
+
+
 _ENV_VAR_DIR = 'PDFSLASH_DIR'
 _CONFIG_FILENAME = 'pdfslash.ini'
 
@@ -1274,6 +1278,10 @@ class Backend(object):
     def get_boxes(self):
         pass
 
+    # get all page boundaries (mediabox, cropbox, bleedbox, trimbox, artbox)
+    def get_bounds(self):
+        pass
+
     def get_img(self, number):
         pass
 
@@ -1385,6 +1393,24 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         for page in self.pdf:
             boxes.append(ints(page.rect))
         return boxes
+
+    def get_bounds(self):
+        bounds = [[], [], [], [], []]
+        for page in self.pdf:
+            keys = self.pdf.xref_get_keys(page.xref)
+            seen = set()
+            for boundname, bound in zip(BOUNDNAMES, bounds):
+                if boundname in keys:
+                    _, box = self.pdf.xref_get_key(page.xref, boundname)
+                    if box:
+                        # e.g. '[0 0 595 842]' -> (0.0, 0.0, 595.0, 842.0)
+                        box = tuple(map(float, box[1:-1].split()))
+                        if box not in seen:
+                            seen.add(box)
+                            bound.append(box)
+                            continue
+                bound.append(None)
+        return bounds
 
     def get_img(self, number):  # c.f. 5ms per page, 3s for 600p
         index = number - 1
@@ -1499,6 +1525,8 @@ class Document(object):
         # ``_ImageData`` uses this cache dict.
         self._img_cache = {}
 
+        self._bounds = None
+
     def autocrop(self, numbers):  # c.f. 0.8s for 600p
         numbers = self.pages.modifiable(numbers)
         pageboxes = []
@@ -1541,6 +1569,13 @@ class Document(object):
     def _get_imagedata(self, numbers):
         indices = num2ind(numbers)
         return _ImageData(self, indices)
+
+    def get_bounds(self, numbers):
+        if self._bounds is None:
+            self._bounds = self.backend.get_bounds()
+        for bound in self._bounds:
+            key = lambda x: bound[x - 1]
+            yield groupby(numbers, key=key)
 
     def write(self, numbers):
         numbers = self.pages.selectable(numbers)
@@ -2946,6 +2981,30 @@ class PDFSlashCmd(_PipeCmd):
         numbers, opts = self._parse_num(args, allow_blank=True)
         if numbers:
             self.printout(self._pages.tostring(numbers))
+
+    def do_inspect(self, args):
+        """
+        Take one argument, page numbers (optional).
+
+        Show page boundaries structures for specified pages
+        (MediaBox, CropBox, BleedBox, TrimBox, ArtBox).
+
+        It only shows low-level pdf data, for debug.
+        """
+        numbers, opts = self._parse_num(args, allow_blank=True)
+        if numbers:
+            for boundname, groups in zip(
+                    BOUNDNAMES, self._doc.get_bounds(numbers)):
+                first = True
+                for box, nums in groups:
+                    if box is None:
+                        continue
+                    if first:
+                        self.printout('%s:' % boundname)
+                        first = False
+                    bstr = '%8.3f %8.3f %8.3f %8.3f' % box
+                    nstr = self.numparser.unparse(nums)
+                    self.printout('%s  (%s)' % (bstr, nstr))
 
     def do_undo(self, args):
         """
