@@ -1535,11 +1535,11 @@ class Document(object):
 
     def _autocrop(self, num, box):
         img = self.imgs[num - 1].load()[0]
-        newimg = self._get_view(img, box)
+        newimg = self._narrow_view(img, box)
         newbox = self.cropfinder.find(newimg)
-        return self._translate_view(newbox, box)
+        return self._unnarrow_view(newbox, box)
 
-    def _get_view(self, img, box):
+    def _narrow_view(self, img, box):
         """Return a boxed part of image data.
 
         ``CropFinder`` doesn't know about this.
@@ -1547,7 +1547,7 @@ class Document(object):
         left, top, right, bottom = ints(box)
         return img[top:bottom + 1, left:right + 1]
 
-    def _translate_view(self, newbox, box):
+    def _unnarrow_view(self, newbox, box):
         """Translate new box in the original img coordinates."""
         left, top, right, bottom = newbox
         x, y = box[:2]
