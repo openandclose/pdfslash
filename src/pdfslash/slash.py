@@ -133,7 +133,7 @@ def ind2num(indices):  # indices to numbers (0-based to 1-based)
 
 def getsize(box):
     left, top, right, bottom = box
-    return (right - left, bottom - top)
+    return ints((right - left, bottom - top))
 
 
 def groupby(seq, key=None):
@@ -1391,7 +1391,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     def get_boxes(self):
         boxes = []
         for page in self.pdf:
-            boxes.append(ints(page.rect))
+            boxes.append(tuple(page.rect))
         return boxes
 
     def get_bounds(self):
@@ -1544,7 +1544,7 @@ class Document(object):
 
         ``CropFinder`` doesn't know about this.
         """
-        left, top, right, bottom = box
+        left, top, right, bottom = ints(box)
         return img[top:bottom + 1, left:right + 1]
 
     def _translate_view(self, newbox, box):
