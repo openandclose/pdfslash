@@ -1402,7 +1402,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             for boundname, bound in zip(BOUNDNAMES, bounds):
                 if boundname in keys:
                     _, box = self.pdf.xref_get_key(page.xref, boundname)
-                    if box and box not in seen:
+                    if box and box != 'null' and box not in seen:
                         seen.add(box)
                         bound.append(box)
                         continue
