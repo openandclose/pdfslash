@@ -1402,13 +1402,10 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             for boundname, bound in zip(BOUNDNAMES, bounds):
                 if boundname in keys:
                     _, box = self.pdf.xref_get_key(page.xref, boundname)
-                    if box:
-                        # e.g. '[0 0 595 842]' -> (0.0, 0.0, 595.0, 842.0)
-                        box = tuple(map(float, box[1:-1].split()))
-                        if box not in seen:
-                            seen.add(box)
-                            bound.append(box)
-                            continue
+                    if box and box not in seen:
+                        seen.add(box)
+                        bound.append(box)
+                        continue
                 bound.append(None)
         return bounds
 
@@ -2986,10 +2983,10 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take one argument, page numbers (optional).
 
-        Show page boundaries structures for specified pages
-        (MediaBox, CropBox, BleedBox, TrimBox, ArtBox).
+        Show page boundaries structures for specified pages.
 
-        It only shows low-level pdf data, for debug.
+        (raw MediaBox, CropBox, BleedBox, TrimBox, ArtBox data,
+        if different from the previous ones).
         """
         numbers, opts = self._parse_num(args, allow_blank=True)
         if numbers:
@@ -3002,9 +2999,8 @@ class PDFSlashCmd(_PipeCmd):
                     if first:
                         self.printout('%s:' % boundname)
                         first = False
-                    bstr = '%8.3f %8.3f %8.3f %8.3f' % box
                     nstr = self.numparser.unparse(nums)
-                    self.printout('%s  (%s)' % (bstr, nstr))
+                    self.printout('    %-30s  (%s)' % (box, nstr))
 
     def do_undo(self, args):
         """
