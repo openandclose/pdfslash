@@ -29,7 +29,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Topic :: Utilities',
     ],
-    keywords='pdf crop trim MuPDF PyMuPDF',
+    keywords='pdf crop trim MuPDF PyMuPDF briss',
     packages=find_packages('src'),
     package_dir={'': 'src'},
     include_package_data=True,
