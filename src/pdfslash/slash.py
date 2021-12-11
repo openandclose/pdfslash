@@ -398,6 +398,9 @@ class _Stacker(object):
             self.apply(command)
         return msg
 
+    def export(self):
+        return [msg for commands, msg in self._stack._stack]
+
 
 class _Boxes(MutableSequence):
     """Behave as a box list, auto-create box dict (item-keyed dict)."""
@@ -3267,6 +3270,25 @@ class PDFSlashCmd(_PipeCmd):
             code.interact(banner=banner, exitmsg=exitmsg, local=d)
         except SystemExit:
             pass
+
+    def do_export(self, args):
+        """
+        Take no argument.
+
+        Print all box edit history in chronological order.
+
+        Conceptually, if they are supplied as input again,
+        the program should 'replay' the same edits.
+
+        .. code-block:: none
+
+            (pdfslash) export | cat > log.txt
+            (pdfslash) exit
+            $ cat log.txt | pdfslash -C some.pdf
+        """
+        stacker = self._doc.pages.boxdata.stacker
+        msgs = stacker.export()
+        self.printout('\n'.join(msgs))
 
     def do_exit(self, args):
         """
