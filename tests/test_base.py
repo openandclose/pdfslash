@@ -6,6 +6,10 @@ import pdfslash.slash as slash
 import pytest
 
 
+class NameSpace(object):
+    pass
+
+
 class TestStacker:
 
     def create_data(self):
@@ -164,49 +168,69 @@ class TestNumParser:
         assert u([6, 8, 9, 11, 12]) == '6,8,9,11,12'
 
 
-class TestBoxParser:
+class TestCommandParser:
 
-    def create_data(self):
-        """
-        boxes = [
-            [(100, 110, 120, 130)],
-            [(200, 210, 220, 230)],
-            [(300, 310, 320, 330), (340, 350, 360, 370)],
-            [(400, 410, 420, 430)],
-            [],
-            [],
-            [],
-            [],
-        ]
-        """
-        cboxes = [(0, 0, 595, 842) for _ in range(8)]
-        pages = slash._Pages(cboxes)
-        pages.overwrite((1,), (100, 110, 120, 130))
-        pages.overwrite((2,), (200, 210, 220, 230))
-        pages.overwrite((3,), (300, 310, 320, 330))
-        pages.append((3,), (340, 350, 360, 370))
-        pages.overwrite((4,), (400, 410, 420, 430))
-        return pages
+    def create(self):
+        def create_pages():
+            cboxes = [(0, 0, 595, 842) for _ in range(8)]
+            return slash._Pages(cboxes)
+
+        def create_cmd(pages):
+            cmd = NameSpace()
+            cmd.numparser = slash.NumParser(len(pages))
+            cmd.boxparser = slash.BoxParser(pages)
+            cmd.printout = print
+            return cmd
+
+        pages = create_pages()
+        cmd = create_cmd(pages)
+        return slash.CommandParser(cmd), pages
 
     def test_parse(self):
-        pages = self.create_data()
-        p = slash.BoxParser(pages).parse
+        parser, pages = self.create()
 
-        assert p((1,), '100,110,120,130') == (
-            'crop', (1,), (100, 110, 120, 130))
-        assert p((1,), '500,510,520,530') == (
-            'crop', (1,), (500, 510, 520, 530))
-        assert p((1, 2), '500,510,520,530') == (
-            'crop', (1, 2), (500, 510, 520, 530))
-        assert p((1, 2), 'min,min,max,max') == (
-            'crop', (1, 2), (100, 110, 220, 230))
-        assert p((1, 2, 3), 'min,min,max,max') == (
-            'crop', (1, 2, 3), (100, 110, 360, 370))
+        b1, B1 = '100,110,120,130', (100, 110, 120, 130)
+        b2, B2 = '200,210,220,230', (200, 210, 220, 230)
+        b3, B3 = '300,310,320,330', (300, 310, 320, 330)
+        b32, B32 = '340,350,360,370', (340, 350, 360, 370)
+        b4, B4 = '400,410,420,430', (400, 410, 420, 430)
+        x5, X5 = '500,510,520,530', (500, 510, 520, 530)
 
-        assert p((1,), '-100,-100,+400,+400') == (
-            'crop_each', (1,), [[(0, 10, 520, 530)]])
+        pages.overwrite((1,), B1)
+        pages.overwrite((2,), B2)
+        pages.overwrite((3,), B3)
+        pages.append((3,), B32)
+        pages.append((3,), B1)
+        pages.overwrite((4,), B4)
 
-        assert p((2, 3), '111,max,+200,530') == (
-            'crop_each', (2, 3),
-            [[(111, 350, 420, 530)],
-                [(111, 350, 520, 530), (340, 350, 360, 370)]])
+        def p(*s):
+            return parser.parse(' '.join(s[:-1]), s[-1])[0]
+
+    # numbers only
+        assert p('1', 'n') == [1,]
+
+    # append or overwrite (numbers, box)
+        assert p('1', x5, 'nb') == ([1], X5)
+        assert p('1-3', x5, 'nb') == ([1, 2, 3], X5)
+
+    # modify (numbers, box1, box2)
+        assert p('1', b1, x5, 'nbb') == ('modify', [1], B1, X5)
+        assert p('1,3', b1, x5, 'nbb') == ('modify', [1, 3], B1, X5)
+        assert p('1', '@1', x5, 'nbb') == ('modify', [1], B1, X5)
+        assert p('3', '@1', x5, 'nbb') == ('modify', [3], B3, X5)
+        assert p('3', '@3', x5, 'nbb') == ('modify', [3], B1, X5)
+        assert p('1,3', '@1', x5, 'nbb') == (
+                'crop_each', [1, 3], [B1, B3], [[X5], [X5, B32, B1]])
+
+        bstr2 = '-100,-100,+100,+100'
+        box2_1 = 0, 10, 220, 230  # box2 result of page 1
+        box2_3 = 200, 210, 420, 430  # box2 result of page 3
+        assert p('1', b1, bstr2, 'nbb') == ('modify', [1], B1, box2_1)
+        assert p('1', '@1', bstr2, 'nbb') == ('modify', [1], B1, box2_1)
+        assert p('1,3', '@1', bstr2, 'nbb') == (
+                'crop_each', [1, 3], [B1, B3], [[box2_1], [box2_3, B32, B1]])
+
+        bstr2 = 'min,min,max,max'
+        box2_m = 100, 110, 320, 330
+        assert p('1,3', '@1', bstr2, 'nbb') == (
+                'crop_each', [1, 3], [B1, B3], [[box2_m], [box2_m, B32, B1]])

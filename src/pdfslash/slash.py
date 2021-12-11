@@ -2531,12 +2531,17 @@ class BoxParser(object):
 
     10,20,30,40     left,top,right,bottom
 
-    (currently the followings are quite broken,
-    but I think better to keep them here,
-    to show the plan and the design intensions.)
+    For 'modify' command, the following special syntax can be used.
 
-    +-              increment or decrement
-                    to the (first) boxes of currently selected pages
+    For box1 (box to modify):
+
+    @               Specify box with order.
+                    E.g. '@1' means first boxes for each page.
+
+    For box2 (box to modify *to*):
+
+    +-              Apply increment or decrement
+                    to the chosen boxes (by box1) of each page.
 
                     E.g. when box is -3,-3,+3,+3:
 
@@ -2547,7 +2552,7 @@ class BoxParser(object):
                     are clipped.
 
     min, max        min or max numbers
-                    of the boxes of currently selected pages
+                    of the chosen boxes (by box1) of each page.
 
                     E.g. min,min,max,+0
                     (select the broadest rectangle
@@ -2557,36 +2562,86 @@ class BoxParser(object):
 
     def __init__(self, pages):
         self._pages = pages
+        self._cache = {
+            'numbers': None,
+            'pageboxes': None,
+        }
+
+    def _initialize(self):
+        for key in self._cache:
+            self._cache[key] = None
 
     def _get_pageboxes(self, numbers):
-        return self._pages.get_boxes(numbers)  # TODO: is 'fallback=True' OK?
+        cache = self._cache
+        if cache['pageboxes'] is None:
+            cache['pageboxes'] = self._pages.get_boxes(numbers, fallback=False)
+        return cache['pageboxes']
 
-    def parse(self, numbers, bstr):
-        box = [b for b in bstr.split(',')]
-        if len(box) != 4:
-            fmt = 'more or less than four box coordinates: %r\n'
-            raise ValueError(fmt % bstr)
-
-        for b in box:
-            if b[0] in ('+', '-'):
-                return self.parse_plusminus(numbers, box)
-
-        new = []  # new box
-        pageboxes = None
-        for i, b in enumerate(box):
-            if b in ('min', 'max'):
-                if not pageboxes:
-                    pageboxes = self._get_pageboxes(numbers)
-                b = self._get_min_max(pageboxes, i, b)
-            else:
-                b = int(b)  # floors floats
-            new.append(b)
-
-        return 'crop', numbers, tuple(new)
-
-    def parse_plusminus(self, numbers, box):
+    def _copy_pageboxes(self, numbers):
         pageboxes = self._get_pageboxes(numbers)
-        new = [list(boxes.data) for boxes in pageboxes]  # copy
+        return [list(boxes.data) for boxes in pageboxes]
+
+    def parse(self, numbers, *args):
+        table = (
+            ('b', '_parse_b'),
+            ('bb', '_parse_bb'),
+        )
+
+        self._initialize()
+        args, signature = args[:-1], args[-1]
+        for sig, name in table:
+            if signature == sig:
+                method = getattr(self, name)
+                return method(numbers, *args)
+
+        raise ValueError('Error: Invalid signature: %s.' % signature)
+
+    def _parse_b(self, numbers, bstr):  # append or overwrite
+        box = self._get_plain_box(bstr)
+        return numbers, box
+
+    def _parse_bb(self, numbers, bstr1, bstr2):  # modify
+        box1, boxes1 = self._get_box1(numbers, bstr1)
+        box2, boxes2 = self._get_box2(numbers, box1, boxes1, bstr2)
+        if box1:
+            return 'modify', numbers, box1, box2
+        elif boxes1:
+            return 'crop_each', numbers, boxes1, boxes2
+
+    def _get_plain_box(self, bstr):
+        try:
+            return tuple(int(b) for b in bstr.split(','))
+        except ValueError:
+            raise ValueError('Invalid box string: %s' % bstr)
+
+    def _get_box1(self, numbers, bstr1):  # boxquerry
+        box1, boxes1 = None, None
+        parts = bstr1.split('@')
+        try:
+            if len(parts) == 1:
+                box1 = self._get_plain_box(parts[0])
+                return box1, boxes1
+            elif len(parts) == 2:
+                if parts[0] == '':
+                    index = int(parts[1]) - 1
+                    if index > -1:
+                        pageboxes = self._get_pageboxes(numbers)
+                        boxes1 = [boxes[index] for boxes in pageboxes]
+                        if all(b == boxes1[0] for b in boxes1[1:]):
+                            box1 = boxes1[0]
+                            boxes1 = None
+                        return box1, boxes1
+
+        except (ValueError, IndexError):
+            pass
+
+        raise ValueError('Invalid box string: %s' % bstr1)
+
+    def _get_box2(self, numbers, box1, boxes1, bstr2):  # boxmod
+        box = [b for b in bstr2.split(',')]  # box: box2
+        if len(box) != 4:
+            fmt = 'More or less than four box coordinates: %r.'
+            raise ValueError(fmt % bstr2)
 
         coords = []
         for i, b in enumerate(box):
@@ -2594,28 +2649,143 @@ class BoxParser(object):
             if b[0] in ('+', '-'):
                 sign, b = b[0], b[1:]
             elif b in ('min', 'max'):
-                b = self._get_min_max(pageboxes, i, b)
+                b = self._get_min_max(numbers, box1, boxes1, i, b)
             b = int(b)
             coords.append((sign, b))
 
-        # For now it only changes the first box of boxes in a page.
-        for boxes in new:
-            box = list(boxes[0])
-            for i, (sign, b) in enumerate(coords):
-                if sign == '+':
-                    box[i] += b
-                elif sign == '-':
-                    box[i] -= b
-                else:
-                    box[i] = b
-            boxes[0] = tuple(box)
+        box2, boxes2 = None, None
 
-        return 'crop_each', numbers, new
+        if box1:
+            box2 = self._apply_plusminus(box1, coords)
 
-    def _get_min_max(self, pageboxes, index, which):
-        boxes = [box[index] for boxes in pageboxes for box in boxes]
-        funcs = {'min': min, 'max': max, }
-        return funcs[which](boxes)
+        elif boxes1:
+            boxes2 = self._copy_pageboxes(numbers)
+            for i, (boxes, box1) in enumerate(zip(boxes2, boxes1)):
+                try:
+                    index = boxes.index(box1)
+                except ValueError:
+                    fmt = 'No box (%d,%d,%d,%d) in page %d.'
+                    raise ValueError(fmt % (box1, numbers[i]))
+
+                boxes[index] = self._apply_plusminus(box1, coords)
+
+        return box2, boxes2
+
+    def _get_min_max(self, numbers, box1, boxes1, pos, which):
+        if box1:
+            return box1[pos]
+        elif boxes1:
+            values = [box[pos] for box in boxes1]
+            funcs = {'min': min, 'max': max, }
+            return funcs[which](values)
+
+    def _apply_plusminus(self, box, coords):
+        box = list(box)
+        for i, (sign, b) in enumerate(coords):
+            if sign == '+':
+                box[i] += b
+            elif sign == '-':
+                box[i] -= b
+            else:
+                box[i] = b
+        return tuple(box)
+
+
+class CommandParser(object):
+    """Parse Command on interpreter."""
+
+    def __init__(self, cmd):
+        self.numparser = cmd.numparser
+        self.boxparser = cmd.boxparser
+        self.printout = cmd.printout
+
+    def parse_opts(self, args_):
+        opts, args = [], []
+        maybe_opts = True
+        for a in args_.split():
+            if a == '--':
+                maybe_opts = False
+                continue
+            if a.startswith('--'):
+                if maybe_opts:
+                    opts.append(a)
+                    continue
+            args.append(a)
+        return opts, args
+
+    def parse(self, args, signature='n', allow_blank=False):
+        opts, args = self.parse_opts(args)
+        if not args:
+            if allow_blank:
+                args = [':']
+            else:
+                self.printout('Error: No page numbers.')
+                return
+
+        ret = self._parse(args, signature)
+        return ret, opts  # ret is 'None' or something.
+
+    def _parse(self, args, signature):
+        table = (
+            ('n', '_parse_n'),
+            ('nb', '_parse_nb'),
+            ('nbb', '_parse_nbb'),
+        )
+
+        for sig, name in table:
+            if signature == sig:
+                method = getattr(self, name)
+                return method(args)
+
+        self.printout('Error: Invalid signature: %s.' % signature)
+
+    def _get_numbers(self, nstr):
+        try:
+            return self.numparser.parse(nstr)
+        except ValueError as e:
+            self.printout('Error while parsing numbers: %s.' % str(e))
+            return
+
+    def _parse_n(self, args):
+        if len(args) > 1:
+            fmt = 'Error: More than one arguments (numbers): %r.'
+            self.printout(fmt % args)
+            return
+
+        nstr = args[0]
+        return self._get_numbers(nstr)
+
+    def _parse_nb(self, args):  # append or overwrite
+        if len(args) != 2:
+            fmt = ('Error: More or less than two arguments '
+                '(numbers and box): %r')
+            self.printout(fmt % args)
+            return
+
+        nstr, bstr = args
+        numbers = self._get_numbers(nstr)
+        if numbers:
+            try:
+                return self.boxparser.parse(numbers, bstr, 'b')
+            except ValueError as e:
+                self.printout('Error while parsing box: %s' % str(e))
+                return
+
+    def _parse_nbb(self, args):  # modify
+        if len(args) != 3:
+            fmt = ('Error: You have to provide three arguments '
+                '(numbers, box1, box2): %r')
+            self.printout(fmt % args)
+            return
+
+        nstr, bstr1, bstr2 = args
+        numbers = self._get_numbers(nstr)
+        if numbers:
+            try:
+                return self.boxparser.parse(numbers, bstr1, bstr2, 'bb')
+            except ValueError as e:
+                self.printout('Error while parsing box: %s' % str(e))
+                return
 
 
 class _NoErrorCmd(cmd.Cmd):
@@ -2731,6 +2901,7 @@ class PDFSlashCmd(_PipeCmd):
         self._pages = doc.pages
         self.numparser = self._doc.numparser
         self.boxparser = self._doc.boxparser
+        self.cmdparser = CommandParser(self)
 
         self.hisfile = self._get_history_file(self.hisname)
 
@@ -2763,66 +2934,6 @@ class PDFSlashCmd(_PipeCmd):
         self.stdout.write(string)
         self.stdout.write('\n')
 
-    def _parse_opts(self, args_):
-        opts, args = [], []
-        maybe_opts = True
-        for a in args_.split():
-            if a == '--':
-                maybe_opts = False
-                continue
-            if a.startswith('--'):
-                if maybe_opts:
-                    opts.append(a)
-                    continue
-            args.append(a)
-        return opts, args
-
-    def _parse_num(self, args_, allow_blank=False):
-        opts, args = self._parse_opts(args_)
-        error = (None, opts)
-
-        if len(args) > 1:
-            fmt = 'more than one arguments (numbers): %r'
-            self.printout(fmt % args_)
-            return error
-
-        if not args:
-            if allow_blank:
-                args = ':'
-            else:
-                self.printout('no page numbers')
-                return error
-        else:
-            args = args[0]
-
-        try:
-            return self.numparser.parse(args), opts
-        except ValueError as e:
-            self.printout('Error on parsing numbers: %s' % str(e))
-            return error
-
-    def _parse_num_and_box(self, args_):
-        opts, args = self._parse_opts(args_)
-
-        if len(args) != 2:
-            fmt = 'more or less than two arguments (numbers and box): %r'
-            self.printout(fmt % args_)
-            return
-
-        nstr, bstr = args
-        try:
-            numbers = self.numparser.parse(nstr)
-        except ValueError as e:
-            self.printout('Error on parsing numbers: %s' % str(e))
-            return
-
-        if numbers:
-            try:
-                return self.boxparser.parse(numbers, bstr), bstr
-            except ValueError as e:
-                self.printout('Error on parsing box: %s' % str(e))
-                return
-
     def do_select(self, args):
         """
         Take one argument, page numbers.
@@ -2841,7 +2952,7 @@ class PDFSlashCmd(_PipeCmd):
             crop 1-10 100,100,400,400   # crop pages 2-8
             write                       # write pages 2-8
         """
-        numbers, opts = self._parse_num(args)
+        numbers, opts = self.cmdparser.parse(args)
         if numbers:
             self._pages.select(numbers)
 
@@ -2853,7 +2964,7 @@ class PDFSlashCmd(_PipeCmd):
 
         See ``select``.
         """
-        numbers, opts = self._parse_num(args)
+        numbers, opts = self.cmdparser.parse(args)
         if numbers:
             self._pages.unselect(numbers)
 
@@ -2875,7 +2986,7 @@ class PDFSlashCmd(_PipeCmd):
             crop 2-6 100,100,400,400    # crop pages 4,5,6
             write 2-10                  # write pages 2-10
         """
-        numbers, opts = self._parse_num(args)
+        numbers, opts = self.cmdparser.parse(args)
         if numbers:
             self._pages.fix(numbers)
 
@@ -2887,20 +2998,20 @@ class PDFSlashCmd(_PipeCmd):
 
         See ``fix``.
         """
-        numbers, opts = self._parse_num(args)
+        numbers, opts = self.cmdparser.parse(args)
         if numbers:
             self._pages.unfix(numbers)
 
     def _append_or_overwrite(self, args, which):
-        (op, numbers, box_or_boxes), bstr = self._parse_num_and_box(args)
-        if op == 'crop':
-            op = which  # 'append' or 'overwrite'
-        op = getattr(self._pages, op)
-        try:
-            op(numbers, box_or_boxes)
-        except Exception as e:  # TODO
-            self.printout('Error on processing box: %s' % str(e))
-            return
+        ret, opts = self.cmdparser.parse(args, signature='nb')
+        if ret:
+            numbers, box = ret
+            op = getattr(self._pages, which)
+            try:
+                op(numbers, box)
+            except Exception as e:  # TODO
+                self.printout('Error while processing box: %s' % str(e))
+                return
 
     def do_append(self, args):
         """
@@ -2922,13 +3033,30 @@ class PDFSlashCmd(_PipeCmd):
         """
         self._append_or_overwrite(args, which='overwrite')
 
+    def do_modify(self, args):
+        """
+        Take three argument, page numbers, box1 and box2.
+
+        Modify cropbox.
+        (For each page, change pre-existent box (box1) to new box (box2).
+        If box1 doesn't exist in any page, it is Error).
+        """
+        ret, opts = self.cmdparser.parse(args, signature='nbb')
+        if ret:
+            op = getattr(self._pages, ret[0])
+            try:
+                op(*ret[1:])
+            except Exception as e:  # TODO
+                self.printout('Error while processing box: %s' % str(e))
+                return
+
     def do_clear(self, args):
         """
         Take one argument, page numbers.
 
         Claer all added cropboxes (revert to the original source cropbox).
         """
-        numbers, opts = self._parse_num(args)
+        numbers, opts = self.cmdparser.parse(args)
         if numbers:
             self._pages.clear(numbers)
 
@@ -2942,7 +3070,7 @@ class PDFSlashCmd(_PipeCmd):
 
             auto 3-5        # Replace cropbox for pages 3,4,5
         """
-        numbers, opts = self._parse_num(args, allow_blank=True)
+        numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
             self._doc.autocrop(numbers)
 
@@ -2952,7 +3080,7 @@ class PDFSlashCmd(_PipeCmd):
 
         Run tkinter GUI.
         """
-        numbers, opts = self._parse_num(args, allow_blank=True)
+        numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
             self._doc.preview(numbers)
 
@@ -2962,7 +3090,7 @@ class PDFSlashCmd(_PipeCmd):
 
         Create new PDF file with specified (or selected) pages.
         """
-        numbers, opts = self._parse_num(args, allow_blank=True)
+        numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
             self.printout('writing...')
             self._doc.write(numbers)
@@ -2975,7 +3103,7 @@ class PDFSlashCmd(_PipeCmd):
 
         (selected or fixed pages are shown with headers 's' and 'f').
         """
-        numbers, opts = self._parse_num(args, allow_blank=True)
+        numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
             self.printout(self._pages.tostring(numbers))
 
@@ -2988,7 +3116,7 @@ class PDFSlashCmd(_PipeCmd):
         (raw MediaBox, CropBox, BleedBox, TrimBox, ArtBox data,
         if different from the previous ones).
         """
-        numbers, opts = self._parse_num(args, allow_blank=True)
+        numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
             for boundname, groups in zip(
                     BOUNDNAMES, self._doc.get_bounds(numbers)):
