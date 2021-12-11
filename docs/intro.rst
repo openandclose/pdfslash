@@ -27,9 +27,10 @@ Technical Overview
 * Borrow algorithms from `briss <https://github.com/fatso83/briss-archived>`__,
   for key functions (page merging and auto margin detection).
 
-* interpreter is a subclass of standard library `cmd <https://docs.python.org/3/library/cmd.html>`__.
-
-* GUI part is a subclass of standard library `tkinter <https://docs.python.org/3/library/tkinter.html>`__.
+* interpreter and GUI are using Python standard libraries (
+  `cmd <https://docs.python.org/3/library/cmd.html>`__
+  and `tkinter <https://docs.python.org/3/library/tkinter.html>`__).
+  so no extra installations are needed.
 
 
 Installation
@@ -58,7 +59,7 @@ Upon invocation, users are faced with a commandline prompt.
     (pdfslash) <-- this
 
 Most commands only take one argument (page numbers),
-box commands take two (page numbers and cropbox).
+box commands take two or three.
 
 .. code-block:: none
 
@@ -82,12 +83,12 @@ In GUI, Pages are grouped by their source cropbox sizes.
 Pages of each group are merged into one grayscale image, as in ``briss``.
 
 Only one (initially first) image is shown in GUI window.
-You can navigate by keys ``n`` and ``p`` (next and previous).
+You can navigate by keys ``n`` and ``p`` (next and previous group).
 
 Each image has actually three views, ``all``, ``odds`` and ``evens``.
 E.g. if the pages of a group is ``2-5,9``,
 ``all`` is ``2,3,4,5,9``, ``odds`` is ``3,5,9`` and ``evens`` is ``2,4``.
-You can cycle them by keys ``v`` and ``V`` (forward and backward).
+You can cycle them by keys ``v`` and ``V`` (forward and backward view).
 
 If there are previously created boxes (say, previous boxes), they are also shown.
 Boxes in all pages (in this group and view) are in blue, and boxes just in some pages
@@ -113,7 +114,7 @@ the new one replaces all the previous boxes.
 That is, if any, they were removed.
 
 You can cycle 'active' box.
-Initially the active box is ``sel``, a virtual box,
+Initially the active box is ``sel``, a virtual box
 (one with dotted lines created by mouse click, or non-existent).
 
 But Pressing ``a``,

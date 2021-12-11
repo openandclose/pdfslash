@@ -71,11 +71,12 @@ Commands
   (e.g. ``Set`` and ``Python`` start with capital letters).
 
 * When commands take *optional* page numbers and they are omitted,
-  selected pages are used.
+  *selected* pages are used.
 
 * Admittedly ``select``, ``unselect``, ``fix`` and ``unfix`` tend to get very confusing.
 
-  But note that you can safely ignore them if you don't use them.
+  But normally you don't have to think about them,
+  until when you need them.
 
 * Interpreter and GUI are using the same undo and redo stack data.
 
@@ -88,15 +89,15 @@ Commands
 
 **do_crop**
 
-Alias for ``do_append``
+Alias for ``do_append``.
 
 **do_quit**
 
-Alias for ``do_exit``
+Alias for ``do_exit``.
 
 **do_EOF**
 
-Alias for ``do_exit``
+Alias for ``do_exit``. Send actual ``EOF``.
 
 **'|' (pipe)**
 
@@ -126,35 +127,35 @@ Info
 
 title bar and label show some information.
 
-title bar example:
+**title bar example**:
 
-.. code-block:: none
+    .. code-block:: none
 
-    pdfslash: 1-13,21 (110%)
+        pdfslash: 1-13,21 (110%)
 
-``1-13,21``: current page numbers (in current group and current view).
+    ``1-13,21``: current page numbers (in current group and current view).
 
-``(110%)``: current image zoom (when 100%, it is omitted).
+    ``(110%)``: current image zoom (when 100%, it is omitted).
 
-label example:
+**label example**:
 
-.. code-block:: none
+    .. code-block:: none
 
-    1/3 both 595x841, sel: 100,100,400,500 (300x400, 1.333)
+        1/3 both 595x841, sel: 100,100,400,500 (300x400, 1.333)
 
-``1/3``: current group number (``1``) and the number of groups (``3``).
+    ``1/3``: current group number (``1``) and the number of groups (``3``).
 
-``both``: current view (``both``, ``odds``, or ``evens``).
+    ``both``: current view (``both``, ``odds``, or ``evens``).
 
-``595x842``: current source cropbox size. ``left`` and ``top`` are always zeros.([0, 0, 595, 841]).
+    ``595x842``: current source cropbox size. ``left`` and ``top`` are always zeros.([0, 0, 595, 841]).
 
-``sel``: active box (``sel`` or ``box``).
+    ``sel``: active box (``sel`` or ``box``).
 
-``100,100,400,500``: active box coordinates.
+    ``100,100,400,500``: active box coordinates.
 
-``300x400``: active box size
+    ``300x400``: active box size
 
-``1.333``: ratio of height / width of active box.
+    ``1.333``: ratio of height / width of active box.
 
 
 Keyboard

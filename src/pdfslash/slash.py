@@ -1959,8 +1959,8 @@ _tk_help = """
 
         n:              next image group
         p:              previous image group
-        v:              cycle images (both, odds or evens)
-        V:              cycle images (reverse direction)
+        v:              cycle view (both, odds or evens)
+        V:              cycle view (reverse direction)
 
         a:              cycle active rectangle
         d:              delete active rectangle
@@ -2563,13 +2563,10 @@ class BoxParser(object):
     +-              Apply increment or decrement
                     to the chosen boxes (by box1) of each page.
 
-                    E.g. when box is -3,-3,+3,+3:
+                    E.g. when box is '-3,-3,+3,+3':
 
-                        Page 1: 20,20,400,400  ->  17,17,403,403
-                        Page 2: 30,30,600,600  ->  27,27,603,603
-
-                    Numbers outside of the source cropbox coordinates
-                    are clipped.
+                        20,20,400,400  ->  17,17,403,403
+                        30,30,600,600  ->  27,27,603,603
 
     min, max        min or max numbers
                     of the chosen boxes (by box1) of each page.
@@ -3055,6 +3052,7 @@ class PDFSlashCmd(_PipeCmd):
         Take two argument, page numbers and box.
 
         Append cropbox.
+
         (Add box as cropbox to specified pages,
         keeping previously added cropboxes.)
         """
@@ -3065,6 +3063,7 @@ class PDFSlashCmd(_PipeCmd):
         Take two argument, page numbers and box.
 
         Replace cropbox.
+
         (Add box as cropbox to specified pages,
         removing previously added cropboxes.)
         """
@@ -3075,6 +3074,7 @@ class PDFSlashCmd(_PipeCmd):
         Take three argument, page numbers, box1 and box2.
 
         Modify cropbox.
+
         (For each page, change pre-existent box (box1) to new box (box2).
         If box1 doesn't exist in any page, it is Error).
         """
@@ -3092,7 +3092,8 @@ class PDFSlashCmd(_PipeCmd):
         Take two argument, page numbers and box.
 
         Delete cropbox.
-        (find the box in each specified page, and remove them.
+
+        (Find the box in each specified page, and remove them.
         If the box doesn't exist in any page, it is Error).
         """
         ret, opts = self.cmdparser.parse(args, signature='nB')
@@ -3108,7 +3109,10 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take one argument, page numbers.
 
-        Claer all added cropboxes (revert to the original source cropbox).
+        Claer cropboxes.
+
+        (Delete all added cropboxes in specified pages.
+        that is, they revert to the original source cropboxes).
         """
         numbers, opts = self.cmdparser.parse(args)
         if numbers:
@@ -3118,7 +3122,9 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take one argument, page numbers (optional).
 
-        Auto detect page margins and apply them.
+        Auto detect page margins and apply (overwrite) them.
+
+        (That is, previously added cropboxes are removed.)
 
         .. code-block:: none
 
@@ -3142,7 +3148,7 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take one argument, page numbers (optional).
 
-        Create new PDF file with specified (or selected) pages.
+        Create new PDF file with specified (or *selected*) pages.
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
@@ -3155,7 +3161,8 @@ class PDFSlashCmd(_PipeCmd):
 
         Show current cropboxes for pages.
 
-        (selected or fixed pages are shown with headers 's' and 'f').
+        (if selected or fixed,
+        pages are shown with headers 's' and 'f' respectively).
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
@@ -3278,7 +3285,8 @@ class PDFSlashCmd(_PipeCmd):
         Print all box edit history in chronological order.
 
         Conceptually, if they are supplied as input again,
-        the program should 'replay' the same edits.
+        the program should 'replay' the same edits
+        (not much tested).
 
         .. code-block:: none
 
