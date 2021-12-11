@@ -1395,6 +1395,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         return boxes
 
     def get_bounds(self):
+        # Note: xref_get_key and xref_get_keys are from v1.18.7
         bounds = [[], [], [], [], []]
         for page in self.pdf:
             keys = self.pdf.xref_get_keys(page.xref)
@@ -3157,8 +3158,14 @@ class PDFSlashCmd(_PipeCmd):
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
-            for boundname, groups in zip(
-                    BOUNDNAMES, self._doc.get_bounds(numbers)):
+            try:
+                bounds = self._doc.get_bounds(numbers)
+            except AttributeError:
+                msg = ('Error while parsing low-level PDF data.\n',
+                    'Note this command requires PyMuPDF v1.18.7 or later.')
+                self.printout(''.join(msg))
+
+            for boundname, groups in zip(BOUNDNAMES, bounds):
                 first = True
                 for box, nums in groups:
                     if box is None:
