@@ -441,7 +441,7 @@ class _BoxData(object):
     """Manage a collection of _Boxes (PDF pages of new cropboxes).
 
     Define additional operations (op):
-    'append', 'overwrite', 'modify', 'discard', 'clear' and 'crop_each'.
+    'append', 'overwrite', 'modify', 'discard', 'clear' and 'set_each'.
     """
 
     def __init__(self, cboxes):
@@ -459,15 +459,16 @@ class _BoxData(object):
 
         self.stacker.set(command_set, msg)
 
-    def crop_each(self, numbers, pageboxes, msg=None):
+    def set_each(self, commands, msg=None):
         command_set = []
-        for n, boxes in zip(numbers, pageboxes):
-            command = self._overwrite, n - 1, boxes[0], None
+        for c in commands:
+            opname, n, *boxes = c
+            op = getattr(self, '_' + opname)
+            box, *old_box = boxes
+            if not old_box:
+                old_box = None
+            command = op, n - 1, box, old_box
             command_set.append(command)
-            for box in boxes[1:]:
-                command = self._append, n - 1, box, None
-                command_set.append(command)
-
         self.stacker.set(command_set, msg)
 
     def append(self, numbers, box, msg=None):
@@ -652,13 +653,15 @@ class _Pages(object):
         for n in numbers:
             self.fixed[n - 1] = 0
 
-    def format_msg(self, op, numbers, box='', new_box='', aux=''):
+    def format_msg(self, op, numbers, box='', new_box=''):
+        if isinstance(numbers, int):
+            numbers = (numbers,)
         nstr = self.numparser.unparse(numbers)
         if box:
             box = '%d,%d,%d,%d' % box
         if new_box:
             new_box = '%d,%d,%d,%d' % new_box
-        ret = [s for s in (op, nstr, box, new_box, aux) if s]
+        ret = [s for s in (op, nstr, box, new_box) if s]
         return ' '.join(ret).strip()
 
     def append(self, numbers, box, msg=None):
@@ -673,13 +676,25 @@ class _Pages(object):
         msg = msg or self.format_msg('overwrite', numbers, box)
         self.boxdata.overwrite(numbers, box, msg=msg)
 
-    def crop_each(self, numbers, pageboxes, msg=None):
-        numbers = self.modifiable(numbers)
-        for n, boxes in zip(numbers, pageboxes):
-            for box in boxes:
-                self.verify((n,), box)
-        msg = msg or self.format_msg('crop_each', numbers, aux='...')
-        self.boxdata.crop_each(numbers, pageboxes, msg=msg)
+    def set_each(self, commands_, msg=None):
+        commands = []
+        for command in commands_:
+            op, n, *boxes = command
+            nn = (n,)
+            if self.modifiable(nn):
+                self.verify(nn, boxes[-1])
+                commands.append(command)
+
+        if msg is None:
+            start = '# start set_each commands.'
+            end = '# end set_each commands.'
+            msgs = [start]
+            for command in commands:
+                msgs.append(self.format_msg(*command))
+            msgs.append(end)
+            msg = '\n'.join(msgs)
+
+        self.boxdata.set_each(commands, msg=msg)
 
     def modify(self, numbers, old_box, new_box, msg=None):
         self.verify(numbers, new_box)
@@ -1527,12 +1542,13 @@ class Document(object):
 
     def autocrop(self, numbers):  # c.f. 0.8s for 600p
         numbers = self.pages.modifiable(numbers)
-        pageboxes = []
+        commands = []
         for num in numbers:
             box = self.pages._get_box(num, fallback=True)[0]
             box = self._autocrop(num, box)
-            pageboxes.append([box])
-        self.pages.crop_each(numbers, pageboxes)
+            command = 'overwrite', num, box
+            commands.append(command)
+        self.pages.set_each(commands)
 
     def _autocrop(self, num, box):
         img = self.imgs[num - 1].load()[0]
@@ -2608,7 +2624,11 @@ class BoxParser(object):
         if box1:
             return 'modify', numbers, box1, box2
         elif boxes1:
-            return 'crop_each', numbers, boxes1, boxes2
+            commands = []
+            for n, box1, box2 in zip(numbers, boxes1, boxes2):
+                command = 'modify', n, box1, box2
+                commands.append(command)
+            return 'set_each', commands
 
     def _parse_B(self, numbers, bstr):  # dicard
         box = self._get_plain_box(bstr)
@@ -2663,17 +2683,8 @@ class BoxParser(object):
 
         if box1:
             box2 = self._apply_plusminus(box1, coords)
-
         elif boxes1:
-            boxes2 = self._copy_pageboxes(numbers)
-            for i, (boxes, box1) in enumerate(zip(boxes2, boxes1)):
-                try:
-                    index = boxes.index(box1)
-                except ValueError:
-                    fmt = 'No box (%d,%d,%d,%d) in page %d.'
-                    raise ValueError(fmt % (box1, numbers[i]))
-
-                boxes[index] = self._apply_plusminus(box1, coords)
+            boxes2 = [self._apply_plusminus(b, coords) for b in boxes1]
 
         return box2, boxes2
 

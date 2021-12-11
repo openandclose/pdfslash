@@ -226,17 +226,18 @@ class TestCommandParser:
         assert p('3', '@1', x5, 'nbb') == ('modify', [3], B3, X5)
         assert p('3', '@3', x5, 'nbb') == ('modify', [3], B1, X5)
         assert p('1,3', '@1', x5, 'nbb') == (
-                'crop_each', [1, 3], [B1, B3], [[X5], [X5, B32, B1]])
+                'set_each', [('modify', 1, B1, X5), ('modify', 3, B3, X5)])
 
+        mo = 'modify'
         bstr2 = '-100,-100,+100,+100'
         box2_1 = 0, 10, 220, 230  # box2 result of page 1
         box2_3 = 200, 210, 420, 430  # box2 result of page 3
         assert p('1', b1, bstr2, 'nbb') == ('modify', [1], B1, box2_1)
         assert p('1', '@1', bstr2, 'nbb') == ('modify', [1], B1, box2_1)
         assert p('1,3', '@1', bstr2, 'nbb') == (
-                'crop_each', [1, 3], [B1, B3], [[box2_1], [box2_3, B32, B1]])
+                'set_each', [(mo, 1, B1, box2_1), (mo, 3, B3, box2_3)])
 
         bstr2 = 'min,min,max,max'
         box2_m = 100, 110, 320, 330
         assert p('1,3', '@1', bstr2, 'nbb') == (
-                'crop_each', [1, 3], [B1, B3], [[box2_m], [box2_m, B32, B1]])
+                'set_each', [(mo, 1, B1, box2_m), (mo, 3, B3, box2_m)])
