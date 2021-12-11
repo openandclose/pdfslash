@@ -213,6 +213,12 @@ class TestCommandParser:
         assert p('1', x5, 'nb') == ([1], X5)
         assert p('1-3', x5, 'nb') == ([1, 2, 3], X5)
 
+    # discard (numbers, box)
+        assert p('3', b1, 'nB') == ([3], B1)
+        assert p('1,3', b1, 'nB') == ([1, 3], B1)
+        assert p('2', b1, 'nB') == ([2], B1)  # no error (no printout)
+        # pages.discard([2], B1)  # no error (printout)
+
     # modify (numbers, box1, box2)
         assert p('1', b1, x5, 'nbb') == ('modify', [1], B1, X5)
         assert p('1,3', b1, x5, 'nbb') == ('modify', [1, 3], B1, X5)

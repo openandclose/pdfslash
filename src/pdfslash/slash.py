@@ -2585,6 +2585,7 @@ class BoxParser(object):
         table = (
             ('b', '_parse_b'),
             ('bb', '_parse_bb'),
+            ('B', '_parse_B'),
         )
 
         self._initialize()
@@ -2607,6 +2608,10 @@ class BoxParser(object):
             return 'modify', numbers, box1, box2
         elif boxes1:
             return 'crop_each', numbers, boxes1, boxes2
+
+    def _parse_B(self, numbers, bstr):  # dicard
+        box = self._get_plain_box(bstr)
+        return numbers, box
 
     def _get_plain_box(self, bstr):
         try:
@@ -2730,6 +2735,7 @@ class CommandParser(object):
             ('n', '_parse_n'),
             ('nb', '_parse_nb'),
             ('nbb', '_parse_nbb'),
+            ('nB', '_parse_nB'),
         )
 
         for sig, name in table:
@@ -2783,6 +2789,22 @@ class CommandParser(object):
         if numbers:
             try:
                 return self.boxparser.parse(numbers, bstr1, bstr2, 'bb')
+            except ValueError as e:
+                self.printout('Error while parsing box: %s' % str(e))
+                return
+
+    def _parse_nB(self, args):  # discard
+        if len(args) != 2:
+            fmt = ('Error: More or less than two arguments '
+                '(numbers and box): %r')
+            self.printout(fmt % args)
+            return
+
+        nstr, bstr = args
+        numbers = self._get_numbers(nstr)
+        if numbers:
+            try:
+                return self.boxparser.parse(numbers, bstr, 'B')
             except ValueError as e:
                 self.printout('Error while parsing box: %s' % str(e))
                 return
@@ -3046,6 +3068,23 @@ class PDFSlashCmd(_PipeCmd):
             op = getattr(self._pages, ret[0])
             try:
                 op(*ret[1:])
+            except Exception as e:  # TODO
+                self.printout('Error while processing box: %s' % str(e))
+                return
+
+    def do_discard(self, args):
+        """
+        Take two argument, page numbers and box.
+
+        Delete cropbox.
+        (find the box in each specified page, and remove them.
+        If the box doesn't exist in any page, it is Error).
+        """
+        ret, opts = self.cmdparser.parse(args, signature='nB')
+        if ret:
+            numbers, box = ret
+            try:
+                self._pages.discard(numbers, box)
             except Exception as e:  # TODO
                 self.printout('Error while processing box: %s' % str(e))
                 return
