@@ -523,8 +523,7 @@ class _BoxData(object):
     def _clear(self, i, box, old_box):
         commands = []
         boxes = self.boxes[i]
-        # e.g. if len(boxes) is four, indices are: 3, 2, 1.
-        for index in range(len(boxes) - 1, -1, -1):
+        for index in reversed(range(len(boxes))):
             command = 'remove', (i, index), None
             commands.append(command)
         return commands
