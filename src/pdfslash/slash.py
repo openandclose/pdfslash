@@ -276,7 +276,11 @@ stackcontext = _StackContext()
 
 
 class _Stacker(object):
-    """Process _Stack."""
+    """Process _Stack.
+
+    Operations (op) are 'add', 'replace' and 'remove',
+    imitating (a subset of) JSON Patch (RFC 6902).
+    """
 
     def __init__(self, data):
         self._data = data
@@ -354,6 +358,19 @@ class _Stacker(object):
         self._apply(op, obj, keys[-1], value)
         return 0, old_val
 
+    def _apply(self, op, obj, key, value):
+        if op == 'add':
+            self._add_item(obj, key, value)
+        elif op == 'replace':
+            self._set_item(obj, key, value)
+        elif op == 'remove':
+            del obj[key]
+
+    def execute(self, command):
+        op, keys, value, *old_val = command
+        obj = self._get(keys[:-1])
+        self._apply(op, obj, keys[-1], value)
+
     def _reverse_command(self, command):
         op, keys, value, old_val = command
         if op == 'add':
@@ -362,19 +379,6 @@ class _Stacker(object):
             return 'replace', keys, old_val
         elif op == 'remove':
             return 'add', keys, old_val
-
-    def execute(self, command):
-        op, keys, value, *old_val = command
-        obj = self._get(keys[:-1])
-        self._apply(op, obj, keys[-1], value)
-
-    def _apply(self, op, obj, key, value):
-        if op == 'add':
-            self._add_item(obj, key, value)
-        elif op == 'replace':
-            self._set_item(obj, key, value)
-        elif op == 'remove':
-            del obj[key]
 
     def _rollback(self, commands):
         commands = (self._reverse_command(c) for c in reversed(commands))
@@ -3179,8 +3183,8 @@ class PDFSlashCmd(_PipeCmd):
 
         Show page boundaries structures for specified pages.
 
-        (raw MediaBox, CropBox, BleedBox, TrimBox, ArtBox data,
-        if different from the previous ones).
+        (raw PDF values of MediaBox, CropBox, BleedBox, TrimBox and ArtBox.
+        The same values from the previous ones are omitted).
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
