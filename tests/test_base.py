@@ -119,6 +119,18 @@ class TestBoxData:
         self.check_rects(boxdata, [(box2, [4])])
         assert 'DuplicateBoxError: ' in capsys.readouterr().out.rstrip()
 
+        # 5 (for modify)
+        boxdata.modify((4,), box1, box2, msg='msg5')
+        self.check(boxdata, (4,), [box1])
+        self.check_rects(boxdata, [(box1, [4]), (box2, [])])
+
+        # # 6 (for modify)
+        boxdata.modify((4,), box2, box1, msg='msg6')
+        self.check(boxdata, (4,), [box2])
+        self.check_rects(boxdata, [(box1, []), (box2, [4])])
+
+        assert boxdata.undo() == 'msg6'
+        assert boxdata.undo() == 'msg5'
         assert boxdata.undo() == 'msg4'
         assert boxdata.undo() == 'msg3'
         assert boxdata.undo() == 'msg2'
