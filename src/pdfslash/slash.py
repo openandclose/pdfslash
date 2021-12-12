@@ -503,23 +503,21 @@ class _BoxData(object):
         return commands + commands2
 
     def _modify(self, i, box, old_box):
-        commands = []
         boxes = self.boxes[i]
-        indices = [i for i, b in enumerate(boxes) if b == old_box]
-        for index in indices:  # no error on blank
-            command = 'replace', (i, index), tuple(box)
-            commands.append(command)
+        try:
+            index = boxes.index(old_box)
+        except ValueError:
+            raise NoBoxToProcessError(i + 1, old_box)
+        commands = [('replace', (i, index), tuple(box))]
         return commands
 
     def _delete(self, i, box, old_box):
-        commands = []
         boxes = self.boxes[i]
-        indices = [i for i, b in enumerate(boxes) if b == old_box]
-        if not indices:
+        try:
+            index = boxes.index(old_box)
+        except ValueError:
             raise NoBoxToProcessError(i + 1, old_box)
-        for index in indices:
-            command = 'remove', (i, index), None
-            commands.append(command)
+        commands = [('remove', (i, index), None)]
         return commands
 
     def _clear(self, i, box, old_box):
