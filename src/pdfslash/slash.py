@@ -488,7 +488,7 @@ class _BoxData(object):
         self.set(self._modify, numbers, box, old_box, msg=msg)
 
     def discard(self, numbers, box, msg=None):
-        self.set(self._delete, numbers, None, box, msg=msg)
+        self.set(self._discard, numbers, None, box, msg=msg)
 
     def clear(self, numbers, msg=None):
         self.set(self._clear, numbers, msg=msg)
@@ -511,7 +511,7 @@ class _BoxData(object):
         commands = [('replace', (i, index), tuple(box))]
         return commands
 
-    def _delete(self, i, box, old_box):
+    def _discard(self, i, box, old_box):
         boxes = self.boxes[i]
         try:
             index = boxes.index(old_box)
