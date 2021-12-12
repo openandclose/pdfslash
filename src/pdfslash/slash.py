@@ -188,10 +188,10 @@ class DuplicateBoxError(UserInputError):
     msg = 'cannot add the duplicate box; page: %d, box: %s'
 
 
-class NoBoxToRemoveError(UserInputError):
-    """Raise when removing non-existent box in a page."""
+class NoBoxToProcessError(UserInputError):
+    """Raise when trying to edit non-existent box in a page."""
 
-    msg = 'cannot remove non-existent box; page: %d, box: %s'
+    msg = 'cannot process non-existent box; page: %d, box: %s'
 
 
 class _Stack(object):
@@ -516,7 +516,7 @@ class _BoxData(object):
         boxes = self.boxes[i]
         indices = [i for i, b in enumerate(boxes) if b == old_box]
         if not indices:
-            raise NoBoxToRemoveError(i + 1, old_box)
+            raise NoBoxToProcessError(i + 1, old_box)
         for index in indices:
             command = 'remove', (i, index), None
             commands.append(command)

@@ -106,7 +106,7 @@ class TestBoxData:
         boxdata.discard((1,), box2, msg='error!')
         self.check(boxdata, (1,), [box1])
         self.check_rects(boxdata, [(box1, [1])])
-        assert 'NoBoxToRemoveError: ' in capsys.readouterr().out.rstrip()
+        assert 'NoBoxToProcessError: ' in capsys.readouterr().out.rstrip()
 
         # 4
         boxdata.discard((1,), box1, msg='msg4')
