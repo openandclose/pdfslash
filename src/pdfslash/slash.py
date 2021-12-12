@@ -363,7 +363,7 @@ class _Stacker(object):
         elif op == 'remove':
             return 'add', keys, old_val
 
-    def apply(self, command):
+    def execute(self, command):
         op, keys, value, *old_val = command
         obj = self._get(keys[:-1])
         self._apply(op, obj, keys[-1], value)
@@ -379,7 +379,7 @@ class _Stacker(object):
     def _rollback(self, commands):
         commands = (self._reverse_command(c) for c in reversed(commands))
         for command in commands:
-            self.apply(command)
+            self.execute(command)
 
     def undo(self):
         ret = self._stack.undo()
@@ -395,7 +395,7 @@ class _Stacker(object):
             return
         commands, msg = ret
         for command in commands:
-            self.apply(command)
+            self.execute(command)
         return msg
 
     def export(self):
