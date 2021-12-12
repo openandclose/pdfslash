@@ -124,11 +124,24 @@ class TestBoxData:
         self.check(boxdata, (4,), [box1])
         self.check_rects(boxdata, [(box1, [4]), (box2, [])])
 
-        # # 6 (for modify)
+        # 6 (for modify)
         boxdata.modify((4,), box2, box1, msg='msg6')
         self.check(boxdata, (4,), [box2])
         self.check_rects(boxdata, [(box1, []), (box2, [4])])
 
+        # 7 (for set_each)
+        commands = [
+            ('append', 1, box1),
+            ('overwrite', 2, box2),
+            ('modify', 4, box1, box2),
+        ]
+        boxdata.set_each(commands, msg='msg7')
+        self.check(boxdata, (1,), [box1])
+        self.check(boxdata, (2,), [box2])
+        self.check(boxdata, (4,), [box1])
+        self.check_rects(boxdata, [(box1, [1, 4]), (box2, [2])])
+
+        assert boxdata.undo() == 'msg7'
         assert boxdata.undo() == 'msg6'
         assert boxdata.undo() == 'msg5'
         assert boxdata.undo() == 'msg4'

@@ -472,8 +472,7 @@ class _BoxData(object):
             opname, n, *boxes = c
             op = getattr(self, '_' + opname)
             box, *old_box = boxes
-            if not old_box:
-                old_box = None
+            old_box = old_box[0] if old_box else None
             command = op, n - 1, box, old_box
             command_set.append(command)
         self.stacker.set(command_set, msg)
