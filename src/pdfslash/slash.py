@@ -598,7 +598,7 @@ class _Page(object):
     def tostring(self):
         selected = 's' if self.selected else ' '
         fixed = 'f' if self.fixed else ' '
-        box = '%d,%d,%d,%d' % self.cbox
+        box = '%.3f,%.3f,%.3f,%.3f' % self.cbox
         fmt = '%s%s %4d  source: %s'
         if not self.boxes:
             return fmt % (selected, fixed, self.number, box)
@@ -732,7 +732,7 @@ class _Pages(object):
         bottom = min(self[n].cbox[3] for n in numbers)
         min_box = 0, 0, right, bottom
 
-        fmt = 'box is not inside source cropbox. box: %d,%d,%d,%d.'
+        fmt = 'box is not inside source cropbox. box: %.3f,%.3f,%.3f,%.3f.'
         if box[0] < min_box[0] or box[1] < min_box[1]:
             raise ValueError(fmt % box)
         if min_box[2] < box[2] or min_box[3] < box[3]:
@@ -3161,8 +3161,12 @@ class PDFSlashCmd(_PipeCmd):
 
         Show current cropboxes for pages.
 
-        (if selected or fixed,
-        pages are shown with headers 's' and 'f' respectively).
+        If selected or fixed,
+        pages are shown with headers 's' and 'f' respectively.
+
+        (Boxes are formatted with three digit fractional part.
+        So they are a bit different from actual PDF values
+        e.g. as viewed by 'inspect' command.)
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
