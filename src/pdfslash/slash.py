@@ -467,6 +467,7 @@ class _BoxData(object):
         self.stacker.set(command_set, msg)
 
     def set_each(self, commands, msg=None):
+        # Note: multiple edits in a same page don't work in most cases.
         command_set = []
         for c in commands:
             opname, n, *boxes = c
