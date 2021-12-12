@@ -2550,6 +2550,7 @@ class BoxParser(object):
     Spec:
 
     10,20,30,40     left,top,right,bottom
+                    (they must be integers, no dots).
 
     For 'modify' command, the following special syntax can be used.
 
