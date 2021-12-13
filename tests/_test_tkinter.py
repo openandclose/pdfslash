@@ -79,7 +79,7 @@ def build(numbers=None):
 
 def run(doc, numbers=None):
     numbers = numbers or (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-    tkrunner = doc.preview(numbers, do_run=False)
+    tkrunner = doc._get_tkrunner(numbers)
     return tkrunner
 
 

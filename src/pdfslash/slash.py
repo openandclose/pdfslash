@@ -1572,17 +1572,17 @@ class Document(object):
         x, y = box[:2]
         return x + left, y + top, x + right, y + bottom
 
-    def preview(self, numbers, do_run=True):
+    def preview(self, numbers):
         # numbers = self.pages.selectable(numbers)
         numbers = self.pages.modifiable(numbers)
-        imagedata = self._get_imagedata(numbers)
-        runner = TkRunner(imagedata, self)
-        runner.run(do_run)
+        runner = self._get_tkrunner(numbers)
+        runner.run()
         return runner
 
-    def _get_imagedata(self, numbers):
+    def _get_tkrunner(self, numbers):
         indices = num2ind(numbers)
-        return _ImageData(self, indices)
+        imagedata = _ImageData(self, indices)
+        return TkRunner(imagedata, self)
 
     def get_bounds(self, numbers):
         if self._bounds is None:
@@ -1985,16 +1985,15 @@ class TkRunner(object):
         self._start = None
         self._end = None
 
-    def run(self, do_run):
-        root = tk.Tk()
-        self.build(root)
-        self._next()
-        if do_run:
-            print('running tkinter...',
-                "type 'q' to quit, 'h' to see help in terminal")
-            root.mainloop()
+        self.build()
 
-    def build(self, root):
+    def run(self):
+        print('running tkinter...',
+            "type 'q' to quit, 'h' to see help in terminal")
+        self.root.mainloop()
+
+    def build(self):
+        root = tk.Tk()
         root.title(self._title)
 
         frame = tk.Frame(root)
@@ -2058,6 +2057,8 @@ class TkRunner(object):
         self._info = _info
         self.label = label
         self.canvas = canvas
+
+        self._next()
 
     def _get_modifier(self, event):
         modifier = getattr(event, 'state', None)
