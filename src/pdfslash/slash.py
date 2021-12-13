@@ -1577,8 +1577,6 @@ class Document(object):
         numbers = self.pages.modifiable(numbers)
         imagedata = self._get_imagedata(numbers)
         runner = TkRunner(imagedata, self)
-        print('running tkinter...',
-            "type 'q' to quit, 'h' to see help in terminal")
         runner.run(do_run)
         return runner
 
@@ -1992,6 +1990,8 @@ class TkRunner(object):
         self.build(root)
         self._next()
         if do_run:
+            print('running tkinter...',
+                "type 'q' to quit, 'h' to see help in terminal")
             root.mainloop()
 
     def build(self, root):
