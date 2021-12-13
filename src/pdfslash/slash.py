@@ -2095,8 +2095,7 @@ class TkRunner(object):
         self._get_image()
 
     def _is_single_group(self):
-        if self.i.g_num == 1:
-            return True
+        return self.i.g_num == 1
 
     def _get_image(self):
         self.canvas.config(width=self.i.width, height=self.i.height)
