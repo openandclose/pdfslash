@@ -1203,10 +1203,10 @@ class BrissCropFinder(CropFinder):
     https://github.com/fatso83/briss-archived
     """
 
-    RATIO_LOOK_AHEAD_SATISFY = 0.85
-    LOOK_AHEAD_PIXEL_NR = 30
-    SD_CALC_SIZE_NR = 5
-    SD_THRESHOLD_TO_BE_COUNTED = 0.2
+    STD_SIZE = 5  # SD_CALC_SIZE_NR
+    SIZE = 30  # LOOK_AHEAD_PIXEL_NR
+    THRESHOLD = 0.2  # SD_THRESHOLD_TO_BE_COUNTED
+    SUCCESS_RATE = 0.85  # RATIO_LOOK_AHEAD_SATISFY
 
     def find(self, img):
         shape = img.shape
@@ -1217,11 +1217,11 @@ class BrissCropFinder(CropFinder):
         X = self._diff(X)
         Y = self._diff(Y)
 
-        wx, wy = self._get_wsize(self.SD_CALC_SIZE_NR, shape)
+        wx, wy = self._get_wsize(self.STD_SIZE, shape)
         X = self._std(self._roll(X, wx), wx)
         Y = self._std(self._roll(Y, wy), wy)
 
-        wx, wy = self._get_wsize(self.LOOK_AHEAD_PIXEL_NR, shape)
+        wx, wy = self._get_wsize(self.SIZE, shape)
         x0, x1 = self._find(self._roll(X, wx), wx)
         y0, y1 = self._find(self._roll(Y, wy), wy)
 
@@ -1265,13 +1265,11 @@ class BrissCropFinder(CropFinder):
         return numpy.pad(numpy.std(array, axis=1), wsize)
 
     def _find(self, array, wsize):
-        threshold = self.SD_THRESHOLD_TO_BE_COUNTED
-        coefficient = self.RATIO_LOOK_AHEAD_SATISFY
         min_ = 0
         max_ = len(array) - 1
 
-        array = numpy.count_nonzero(array > threshold, axis=1)
-        array = numpy.nonzero(array > (wsize * coefficient))[0]
+        array = numpy.count_nonzero(array > self.THRESHOLD, axis=1)
+        array = numpy.nonzero(array > (wsize * self.SUCCESS_RATE))[0]
 
         if len(array) == 0:
             return min_, max_
