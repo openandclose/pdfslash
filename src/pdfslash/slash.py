@@ -2154,17 +2154,19 @@ class TkRunner(object):
         def hide(rect):
             self.canvas.itemconfig(rect.gid, state='hidden')
 
-        if rect.box is None and rect.gid is not None:  # sel
-            hide(rect)
-            return
-        if not rect.numbers and rect.gid is not None:
-            hide(rect)
+        if rect.box is None:  # only sel
+            if rect.gid is not None:
+                hide(rect)
             return
 
         if rect.gid is None:
-            create(rect)
+            if rect.numbers:
+                create(rect)
         else:
-            configure(rect)
+            if rect.numbers:
+                configure(rect)
+            else:
+                hide(rect)
 
     def _move_rect(self, rect, box):
         rect.box = box
@@ -3165,7 +3167,7 @@ class PDFSlashCmd(_PipeCmd):
         If selected or fixed,
         pages are shown with headers 's' and 'f' respectively.
 
-        (Boxes are formatted with three digit fractional part.
+        (Source cropboxes are formatted with three digit fractional part.
         So they are a bit different from actual PDF values
         e.g. as viewed by 'inspect' command.)
         """
