@@ -50,7 +50,7 @@ Interpreter
 * When the command string starts with ``'#'``,
   it is ignored.
 
-* When the command string starts with Python regex ``'\[[a-z]\] '``,
+* When the command string starts with Python regex ``'\[[a-z]+\] '``,
   the matched part is stripped.
 
   (e.g. ``'[gui] crop 1 10,10,400,500'`` -> ``'crop 1 10,10,400,500'``).
@@ -149,7 +149,7 @@ title bar and label show some information.
 
     ``595x842``: current source cropbox size. ``left`` and ``top`` are always zeros.([0, 0, 595, 841]).
 
-    ``sel``: active box (``sel`` or ``box``).
+    ``sel``: active box (string ``'sel'`` or ``'box'``).
 
     ``100,100,400,500``: active box coordinates.
 
