@@ -869,7 +869,7 @@ class _ImgGroup(object):
     def _get_img(self, index):
         return self._doc.backend.get_img(index + 1)
 
-    def get_imgs(self, indices=None, kind='group'):
+    def get(self, indices=None, kind='group'):
         indices = indices or self._indices
         if kind == 'group':
             yield from self.get_groups(indices)
@@ -948,7 +948,7 @@ class _ImgSet(object):
         self.imgs = imgs
 
     def get(self, indices):
-        for meta, indices, imgs in self.imgs.get_imgs(indices):
+        for meta, indices, imgs in self.imgs.get(indices):
             both = (indices, self._get_img(imgs))
 
             odds, o_indices = self._get_odds(indices)
