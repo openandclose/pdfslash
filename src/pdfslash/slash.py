@@ -1611,7 +1611,7 @@ class Document(object):
 class _Rect(object):
     """Define rectangle data attributes."""
 
-    ctypes = ('all', 'some', 'none')  # color types
+    color_types = ('all', 'some', 'none')
     colors = {
         'all': COLORS['blue'],  # box for all pages
         'some': COLORS['lightblue'],  # box for some pages
@@ -1656,7 +1656,7 @@ class _Rect(object):
         return self._rects.active_index == self._box
 
     @property
-    def ctype(self):
+    def color_type(self):
         numbers = self.numbers
         if not numbers:
             return 'none'
@@ -1668,10 +1668,10 @@ class _Rect(object):
     @property
     def color(self):
         if self.active:
-            ctype = 'active'
+            color_type = 'active'
         else:
-            ctype = self.ctype
-        return self.colors[ctype]
+            color_type = self.color_type
+        return self.colors[color_type]
 
 
 class _SelRect(_Rect):
