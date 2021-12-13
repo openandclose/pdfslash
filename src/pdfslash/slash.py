@@ -476,6 +476,7 @@ class _BoxData(object):
             old_box = old_box[0] if old_box else None
             command = op, n - 1, box, old_box
             command_set.append(command)
+
         self.stacker.set(command_set, msg)
 
     def append(self, numbers, box, msg=None):
