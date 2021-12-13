@@ -1211,19 +1211,19 @@ class BrissCropFinder(CropFinder):
     def find(self, img):
         shape = img.shape
 
-        sumX = self._sum_x(img)
-        sumY = self._sum_y(img)
+        X = self._sum_x(img)
+        Y = self._sum_y(img)
 
-        diffX = self._diff(sumX)
-        diffY = self._diff(sumY)
+        X = self._diff(X)
+        Y = self._diff(Y)
 
         wx, wy = self._get_wsize(self.SD_CALC_SIZE_NR, shape)
-        sdsX = self._std(self._roll(diffX, wx), wx)
-        sdsY = self._std(self._roll(diffY, wy), wy)
+        X = self._std(self._roll(X, wx), wx)
+        Y = self._std(self._roll(Y, wy), wy)
 
         wx, wy = self._get_wsize(self.LOOK_AHEAD_PIXEL_NR, shape)
-        x0, x1 = self._find(self._roll(sdsX, wx), wx)
-        y0, y1 = self._find(self._roll(sdsY, wy), wy)
+        x0, x1 = self._find(self._roll(X, wx), wx)
+        y0, y1 = self._find(self._roll(Y, wy), wy)
 
         return x0, y0, x1, y1
 
