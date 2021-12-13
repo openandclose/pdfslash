@@ -1368,8 +1368,6 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     # from b469ab92 (2021/01/27 'upload v1.18.7').
 
     def __init__(self, *args, **kwargs):
-        if not fitz:
-            raise ImportError('Failed to import PyMuPDF (fitz).')
         super().__init__(*args, **kwargs)
         self._password = None  # keep password as plaintext
 
