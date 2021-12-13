@@ -1430,8 +1430,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         index = number - 1
         page = self.pdf[index]
         width, height = getsize(self.boxes[index])
-        # sometimes source pdf uses float sizes, so clipping them to ints.
-        clip = (0, 0, width, height)
+        clip = (0, 0, width, height)  # clipping them to ints
         get_pixmap = self._compat(page, ('get_pixmap', 'getPixmap'))
         bytes_ = get_pixmap(
             colorspace='gray', alpha=False, clip=clip, annots=False).samples
@@ -1451,7 +1450,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         for i, index in enumerate(indices):
             page = pdf[i]
-            box = self._un_rotate(page, boxes[i])  # c.f. box is now floats
+            box = self._un_rotate(page, boxes[i])
             if box:
                 set_cropbox = self._compat(page, ('set_cropbox', 'setCropBox'))
                 set_cropbox(box)
@@ -1480,15 +1479,17 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         rot = page.rotation
         w, h = page.mediabox[2:]
         if rot == 0:
-            return box
+            new = box
         elif rot == 90:
-            return [h - box[1], box[2], h - box[3], box[0]]
+            new = [h - box[1], box[2], h - box[3], box[0]]
         elif rot == 180:
-            return [w - box[2], h - box[3], w - box[0], h - box[1]]
+            new = [w - box[2], h - box[3], w - box[0], h - box[1]]
         elif rot == 270:
-            return [box[3], w - box[0], box[1], w - box[2]]
+            new = [box[3], w - box[0], box[1], w - box[2]]
         else:
-            return box  # illegal in PDF reference
+            new = box  # illegal in PDF reference
+
+        return ints(new)
 
     # alternative, not used, not finished (it uses cropbox for w and h)
     def _un_rotate__(self, page, box):
