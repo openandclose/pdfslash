@@ -685,9 +685,9 @@ class _Pages(object):
         commands = []
         for command in commands_:
             op, n, *boxes = command
-            nn = (n,)
-            if self.modifiable(nn):
-                self.verify(nn, boxes[-1])
+            numbers = (n,)
+            if self.modifiable(numbers):
+                self.verify(numbers, boxes[-1])
                 commands.append(command)
 
         if msg is None:
