@@ -1730,10 +1730,11 @@ class _Rects(object):
 
     def clip_box(self, box):
         x0, y0, x1, y1 = box
-        x0 = max(0, min(x0, self.i._width))
-        y0 = max(0, min(y0, self.i._height))
-        x1 = max(0, min(x1, self.i._width))
-        y1 = max(0, min(y1, self.i._height))
+        w, h = self.i._width, self.i._height
+        x0 = max(0, min(x0, w))
+        y0 = max(0, min(y0, h))
+        x1 = max(0, min(x1, w))
+        y1 = max(0, min(y1, h))
         return x0, y0, x1, y1
 
     @property
