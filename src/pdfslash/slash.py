@@ -1637,6 +1637,9 @@ class _Rect(object):
         if box is None:
             self._tempbox = None
         else:
+            x0, y0, x1, y1 = box
+            if (x1 - x0 < 1) or (y1 - y0 < 1):
+                return
             self._tempbox = self._rects.clip_box(box)
 
     @property
@@ -1731,10 +1734,10 @@ class _Rects(object):
     def clip_box(self, box):
         x0, y0, x1, y1 = box
         w, h = self.i._width, self.i._height
-        x0 = max(0, min(x0, w))
-        y0 = max(0, min(y0, h))
-        x1 = max(0, min(x1, w))
-        y1 = max(0, min(y1, h))
+        x0 = max(0, min(x0, w - 1))
+        y0 = max(0, min(y0, h - 1))
+        x1 = max(x0 + 1, min(x1, w))
+        y1 = max(y0 + 1, min(y1, h))
         return x0, y0, x1, y1
 
     @property
