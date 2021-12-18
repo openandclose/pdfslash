@@ -447,16 +447,16 @@ class _Boxes(MutableSequence):
 
 
 class _BoxData(object):
-    """Manage a collection of _Boxes (PDF pages of new cropboxes).
+    """Manage a collection of _Boxes (future cropboxes).
 
     Define additional operations (op):
     'append', 'overwrite', 'modify', 'discard', 'clear' and 'set_each'.
     """
 
-    def __init__(self, cboxes):
-        self.cboxes = [tuple(cbox) for cbox in cboxes]
+    def __init__(self, cropboxes):
+        self.cropboxes = [tuple(cropbox) for cropbox in cropboxes]
         self.boxdict = _Boxdict(self)
-        self.numbers = tuple(range(1, len(cboxes) + 1))
+        self.numbers = tuple(range(1, len(cropboxes) + 1))
         self.boxes = [_Boxes(n, self.boxdict) for n in self.numbers]
         self.stacker = _Stacker(self.boxes)
 
@@ -578,8 +578,8 @@ class _Page(object):
         self.number = number
 
     @property
-    def cbox(self):
-        return self.pages.boxdata.cboxes[self.number - 1]
+    def cropbox(self):
+        return self.pages.boxdata.cropboxes[self.number - 1]
 
     @property
     def boxes(self):
@@ -602,7 +602,7 @@ class _Page(object):
     def tostring(self):
         selected = 's' if self.selected else ' '
         fixed = 'f' if self.fixed else ' '
-        box = '%.3f,%.3f,%.3f,%.3f' % self.cbox
+        box = '%.3f,%.3f,%.3f,%.3f' % self.cropbox
         fmt = '%s%s %4d  source: %s'
         if not self.boxes:
             return fmt % (selected, fixed, self.number, box)
@@ -732,8 +732,8 @@ class _Pages(object):
         self._verify_box(numbers, box)
 
     def _verify_box(self, numbers, box):
-        right = min(self[n].cbox[2] for n in numbers)
-        bottom = min(self[n].cbox[3] for n in numbers)
+        right = min(self[n].cropbox[2] for n in numbers)
+        bottom = min(self[n].cropbox[3] for n in numbers)
         min_box = 0, 0, right, bottom
 
         fmt = 'box is not inside source cropbox. box: %.3f,%.3f,%.3f,%.3f.'
@@ -745,7 +745,7 @@ class _Pages(object):
     def get_boxes(self, number, fallback=True):
         page = self[number]
         if fallback:
-            return page.boxes or [page.cbox]
+            return page.boxes or [page.cropbox]
         else:
             return page.boxes
 
@@ -767,7 +767,7 @@ class _Pages(object):
                 new_boxes.append(box)
         return is_single_boxes, new_numbers, new_boxes
 
-    def is_single_boxes(self, numbers):  # Each page has only one cropbox.
+    def is_single_boxes(self, numbers):  # Each page has zero or one box.
         return all(len(self.get_boxes(n)) == 1 for n in numbers)
 
     def tostring(self, numbers=None):
@@ -1031,7 +1031,7 @@ class _ImageData(object):
         self.width = None  # current scaled image width
         self.height = None  # current scaled image height
 
-        self.rects = _Rects(self)  # current (crop)boxes
+        self.rects = _Rects(self)  # current pageboxes
 
         self._stackdata = None  # g_index, im_state, _scaling._scale
         self._stacker = None
@@ -1307,7 +1307,7 @@ class Backend(object):
         pass
 
     # Each backend decides how to handle when 'is_single_boxes' is False
-    # (when a page has multiple cropboxes).
+    # (when a page has multiple boxes).
     def write(self, numbers, outfile, is_single_boxes=True):
         pass
 
@@ -1553,7 +1553,7 @@ class Document(object):
             if len(boxes) == 1:
                 box = boxes[0]
             else:  # when number of box is zero or more than one
-                box = self.pages[num].cbox
+                box = self.pages[num].cropbox
             box = self._autocrop(num, box)
             command = 'overwrite', num, box
             commands.append(command)
@@ -3065,10 +3065,9 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take two argument, page numbers and box.
 
-        Append cropbox.
+        Append box.
 
-        (Add box as cropbox to specified pages,
-        keeping previously added cropboxes.)
+        (Add box to specified pages, keeping previously added boxes.)
         """
         self._append_or_overwrite(args, which='append')
 
@@ -3076,10 +3075,9 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take two argument, page numbers and box.
 
-        Replace cropbox.
+        Replace box.
 
-        (Add box as cropbox to specified pages,
-        removing previously added cropboxes.)
+        (Add box to specified pages, removing previously added boxes.)
         """
         self._append_or_overwrite(args, which='overwrite')
 
@@ -3087,7 +3085,7 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take three argument, page numbers, box1 and box2.
 
-        Modify cropbox.
+        Modify box.
 
         (For each page, change pre-existent box (box1) to new box (box2).
         If box1 doesn't exist in any page, it is Error).
@@ -3105,7 +3103,7 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take two argument, page numbers and box.
 
-        Delete cropbox.
+        Delete box.
 
         (Find the box in each specified page, and remove them.
         If the box doesn't exist in any page, it is Error).
@@ -3123,9 +3121,9 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take one argument, page numbers.
 
-        Claer cropboxes.
+        Claer boxes.
 
-        (Delete all added cropboxes in specified pages.
+        (Delete all added boxes in specified pages.
         that is, they revert to the original source cropboxes).
         """
         numbers, opts = self.cmdparser.parse(args)
@@ -3174,7 +3172,7 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take one argument, page numbers (optional).
 
-        Show current cropboxes for pages.
+        Show current boxes for specified pages.
 
         If selected or fixed,
         pages are shown with headers 's' and 'f' respectively.

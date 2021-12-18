@@ -65,11 +65,11 @@ box commands take two or three.
 
     (pdfslash) info 1-3,7
 
-        # Show page cropbox info for page 1,2,3,7
+        # Show page box info for page 1,2,3,7
 
     (pdfslash) crop 6-9 30,30,400,500
 
-        # Append new cropbox (left,top,right,bottom),
+        # Append new box (left,top,right,bottom),
         # for page 6,7,8,9.
 
 To run GUI, use ``preview``.
