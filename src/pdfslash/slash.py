@@ -1549,7 +1549,11 @@ class Document(object):
         numbers = self.pages.modifiable(numbers)
         commands = []
         for num in numbers:
-            box = self.pages.get_boxes(num, fallback=True)[0]
+            boxes = self.pages.get_boxes(num, fallback=False)
+            if len(boxes) == 1:
+                box = boxes[0]
+            else:  # when number of box is zero or more than one
+                box = self.pages[num].cbox
             box = self._autocrop(num, box)
             command = 'overwrite', num, box
             commands.append(command)
@@ -3134,11 +3138,12 @@ class PDFSlashCmd(_PipeCmd):
 
         Auto detect page margins and apply (overwrite) them.
 
-        (That is, previously added cropboxes are removed.)
+        If the number of box is one,
+        the detection is done against this box,
+        else (the number is zero or two or more),
+        the detection is done against source cropbox.
 
-        .. code-block:: none
-
-            auto 3-5        # Replace cropbox for pages 3,4,5
+        All previously added boxes are removed.
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
