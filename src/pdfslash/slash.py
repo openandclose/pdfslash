@@ -742,16 +742,16 @@ class _Pages(object):
         if min_box[2] < box[2] or min_box[3] < box[3]:
             raise ValueError(fmt % box)
 
-    def _get_box(self, number, fallback=True):
+    def get_boxes(self, number, fallback=True):
         page = self[number]
         if fallback:
             return page.boxes or [page.cbox]
         else:
             return page.boxes
 
-    def get_boxes(self, numbers=None, fallback=True):
+    def get_pageboxes(self, numbers=None, fallback=True):
         numbers = numbers or self.numbers
-        return [self._get_box(n, fallback=fallback) for n in numbers]
+        return [self.get_boxes(n, fallback=fallback) for n in numbers]
 
     def get_boxes_flattened(self, numbers):
         # Used in pdf backend write (Document.write).
@@ -761,14 +761,14 @@ class _Pages(object):
         new_boxes = []
         is_single_boxes = self.is_single_boxes(numbers)
         for n in numbers:
-            boxes = self._get_box(n)
+            boxes = self.get_boxes(n)
             for box in boxes:
                 new_numbers.append(n)
                 new_boxes.append(box)
         return is_single_boxes, new_numbers, new_boxes
 
     def is_single_boxes(self, numbers):  # Each page has only one cropbox.
-        return all(len(self._get_box(n)) == 1 for n in numbers)
+        return all(len(self.get_boxes(n)) == 1 for n in numbers)
 
     def tostring(self, numbers=None):
         numbers = numbers or self.numbers
@@ -917,7 +917,8 @@ class _ImgGroup(object):
 
     # not used
     def _get_boxes(self):
-        return [tuple(b) for b in self._doc.pages.get_boxes(fallback=False)]
+        return [tuple(b) for b
+            in self._doc.pages.get_pageboxes(fallback=False)]
 
     # not used
     def _subgroupby(self, indices, boxes):
@@ -1548,7 +1549,7 @@ class Document(object):
         numbers = self.pages.modifiable(numbers)
         commands = []
         for num in numbers:
-            box = self.pages._get_box(num, fallback=True)[0]
+            box = self.pages.get_boxes(num, fallback=True)[0]
             box = self._autocrop(num, box)
             command = 'overwrite', num, box
             commands.append(command)
@@ -2599,7 +2600,8 @@ class BoxParser(object):
     def _get_pageboxes(self, numbers):
         cache = self._cache
         if cache['pageboxes'] is None:
-            cache['pageboxes'] = self._pages.get_boxes(numbers, fallback=False)
+            pageboxes = self._pages.get_pageboxes(numbers, fallback=False)
+            cache['pageboxes'] = pageboxes
         return cache['pageboxes']
 
     def _copy_pageboxes(self, numbers):
