@@ -403,7 +403,9 @@ class _Stacker(object):
         return msg
 
     def export(self):
-        return [msg for commands, msg in self._stack._stack]
+        stack = self._stack._stack
+        pos = self._stack.pos
+        return [msg for commands, msg in stack[:pos + 1]]
 
 
 class _Boxes(MutableSequence):
