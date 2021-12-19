@@ -1489,9 +1489,9 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
     def _copy_pages(self, pdf, numbers, indices, boxes):
         length = len(pdf)
-        excluded = [n for n in range(1, length + 1) if n not in numbers]
+        excluded = [n - 1 for n in range(1, length + 1) if n not in numbers]
         if excluded:
-            pdf.delete_pages(excluded)  # .delete_pages is one-based.
+            pdf.delete_pages(excluded)  # TODO: list argument is from v1.18.13
         prev = -1
         for i, index in enumerate(indices):
             if index == prev:
