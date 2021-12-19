@@ -167,6 +167,27 @@ def filter_numbers(numbers, which=0, need_indices=False):
     return numbers, number_indices  # note: tuple and list
 
 
+def rotate(w, h, rot, box):
+    # Rotate box in PDF mediabox coordinates (0, 0, w, h).
+    # rot is one of 0, 90, 180, 270 or 360.
+    rot = rot % 360
+    if rot == 0:
+        new = box
+    elif rot == 90:
+        new = [w - box[3], box[0], w - box[1], box[2]]
+    elif rot == 180:
+        new = [w - box[2], h - box[3], w - box[0], h - box[1]]
+    elif rot == 270:
+        new = [box[1], h - box[2], box[3], h - box[0]]
+    else:
+        new = box  # illegal in PDF reference
+    return ints(new)
+
+
+def unrotate(w, h, rot, box):
+    return rotate(w, h, 360 - rot, box)
+
+
 class PDFSlashError(Exception):
     """Errors the program defines."""
 
@@ -1453,7 +1474,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         for i, index in enumerate(indices):
             page = pdf[i]
-            box = self._un_rotate(page, boxes[i])
+            box = self.unrotate(page, boxes[i])
             if box:
                 set_cropbox = self._compat(page, ('set_cropbox', 'setCropBox'))
                 set_cropbox(box)
@@ -1478,28 +1499,10 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     def _adjut_toc(self, pdf, numbers, boxes):
         pass
 
-    def _un_rotate(self, page, box):
+    def unrotate(self, page, box):
         rot = page.rotation
         w, h = page.mediabox[2:]
-        if rot == 0:
-            new = box
-        elif rot == 90:
-            new = [h - box[1], box[2], h - box[3], box[0]]
-        elif rot == 180:
-            new = [w - box[2], h - box[3], w - box[0], h - box[1]]
-        elif rot == 270:
-            new = [box[3], w - box[0], box[1], w - box[2]]
-        else:
-            new = box  # illegal in PDF reference
-
-        return ints(new)
-
-    # alternative, not used, not finished (it uses cropbox for w and h)
-    def _un_rotate__(self, page, box):
-        box = fitz.Rect(box)
-        box = box * page.derotation_matrix
-        box = box.normalize()
-        return tuple(box)
+        return unrotate(w, h, rot, box)
 
 
 class Document(object):
