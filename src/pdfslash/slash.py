@@ -1402,8 +1402,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     # from b469ab92 (2021/01/27 'upload v1.18.7').
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self._password = None  # keep password as plaintext
+        super().__init__(*args, **kwargs)
 
     def load_pdf(self):
         doc = fitz.open(self.fname)
