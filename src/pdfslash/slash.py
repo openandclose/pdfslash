@@ -1474,11 +1474,14 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             self._copy_pages(pdf, numbers, indices, boxes)  # deep copy
             self._adjut_toc(pdf, indices, boxes)
 
+        cropbox_position = self._compat('cropbox_position', 'CropBoxPosition')
         set_cropbox = self._compat('set_cropbox', 'setCropBox')
 
         for i, index in enumerate(indices):
             page = pdf[i]
             box = self.unrotate(page, boxes[i])
+            pos = cropbox_position(page)
+            box = self._shift_box(box, pos)
             set_cropbox(page)(box)
 
         self._save(pdf, outfile)
@@ -1505,6 +1508,11 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         rot = page.rotation
         w, h = page.mediabox[2:]
         return unrotate(w, h, rot, box)
+
+    def _shift_box(self, box, pos):
+        x0, y0, x1, y1 = box
+        x, y = pos
+        return x0 + x, y0 + y, x1 + x, y1 + y
 
 
 class Document(object):
