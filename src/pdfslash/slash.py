@@ -1352,6 +1352,14 @@ class _PyMuPDFBackend(Backend):
             return attr
         return wrapper
 
+    # v1.18.13 introduced list type argument
+    def _delete_pages(self, pdf, numbers):
+        try:
+            pdf.delete_pages(numbers)
+        except TypeError:
+            for n in numbers:
+                pdf.delete_page(n)
+
     # mostly the same arguments as fitz's '.ez_save' (v1.18.11)
     def _save(self, pdf, outfile):
         args = dict(
@@ -1491,7 +1499,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         length = len(pdf)
         excluded = [n - 1 for n in range(1, length + 1) if n not in numbers]
         if excluded:
-            pdf.delete_pages(excluded)  # TODO: list argument is from v1.18.13
+            self._delete_pages(pdf, excluded)
         prev = -1
         for i, index in enumerate(indices):
             if index == prev:
