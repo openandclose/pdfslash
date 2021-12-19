@@ -1410,15 +1410,16 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         return self.decrypt(doc)
 
     def decrypt(self, doc):
-        if doc.is_encrypted:  # TODO: oldname is isEncrypted
+        is_encrypted = self._compat('is_encrypted', 'isEncrypted')
+        if is_encrypted(doc):
             if self._password:
                 doc.authenticate(self._password)
-        if doc.is_encrypted:
+        if is_encrypted(doc):
             doc.authenticate('')
         cnt = 0
         first = True
         password = None
-        while doc.is_encrypted:
+        while is_encrypted(doc):
             if first is True:
                 print('The document is password protected. '
                     'Will abort after three unsuccessful inputs.')
