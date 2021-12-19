@@ -2505,7 +2505,7 @@ class NumParser(object):
                 n1, n2 = num[:i], num[i + 1:]
                 n1, n2 = int2(n1.strip()), int2(n2.strip())
                 if n1 >= n2:
-                    _error_supl = 'left operand is greater than right'
+                    _error_supl = 'left operand is equal or greater than right'
                     raise ValueError
                 if num[i] == '-':
                     lst = list(range(n1, n2 + 1))
