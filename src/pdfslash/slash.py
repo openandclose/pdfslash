@@ -1343,12 +1343,14 @@ class _PyMuPDFBackend(Backend):
 
     # handle depreciated names
     # https://pymupdf.readthedocs.io/en/latest/znames.html
-    def _compat(self, obj, names):
-        for name in names:
-            attr = getattr(obj, name, None)
-            if attr:
-                break
-        return attr
+    def _compat(self, *names):
+        def wrapper(obj):
+            for name in names:
+                attr = getattr(obj, name, None)
+                if attr:
+                    break
+            return attr
+        return wrapper
 
     # mostly the same arguments as fitz's '.ez_save' (v1.18.11)
     def _save(self, pdf, outfile):
@@ -1400,7 +1402,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         return self.decrypt(doc)
 
     def decrypt(self, doc):
-        if doc.is_encrypted:
+        if doc.is_encrypted:  # TODO: oldname is isEncrypted
             if self._password:
                 doc.authenticate(self._password)
         if doc.is_encrypted:
@@ -1455,7 +1457,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         page = self.pdf[index]
         width, height = getsize(self.boxes[index])
         clip = (0, 0, width, height)  # clipping them to ints
-        get_pixmap = self._compat(page, ('get_pixmap', 'getPixmap'))
+        get_pixmap = self._compat('get_pixmap', 'getPixmap')(page)
         bytes_ = get_pixmap(
             colorspace='gray', alpha=False, clip=clip, annots=False).samples
         array = numpy.frombuffer(bytes_, dtype=UINT8)
@@ -1472,12 +1474,12 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             self._copy_pages(pdf, numbers, indices, boxes)  # deep copy
             self._adjut_toc(pdf, indices, boxes)
 
+        set_cropbox = self._compat('set_cropbox', 'setCropBox')
+
         for i, index in enumerate(indices):
             page = pdf[i]
             box = self.unrotate(page, boxes[i])
-            if box:
-                set_cropbox = self._compat(page, ('set_cropbox', 'setCropBox'))
-                set_cropbox(box)
+            set_cropbox(page)(box)
 
         self._save(pdf, outfile)
         pdf.close()
