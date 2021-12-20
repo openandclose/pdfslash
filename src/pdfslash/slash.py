@@ -169,7 +169,7 @@ def filter_numbers(numbers, which=0, need_indices=False):
 
 def rotate(w, h, rot, box):
     # Rotate box in PDF mediabox coordinates (0, 0, w, h).
-    # rot is one of 0, 90, 180, 270 or 360.
+    # rot must be a multiple of 90.
     rot = rot % 360
     if rot == 0:
         new = box
