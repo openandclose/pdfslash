@@ -1357,7 +1357,7 @@ class _PyMuPDFBackend(Backend):
         try:
             pdf.delete_pages(numbers)
         except TypeError:
-            for n in numbers:
+            for n in reversed(numbers):
                 pdf.delete_page(n)
 
     # mostly the same arguments as fitz's '.ez_save' (v1.18.11)
