@@ -1304,10 +1304,7 @@ class BrissCropFinder(CropFinder):
 
 
 class Backend(object):
-    """Define external pdf library interface.
-
-    box values must be integers.
-    """
+    """Define external pdf library interface."""
 
     def __init__(self, fname):
         self.fname = fname
