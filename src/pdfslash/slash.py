@@ -1450,16 +1450,29 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         return boxes
 
     def get_data(self):
+        data = {}
+        self._get_data(data)
+        self._get_info(data)
+        return data
+
+    def _get_data(self, data):
+        keys = {
+            'mediabox': self._compat('mediabox', 'MediaBox'),
+            'cropbox': self._compat('cropbox', 'CropBox'),
+            'rotation': self._compat('rotation',),
+        }
+        for key in keys:
+            data[key] = []
+        for page in self.pdf:
+            for key in keys:
+                data[key].append(keys[key](page))
+
+    def _get_info(self, data):
         if getattr(self.pdf, 'xref_get_keys', None) is None:  # v1.18.7
             return []
 
         bboxes = 'MediaBox', 'CropBox', 'BleedBox', 'TrimBox', 'ArtBox'
-
-        data = {
-            'info': {},
-        }
-
-        info = data['info']
+        info = {}
         for name in bboxes:
             info[name] = []
 
@@ -1475,7 +1488,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                         bound.append(box)
                         continue
                 bound.append(None)
-        return data
+
+        data['info'] = info
 
     def get_img(self, number):  # c.f. 5ms per page, 3s for 600p
         index = number - 1
