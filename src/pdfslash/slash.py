@@ -58,9 +58,6 @@ except ImportError:
     fitz = None
 
 
-BOUNDNAMES = 'MediaBox', 'CropBox', 'BleedBox', 'TrimBox', 'ArtBox'
-
-
 _ENV_VAR_DIR = 'PDFSLASH_DIR'
 _CONFIG_FILENAME = 'pdfslash.ini'
 
@@ -1456,18 +1453,20 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         if getattr(self.pdf, 'xref_get_keys', None) is None:  # v1.18.7
             return []
 
+        bboxes = 'MediaBox', 'CropBox', 'BleedBox', 'TrimBox', 'ArtBox'
+
         data = {
             'info': {},
         }
 
         info = data['info']
-        for name in BOUNDNAMES:
+        for name in bboxes:
             info[name] = []
 
         for page in self.pdf:
             keys = self.pdf.xref_get_keys(page.xref)
             seen = set()
-            for name in BOUNDNAMES:
+            for name in bboxes:
                 bound = info[name]
                 if name in keys:
                     _, box = self.pdf.xref_get_key(page.xref, name)
