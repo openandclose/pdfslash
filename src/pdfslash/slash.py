@@ -1309,20 +1309,30 @@ class Backend(object):
     def __init__(self, fname):
         self.fname = fname
         self.pdf = self.load_pdf()
+        self.data = self.get_data()
         self.boxes = self.get_boxes()
 
     def load_pdf(self):
         pass
 
-    def get_boxes(self):
+    def get_data(self):
         pass
 
-    # get all page boundaries (mediabox, cropbox, bleedbox, trimbox, artbox)
-    def get_info(self):
+    def get_boxes(self):
         pass
 
     def get_img(self, number):
         pass
+
+    def get_info(self, numbers):
+        try:
+            info = self.data['info']
+        except (TypeError, KeyError):
+            return []
+
+        for name, values in info.items():
+            key = lambda x: values[x - 1]
+            yield name, groupby(numbers, key=key)
 
     # Each backend decides how to handle when 'is_single_boxes' is False
     # (when a page has multiple boxes).
@@ -1442,21 +1452,31 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             boxes.append(tuple(page.rect))
         return boxes
 
-    def get_info(self):
-        # Note: xref_get_key and xref_get_keys are from v1.18.7
-        bounds = [[], [], [], [], []]
+    def get_data(self):
+        if getattr(self.pdf, 'xref_get_keys', None) is None:  # v1.18.7
+            return []
+
+        data = {
+            'info': {},
+        }
+
+        info = data['info']
+        for name in BOUNDNAMES:
+            info[name] = []
+
         for page in self.pdf:
             keys = self.pdf.xref_get_keys(page.xref)
             seen = set()
-            for boundname, bound in zip(BOUNDNAMES, bounds):
-                if boundname in keys:
-                    _, box = self.pdf.xref_get_key(page.xref, boundname)
+            for name in BOUNDNAMES:
+                bound = info[name]
+                if name in keys:
+                    _, box = self.pdf.xref_get_key(page.xref, name)
                     if box and box != 'null' and box not in seen:
                         seen.add(box)
                         bound.append(box)
                         continue
                 bound.append(None)
-        return bounds
+        return data
 
     def get_img(self, number):  # c.f. 5ms per page, 3s for 600p
         index = number - 1
@@ -1609,13 +1629,6 @@ class Document(object):
         indices = num2ind(numbers)
         imagedata = _ImageData(self, indices)
         return TkRunner(imagedata, self)
-
-    def get_info(self, numbers):
-        if self._bounds is None:
-            self._bounds = self.backend.get_info()
-        for bound in self._bounds:
-            key = lambda x: bound[x - 1]
-            yield groupby(numbers, key=key)
 
     def write(self, numbers):
         numbers = self.pages.selectable(numbers)
@@ -3214,24 +3227,24 @@ class PDFSlashCmd(_PipeCmd):
         The same values from the previous ones are omitted).
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
-        if numbers:
-            try:
-                bounds = self._doc.get_info(numbers)
-            except AttributeError:
-                msg = ('Error while parsing low-level PDF data.\n',
-                    'Note this command requires PyMuPDF v1.18.7 or later.')
-                self.printout(''.join(msg))
+        if not numbers:
+            return
 
-            for boundname, groups in zip(BOUNDNAMES, bounds):
-                first = True
-                for box, nums in groups:
-                    if box is None:
-                        continue
-                    if first:
-                        self.printout('%s:' % boundname)
-                        first = False
-                    nstr = self.numparser.unparse(nums)
-                    self.printout('    %-30s  (%s)' % (box, nstr))
+        info = self._doc.backend.get_info(numbers)
+        if not info:
+            self.printout('Not implemented.')
+            return
+
+        for name, groups in info:
+            first = True
+            for attr, nums in groups:
+                if attr is None:
+                    continue
+                if first:
+                    self.printout('%s:' % name)
+                    first = False
+                nstr = self.numparser.unparse(nums)
+                self.printout('    %-30s  (%s)' % (attr, nstr))
 
     def do_undo(self, args):
         """
