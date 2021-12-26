@@ -1472,22 +1472,32 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             return []
 
         bboxes = 'MediaBox', 'CropBox', 'BleedBox', 'TrimBox', 'ArtBox'
+        others = 'Rotate', 'UserUnit'
         info = {}
-        for name in bboxes:
+        for name in bboxes + others:
             info[name] = []
 
         for page in self.pdf:
             keys = self.pdf.xref_get_keys(page.xref)
             seen = set()
             for name in bboxes:
-                bound = info[name]
+                vals = info[name]
                 if name in keys:
                     _, box = self.pdf.xref_get_key(page.xref, name)
                     if box and box != 'null' and box not in seen:
                         seen.add(box)
-                        bound.append(box)
+                        vals.append(box)
                         continue
-                bound.append(None)
+                vals.append(None)
+
+            for name in others:
+                vals = info[name]
+                if name in keys:
+                    _, attr = self.pdf.xref_get_key(page.xref, name)
+                    if attr and attr != 'null':
+                        vals.append(attr)
+                        continue
+                vals.append(None)
 
         data['info'] = info
 
@@ -3234,10 +3244,12 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take one argument, page numbers (optional).
 
-        Show page boundaries structures for specified pages.
+        Show some raw page attributes for specified pages.
+        Inheritances are not followed.
 
-        (raw PDF values of MediaBox, CropBox, BleedBox, TrimBox and ArtBox.
-        The same values from the previous ones are omitted).
+        (Raw PDF values of
+        MediaBox, CropBox, BleedBox, TrimBox, ArtBox, Rotate and UserUnit.
+        For boxes, he same values from the previous ones are omitted
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if not numbers:
