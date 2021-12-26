@@ -1321,7 +1321,7 @@ class Backend(object):
         pass
 
     # get all page boundaries (mediabox, cropbox, bleedbox, trimbox, artbox)
-    def get_bounds(self):
+    def get_info(self):
         pass
 
     def get_img(self, number):
@@ -1445,7 +1445,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             boxes.append(tuple(page.rect))
         return boxes
 
-    def get_bounds(self):
+    def get_info(self):
         # Note: xref_get_key and xref_get_keys are from v1.18.7
         bounds = [[], [], [], [], []]
         for page in self.pdf:
@@ -1613,9 +1613,9 @@ class Document(object):
         imagedata = _ImageData(self, indices)
         return TkRunner(imagedata, self)
 
-    def get_bounds(self, numbers):
+    def get_info(self, numbers):
         if self._bounds is None:
-            self._bounds = self.backend.get_bounds()
+            self._bounds = self.backend.get_info()
         for bound in self._bounds:
             key = lambda x: bound[x - 1]
             yield groupby(numbers, key=key)
@@ -3219,7 +3219,7 @@ class PDFSlashCmd(_PipeCmd):
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
             try:
-                bounds = self._doc.get_bounds(numbers)
+                bounds = self._doc.get_info(numbers)
             except AttributeError:
                 msg = ('Error while parsing low-level PDF data.\n',
                     'Note this command requires PyMuPDF v1.18.7 or later.')
