@@ -1443,12 +1443,6 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             self._password = password
         return doc
 
-    def get_boxes(self):
-        boxes = []
-        for page in self.pdf:
-            boxes.append(tuple(page.rect))
-        return boxes
-
     def get_data(self):
         data = {}
         self._get_data(data)
@@ -1500,6 +1494,12 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                 vals.append(None)
 
         data['info'] = info
+
+    def get_boxes(self):
+        boxes = []
+        for page in self.pdf:
+            boxes.append(tuple(page.rect))
+        return boxes
 
     def get_img(self, number):  # c.f. 5ms per page, 3s for 600p
         index = number - 1
