@@ -3190,7 +3190,7 @@ class PDFSlashCmd(_PipeCmd):
             self.printout('writing...')
             self._doc.write(numbers)
 
-    def do_info(self, args):
+    def do_show(self, args):
         """
         Take one argument, page numbers (optional).
 
@@ -3201,13 +3201,13 @@ class PDFSlashCmd(_PipeCmd):
 
         (Source cropboxes are formatted with three digit fractional part.
         So they are a bit different from actual PDF values
-        e.g. as viewed by 'inspect' command.)
+        e.g. as viewed by 'info' command.)
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
             self.printout(self._pages.tostring(numbers))
 
-    def do_inspect(self, args):
+    def do_info(self, args):
         """
         Take one argument, page numbers (optional).
 

@@ -63,9 +63,9 @@ box commands take two or three.
 
 .. code-block:: none
 
-    (pdfslash) info 1-3,7
+    (pdfslash) show 1-3,7
 
-        # Show page box info for page 1,2,3,7
+        # Show box data for page 1,2,3,7
 
     (pdfslash) crop 6-9 30,30,400,500
 

@@ -108,9 +108,9 @@ Intended for a few basic things. E.g.:
 
 .. code-block:: none
 
-    info 1-100 | grep 155
+    show 1-100 | grep 155
 
-    info 1-100 | cat > log.txt
+    show 1-100 | cat > log.txt
 
 (Currently, in the shell command string after ``'|'``,
 only ``'>'``, ``'>>'`` and ``'|'`` are considered
