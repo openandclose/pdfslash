@@ -2222,33 +2222,33 @@ class TkRunner(object):
             self._draw_rect(rect)
 
     def _draw_rect(self, rect):
-        def create(rect):
-            tag = 'sel' if rect == self._sel else 'rect'
-            rect.gid = self.canvas.create_rectangle(
-                *rect.sbox, fill='', dash=rect.dash, outline=rect.color,
-                state='normal', tags=tag)
-
-        def configure(rect):
-            self.canvas.itemconfig(
-                rect.gid, dash=rect.dash, outline=rect.color, state='normal')
-            self.canvas.coords(rect.gid, *rect.sbox)
-
-        def hide(rect):
-            self.canvas.itemconfig(rect.gid, state='hidden')
-
         if rect.box is None:  # only sel
             if rect.gid is not None:
-                hide(rect)
+                self._hide_rect(rect)
             return
 
         if rect.gid is None:
             if rect.numbers:
-                create(rect)
+                self._create_rect(rect)
         else:
             if rect.numbers:
-                configure(rect)
+                self._configure_rect(rect)
             else:
-                hide(rect)
+                self._hide_rect(rect)
+
+    def _create_rect(self, rect):
+        tag = 'sel' if rect == self._sel else 'rect'
+        rect.gid = self.canvas.create_rectangle(
+            *rect.sbox, fill='', dash=rect.dash, outline=rect.color,
+            state='normal', tags=tag)
+
+    def _configure_rect(self, rect):
+        self.canvas.itemconfig(
+            rect.gid, dash=rect.dash, outline=rect.color, state='normal')
+        self.canvas.coords(rect.gid, *rect.sbox)
+
+    def _hide_rect(self, rect):
+        self.canvas.itemconfig(rect.gid, state='hidden')
 
     def _move_rect(self, rect, box):
         rect.box = box
