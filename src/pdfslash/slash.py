@@ -91,6 +91,7 @@ COLORS = {
     # https://en.wikipedia.org/wiki/Web_colors#Extended_colors
     'blue': '#0000ff',  # Blue
     'lightblue': '#8080ff',
+    'green': '#006400',  # DarkGreen
     'orange': '#FF4500',  # OrangeRed
     'red': '#FF0000',  # Red
 }
@@ -1781,6 +1782,25 @@ class _SelRect(_Rect):
         return self._rects.active_index == 0
 
 
+class _CropBoxRect(object):
+    """Define cropbox data attributes."""
+
+    def __init__(self, rects, box, gid=None):
+        self._rects = rects
+        self._box = box  # _box: compatibility with _Rect
+        self.box = box
+        self.gid = gid
+        self.dash = ()
+
+    @property
+    def sbox(self):
+        return self._rects.i._scaling.get_scaled(self.box)
+
+    @property
+    def color(self):
+        return COLORS['green']
+
+
 class _Rects(object):
     """Manage rectangle data."""
 
@@ -1842,6 +1862,12 @@ class _Rects(object):
             return filter_numbers(numbers, 1)  # odds
         elif state == 2:
             return filter_numbers(numbers, 2)  # evens
+
+    @property
+    def cropboxes(self):
+        cropboxes = set(self.pages[n].cropbox for n in self.numbers)
+        cropboxes -= set((self.pages[self._numbers[0]].mediabox,))
+        return [_CropBoxRect(self, box) for box in cropboxes]
 
     def format_msg(self, op, numbers, box='', new_box=''):
         msg = self.i._doc.pages.format_msg(op, numbers, box, new_box)
@@ -2041,6 +2067,7 @@ _tk_help = """
         p:              previous image group
         v:              cycle view (both, odds or evens)
         V:              cycle view (reverse direction)
+        s:              toggle souce cropbox visibility
 
         a:              cycle active rectangle
         d:              delete active rectangle
@@ -2064,6 +2091,7 @@ class TkRunner(object):
 
         self._image_id = None
         self._notices = []
+        self._cropbox_state = 'normal'
 
         self._start = None
         self._end = None
@@ -2116,6 +2144,8 @@ class TkRunner(object):
 
         root.bind('<v>', self._cycle_view)
         root.bind('<V>', self._cycle_view)
+
+        root.bind('<s>', self._toggle_cropboxes)
 
         root.bind('<a>', self._cycle_rect)
         root.bind('<d>', self._remove)
@@ -2195,6 +2225,7 @@ class TkRunner(object):
         self._draw_rects()
         if self._sel.gid and self._sel.box:
             self._draw_rect(self._sel)
+        self._draw_cropboxes()
         self._set_info()
 
     def _position_window(self):
@@ -2224,7 +2255,7 @@ class TkRunner(object):
     def _draw_rect(self, rect):
         if rect.box is None:  # only sel
             if rect.gid is not None:
-                self._hide_rect(rect)
+                self._hide_rect(rect.gid)
             return
 
         if rect.gid is None:
@@ -2237,7 +2268,7 @@ class TkRunner(object):
             if rect.numbers:
                 self._configure_rect(rect)
             else:
-                self._hide_rect(rect)
+                self._hide_rect(rect.gid)
 
     def _create_rect(self, rect, tag='rect'):
         rect.gid = self.canvas.create_rectangle(
@@ -2249,12 +2280,34 @@ class TkRunner(object):
             rect.gid, dash=rect.dash, outline=rect.color, state='normal')
         self.canvas.coords(rect.gid, *rect.sbox)
 
-    def _hide_rect(self, rect):
-        self.canvas.itemconfig(rect.gid, state='hidden')
+    # Note the argument is 'gid'. Also can un-hide.
+    def _hide_rect(self, gid, new_state='hidden'):
+        self.canvas.itemconfig(gid, state=new_state)
 
     def _move_rect(self, rect, box):
         rect.box = box
         self.canvas.coords(rect.gid, *rect.sbox)
+
+    def _draw_cropboxes(self):
+        for gid in self.canvas.find_withtag('cropbox'):
+            self.canvas.delete(gid)
+        for rect in self.i.rects.cropboxes:
+            self._create_rect(rect, tag='cropbox')
+
+        if self._cropbox_state == 'hidden':
+            self._cropbox_state = 'normal'
+            self._toggle_cropboxes()
+
+    def _toggle_cropboxes(self, event=None):
+        if self._cropbox_state == 'normal':
+            new_state = 'hidden'
+        else:
+            new_state = 'normal'
+
+        for gid in self.canvas.find_withtag('cropbox'):
+            self._hide_rect(gid, new_state=new_state)
+
+        self._cropbox_state = new_state
 
     def _set_start(self, event):
         self._start = event.x, event.y
