@@ -965,12 +965,13 @@ class _ImgGroup(object):
 class _ImgSet(object):
     """Merge imgs and create derivatives (both, odds, evens)."""
 
-    def __init__(self, doc, imgs):
+    def __init__(self, doc, imgs, kind='subgroup'):
         self._doc = doc
         self.imgs = imgs
+        self.kind = kind
 
     def get(self, indices):
-        for meta, indices, imgs in self.imgs.get(indices):
+        for meta, indices, imgs in self.imgs.get(indices, self.kind):
             both = (indices, self._get_img(imgs))
 
             odds, o_indices = self._get_odds(indices)
@@ -1010,11 +1011,11 @@ class _ImgSet(object):
 class _ImageData(object):
     """Manage image data and expose current states (for tkinter)."""
 
-    def __init__(self, doc, indices):
+    def __init__(self, doc, indices, kind='subgroup'):
         self._doc = doc
         self._indices = indices  # original indices
 
-        self._imgset = _ImgSet(doc, doc.imgs)
+        self._imgset = _ImgSet(doc, doc.imgs, kind)
         self._it = self._imgset.get(indices)
 
         dev_scale = doc.conf['device_pixel_ratio']
@@ -1064,9 +1065,8 @@ class _ImageData(object):
 
         if index >= len(self._cache):
             data = next(self._it)
-            if not self._d_metadata:
-                self._d_metadata.update(data[0])
-                self.g_num = data[0]['g_num']
+            self._d_metadata.update(data[0])
+            self.g_num = data[0]['g_num']
             self._d_cache[index] = data[1:]
 
             if index == self.g_num - 1:  # done with the iterator
@@ -1658,16 +1658,16 @@ class Document(object):
         x, y = box[:2]
         return x + left, y + top, x + right, y + bottom
 
-    def preview(self, numbers):
+    def preview(self, numbers, kind='subgroup'):
         # numbers = self.pages.selectable(numbers)
         numbers = self.pages.modifiable(numbers)
-        runner = self._get_tkrunner(numbers)
+        runner = self._get_tkrunner(numbers, kind)
         runner.run()
         return runner
 
-    def _get_tkrunner(self, numbers):
+    def _get_tkrunner(self, numbers, kind='subgroup'):
         indices = num2ind(numbers)
-        imagedata = _ImageData(self, indices)
+        imagedata = _ImageData(self, indices, kind)
         return TkRunner(imagedata, self)
 
     def write(self, numbers):
@@ -3230,10 +3230,22 @@ class PDFSlashCmd(_PipeCmd):
         Take one argument, page numbers (optional).
 
         Run tkinter GUI.
+
+        Options:
+
+        ``-m``, ``--mediabox``:
+            Group pages by source mediabox
+        ``-c``, ``--cropbox``:
+            Group pages first by source mediabox,
+            and then by source cropbox (for each first groups).
+            This is the default.
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
+        kind = 'subgroup'
+        if opts and opts[0] in ('-m', '--mediabox'):
+            kind = 'group'
         if numbers:
-            self._doc.preview(numbers)
+            self._doc.preview(numbers, kind=kind)
 
     def do_write(self, args):
         """
