@@ -2809,12 +2809,18 @@ class CommandParser(object):
             if a == '--':
                 maybe_opts = False
                 continue
-            if a.startswith('--'):
-                if maybe_opts:
+            if maybe_opts:
+                if self._is_short_opt(a):
                     opts.append(a)
                     continue
             args.append(a)
         return opts, args
+
+    def _is_short_opt(self, tok):
+        numbers = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
+        if tok.startswith('-') and len(tok) > 1 and tok[1] not in numbers:
+            return True
+        return False
 
     def parse(self, args, signature='n', allow_blank=False):
         opts, args = self.parse_opts(args)
