@@ -7,9 +7,8 @@ General
 
 **rotation**:
 
-The program treats rotation-applied PDF cropboxes as given coordinates.
-Operations are always done in this coordinates, ignoring rotations
-(until writing, when the program resolves rotations).
+In user interfaces,
+PDF bounding boxes are always rotation-applied ones.
 
 
 Config

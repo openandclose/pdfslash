@@ -2,22 +2,15 @@
 
 """Crop PDF margins from interactive interpreter."""
 
-# Conventions:
+# Conventions (As long as reasonable):
 #
-# As long as reasonable:
 # Use 'index' for 0-based sequence, and 'number' or 'num' for 1-based.
+#
 # Use 'img' for numpy pixel data, 'image' for actual image (with header etc.).
 #
-# The program keeps newly created boxes separately from source cropbox.
-# Trying to use 'box' for one box in a page, 'boxes' for boxes in a page.
-# And 'pageboxes' is used, in some places,
-# for list of boxes in a collection of pages.
-#
-# Notes:
-#
-# Backend PDF library provides the rotation applied bounding box (cropbox),
-# and only when wrinting, the backend should resolve the rotation.
-# So intermediate codes ignore rotations, and the program doesn't touch them.
+# (The program keeps newly created boxes separately from source cropbox).
+# Trying to use 'box' for one box in a page, 'boxes' for boxes in a page,
+# 'pageboxes' for list of boxes in a collection of pages.
 
 
 import argparse
@@ -471,10 +464,11 @@ class _BoxData(object):
     'append', 'overwrite', 'modify', 'discard', 'clear' and 'set_each'.
     """
 
-    def __init__(self, cropboxes):
+    def __init__(self, mediaboxes, cropboxes):
+        self.mediaboxes = [tuple(mediabox) for mediabox in mediaboxes]
         self.cropboxes = [tuple(cropbox) for cropbox in cropboxes]
         self.boxdict = _Boxdict(self)
-        self.numbers = tuple(range(1, len(cropboxes) + 1))
+        self.numbers = tuple(range(1, len(mediaboxes) + 1))
         self.boxes = [_Boxes(n, self.boxdict) for n in self.numbers]
         self.stacker = _Stacker(self.boxes)
 
@@ -596,6 +590,10 @@ class _Page(object):
         self.number = number
 
     @property
+    def mediabox(self):
+        return self.pages.boxdata.mediaboxes[self.number - 1]
+
+    @property
     def cropbox(self):
         return self.pages.boxdata.cropboxes[self.number - 1]
 
@@ -634,12 +632,12 @@ class _Page(object):
 class _Pages(object):
     """Define page data interface."""
 
-    def __init__(self, boxes):
-        self.boxdata = _BoxData(boxes)
-        self.numbers = tuple(range(1, len(boxes) + 1))
+    def __init__(self, mediaboxes, cropboxes):
+        self.boxdata = _BoxData(mediaboxes, cropboxes)
+        self.numbers = tuple(range(1, len(mediaboxes) + 1))
         self.pages = [_Page(self, n) for n in self.numbers]
 
-        self.numparser = NumParser(len(boxes))
+        self.numparser = NumParser(len(mediaboxes))
 
         self.selected = [1 for _ in range(len(self.numbers))]
         self.fixed = [0 for _ in range(len(self.numbers))]
@@ -750,11 +748,11 @@ class _Pages(object):
         self._verify_box(numbers, box)
 
     def _verify_box(self, numbers, box):
-        right = min(self[n].cropbox[2] for n in numbers)
-        bottom = min(self[n].cropbox[3] for n in numbers)
+        right = min(self[n].mediabox[2] for n in numbers)
+        bottom = min(self[n].mediabox[3] for n in numbers)
         min_box = 0, 0, right, bottom
 
-        fmt = 'box is not inside source cropbox. box: %.3f,%.3f,%.3f,%.3f.'
+        fmt = 'box is not inside source mediabox. box: %.3f,%.3f,%.3f,%.3f.'
         if box[0] < min_box[0] or box[1] < min_box[1]:
             raise ValueError(fmt % box)
         if min_box[2] < box[2] or min_box[3] < box[3]:
@@ -854,8 +852,9 @@ class _ImgGroup(object):
 
     def __init__(self, doc):
         self._doc = doc
-        self._sizes = [self._get_size(box) for box in doc.backend.boxes]
-        self._indices = list(range(len(self._sizes)))
+        self._msizes = [self._get_size(box) for box in doc.backend.mediaboxes]
+        self._csizes = [self._get_size(box) for box in doc.backend.cropboxes]
+        self._indices = list(range(len(self._msizes)))
         self._load_groups()
 
     def _get_size(self, box):
@@ -863,7 +862,7 @@ class _ImgGroup(object):
         return row, col
 
     def _groupby(self, indices):
-        key = lambda x: self._sizes[x]
+        key = lambda x: self._msizes[x]
         yield from groupby(indices, key=key)
 
     def _load_groups(self):
@@ -889,7 +888,7 @@ class _ImgGroup(object):
     def _get_img(self, index):
         return self._doc.backend.get_img(index + 1)
 
-    def get(self, indices=None, kind='group'):
+    def get(self, indices=None, kind='subgroup'):
         indices = indices or self._indices
         if kind == 'group':
             yield from self.get_groups(indices)
@@ -901,11 +900,12 @@ class _ImgGroup(object):
             fmt = "kind is one of 'group', 'subgroup' or 'single'. got: %r"
             raise ValueError(fmt % kind)
 
-    def _build_metadata(self, indices, g_num, sub_num=None):
+    def _build_metadata(self, indices, g_num, sub1_num=None, sub2_num=None):
         return {
             'root_indices': indices,  # original input (from ui)
-            'g_num': g_num,  # number_of_groups
-            'sub_num': sub_num,  # number of subgroups (in a group)
+            'g_num': g_num,  # number of groups (including optinal subgroups)
+            'sub1_num': sub1_num,  # number of mediabox groups
+            'sub2_num': sub2_num,  # number of cropbox groups (in a sub1 group)
         }
 
     def get_groups(self, indices):
@@ -920,35 +920,36 @@ class _ImgGroup(object):
 
     def _get_number_of_groups(self, indices):
         """Pre-calculate the number of groups."""
-        sizes = [self._sizes[index] for index in indices]
+        sizes = [self._msizes[index] for index in indices]
         return len(set(sizes))
 
-    # not used, not making sense in the present code
     def get_subgroups(self, indices):
         """Yield subgroup (same cropboxes) selected from indices."""
-        boxes = self._get_boxes(indices)
+        g_num = self._get_number_of_all_subgroups(indices)
         for meta, indices, array in self.get_groups(indices):
-            meta['sub_num'] = self._get_number_of_subgroups(indices, boxes)
-            for box, indices in self._subgroupby(indices, boxes):
+            meta['sub1_num'] = meta['g_num']
+            meta['g_num'] = g_num
+            meta['sub2_num'] = self._get_number_of_subgroups(indices)
+            for box, indices in self._subgroupby(indices):
                 subg_indices = [self._table[index][1] for index in indices]
                 yield meta, indices, array[subg_indices]
 
-    # not used
-    def _get_boxes(self):
-        return [tuple(b) for b
-            in self._doc.pages.get_pageboxes(fallback=False)]
-
-    # not used
-    def _subgroupby(self, indices, boxes):
-        # Note: tupled cropboxes are used as key, so the ordering matters.
-        key = lambda x: boxes[x]
+    def _subgroupby(self, indices):
+        key = lambda x: self._csizes[x]
         yield from groupby(indices, key=key)
 
-    # not used
-    def _get_number_of_subgroups(self, indices, boxes):
-        """Pre-calculate the number of subgroups."""
-        boxes = [boxes[index] for index in indices]
-        return len(set(boxes))
+    def _get_number_of_all_subgroups(self, indices):
+        nums = 0
+        for size in set([self._msizes[index] for index in indices]):
+            csizes = [self._csizes[index] for index in indices
+                if self._msizes[index] == size]
+            nums += len(set(csizes))
+        return nums
+
+    def _get_number_of_subgroups(self, indices):
+        """Pre-calculate the number of goups and subgroups."""
+        csizes = [self._csizes[index] for index in indices]
+        return len(set(csizes))
 
     def get_singles(self, indices):
         """Yield imgs one by one, in indices order."""
@@ -1034,7 +1035,9 @@ class _ImageData(object):
         # temporary image cache, for each gui invocation.
         self._cache = {}
 
-        self.g_num = self._d_metadata['g_num'] if self._d_metadata else None
+        self.g_num = self._d_metadata.get('g_num')
+        self.sub1_num = self._d_metadata.get('sub1_num')
+        self.sub2_num = self._d_metadata.get('sub2_num')
         self.g_index = -1  # current gruop index
 
         self.img = None  # current img
@@ -1307,16 +1310,16 @@ class Backend(object):
         self.fname = fname
         self.pdf = self.load_pdf()
         self.data = self.get_data()
-        self.boxes = self.get_boxes()
+        self.mediaboxes, self.cropboxes = self.get_boxes()
 
     def load_pdf(self):
         pass
 
     def get_data(self):
-        pass
+        return {}
 
     def get_boxes(self):
-        pass
+        return [], []
 
     def get_img(self, number):
         pass
@@ -1496,15 +1499,36 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         data['info'] = info
 
     def get_boxes(self):
-        boxes = []
+        cropbox_position = self._compat('cropbox_position', 'CropBoxPosition')
+
+        cropboxes = []
         for page in self.pdf:
-            boxes.append(tuple(page.rect))
-        return boxes
+            cropbox = tuple(page.rect)
+            cropbox = self._shift_box(cropbox, cropbox_position(page))
+            cropboxes.append(cropbox)
+
+        self._remove_cropbox()
+
+        mediaboxes = []
+        for page in self.pdf:
+            mediaboxes.append(tuple(page.rect))
+
+        return mediaboxes, cropboxes
+
+    def _shift_box(self, box, pos):
+        x0, y0, x1, y1 = box
+        x, y = pos
+        return x0 + x, y0 + y, x1 + x, y1 + y
+
+    def _remove_cropbox(self):
+        set_cropbox = self._compat('set_cropbox', 'setCropBox')
+        for page, mediabox in zip(self.pdf, self.data['mediabox']):
+            set_cropbox(page)(mediabox)
 
     def get_img(self, number):  # c.f. 5ms per page, 3s for 600p
         index = number - 1
         page = self.pdf[index]
-        width, height = getsize(self.boxes[index])
+        width, height = getsize(self.mediaboxes[index])
         clip = (0, 0, width, height)  # clipping them to ints
         get_pixmap = self._compat('get_pixmap', 'getPixmap')(page)
         bytes_ = get_pixmap(
@@ -1523,14 +1547,11 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             self._copy_pages(pdf, numbers, indices, boxes)  # deep copy
             self._adjut_toc(pdf, indices, boxes)
 
-        cropbox_position = self._compat('cropbox_position', 'CropBoxPosition')
         set_cropbox = self._compat('set_cropbox', 'setCropBox')
 
         for i, index in enumerate(indices):
             page = pdf[i]
             box = self.unrotate(page, boxes[i])
-            pos = cropbox_position(page)
-            box = self._shift_box(box, pos)
             set_cropbox(page)(box)
 
         self._save(pdf, outfile)
@@ -1558,11 +1579,6 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         w, h = page.mediabox[2:]
         return unrotate(w, h, rot, box)
 
-    def _shift_box(self, box, pos):
-        x0, y0, x1, y1 = box
-        x, y = pos
-        return x0 + x, y0 + y, x1 + x, y1 + y
-
 
 class Document(object):
     """Manage page and img objects."""
@@ -1586,7 +1602,8 @@ class Document(object):
         backend = backend or PyMuPDFBackend
         self.backend = backend(fname)
 
-        self.pages = _Pages(self.backend.boxes)
+        boxes = self.backend.mediaboxes, self.backend.cropboxes
+        self.pages = _Pages(*boxes)
 
         self.imgs = _ImgGroup(self)
 

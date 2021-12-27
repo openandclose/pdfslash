@@ -59,7 +59,8 @@ class TestStacker:
 class TestBoxData:
 
     def create_data(self):
-        return [(0, 0, 595, 842) for _ in range(8)]
+        boxes = [(0, 0, 595, 842) for _ in range(8)]
+        return boxes, boxes
 
     def check(self, boxdata, numbers, expected):
         for n in numbers:
@@ -73,7 +74,7 @@ class TestBoxData:
         box1 = (100, 100, 300, 300)
         box2 = (200, 200, 500, 500)
 
-        boxdata = slash._BoxData(self.create_data())
+        boxdata = slash._BoxData(*self.create_data())
 
         # 1
         boxdata.overwrite((1, 2, 3), box1, msg='msg1')
@@ -197,8 +198,8 @@ class TestCommandParser:
 
     def create(self):
         def create_pages():
-            cboxes = [(0, 0, 595, 842) for _ in range(8)]
-            return slash._Pages(cboxes)
+            boxes = [(0, 0, 595, 842) for _ in range(8)]
+            return slash._Pages(boxes, boxes)
 
         def create_cmd(pages):
             cmd = NameSpace()
