@@ -2229,15 +2229,17 @@ class TkRunner(object):
 
         if rect.gid is None:
             if rect.numbers:
-                self._create_rect(rect)
+                if rect == self._sel:
+                    self._create_rect(rect, tag='sel')
+                else:
+                    self._create_rect(rect, tag='rect')
         else:
             if rect.numbers:
                 self._configure_rect(rect)
             else:
                 self._hide_rect(rect)
 
-    def _create_rect(self, rect):
-        tag = 'sel' if rect == self._sel else 'rect'
+    def _create_rect(self, rect, tag='rect'):
         rect.gid = self.canvas.create_rectangle(
             *rect.sbox, fill='', dash=rect.dash, outline=rect.color,
             state='normal', tags=tag)
