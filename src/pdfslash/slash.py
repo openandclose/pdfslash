@@ -3299,8 +3299,15 @@ class PDFSlashCmd(_PipeCmd):
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         kind = 'subgroup'
-        if opts and opts[0] in ('-m', '--mediabox'):
-            kind = 'group'
+        if opts:
+            if opts[0] in ('-m', '--mediabox'):
+                kind = 'group'
+            elif opts[0] in ('-c', '--cropbox'):
+                kind = 'subgroup'
+            else:
+                self.printout('Invald option: %s' % opts)
+                return
+
         if numbers:
             self._doc.preview(numbers, kind=kind)
 
