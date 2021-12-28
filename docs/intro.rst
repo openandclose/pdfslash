@@ -30,7 +30,6 @@ Technical Overview
 * interpreter and GUI are using Python standard libraries (
   `cmd <https://docs.python.org/3/library/cmd.html>`__
   and `tkinter <https://docs.python.org/3/library/tkinter.html>`__).
-  so no extra installations are needed.
 
 
 Installation
@@ -58,6 +57,8 @@ Upon invocation, users are faced with a commandline prompt.
 
     (pdfslash) <-- this
 
+**Interpreter Commands**:
+
 Most commands only take one argument (page numbers),
 box commands take two or three.
 
@@ -72,27 +73,40 @@ box commands take two or three.
         # Append new box (left,top,right,bottom),
         # for page 6,7,8,9.
 
+**GUI**:
+
 To run GUI, use ``preview``.
 
 .. code-block:: none
 
     (pdfslash) preview 1-100
 
-In GUI, Pages are grouped by their source cropbox sizes.
+In GUI, Pages are grouped by their source mediabox and cropbox sizes
+(See Spec ``preview`` command for details).
 
 Pages of each group are merged into one grayscale image, as in ``briss``.
 
+Each image size is equal to their mediabox size.
+
 Only one (initially first) image is shown in GUI window.
-You can navigate by keys ``n`` and ``p`` (next and previous group).
+You can navigate by keys ``n`` and ``p`` (next and previous).
 
 Each image has actually three views, ``all``, ``odds`` and ``evens``.
 E.g. if the pages of a group is ``2-5,9``,
 ``all`` is ``2,3,4,5,9``, ``odds`` is ``3,5,9`` and ``evens`` is ``2,4``.
-You can cycle them by keys ``v`` and ``V`` (forward and backward view).
+You can cycle them by keys ``v`` and ``V`` (forward and backward).
+
+Source cropboxes are shown in green.
+You can toggle visibility (show and hide) by key ``s`` (source cropbox).
+
+But when cropbox is equal to mediabox (in most cases),
+you can not see it anyway.
 
 If there are previously created boxes (say, previous boxes), they are also shown.
 Boxes in all pages (in this group and view) are in blue, and boxes just in some pages
 are in a bit lighter blue.
+
+**Crop**:
 
 In any of group and view, you can create a new box (future cropbox) with mouse.
 Click (top-left), drag and release (bottom-right).
@@ -113,6 +127,8 @@ With ``Shift + Enter``,
 the new one replaces all the previous boxes.
 That is, if any, they were removed.
 
+**Edit**:
+
 You can cycle 'active' box.
 Initially the active box is ``sel``, a virtual box
 (one with dotted lines created by mouse click, or non-existent).
@@ -128,11 +144,13 @@ They are only for box registrations, other states are initialized.
 
 To exit GUI, press ``q``.
 
+**Save**:
+
 To actually create a new PDF file, use ``write``.
 
 .. code-block:: none
 
     (pdfslash) write 2-48
 
-It creates a new file with '_slashed' appended to the filename.
-(E.g. ``some.pdf`` to ``some_slashed.pdf``).
+It creates a new file with ``'.slashed'`` appended to the filename.
+(E.g. ``some.pdf`` to ``some.slashed.pdf``).

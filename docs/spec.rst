@@ -146,9 +146,9 @@ title bar and label show some information.
 
     ``both``: current view (``both``, ``odds``, or ``evens``).
 
-    ``595x842``: current source cropbox size. ``left`` and ``top`` are always zeros.([0, 0, 595, 841]).
+    ``595x842``: current source mediabox size. ``left`` and ``top`` are always zeros.([0, 0, 595, 841]).
 
-    ``sel``: active box (string ``'sel'`` or ``'box'``).
+    ``sel``: active box (either string ``'sel'`` or ``'box'``).
 
     ``100,100,400,500``: active box coordinates.
 

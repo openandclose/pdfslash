@@ -3256,10 +3256,10 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take one argument, page numbers.
 
-        Claer boxes.
+        Clear boxes.
 
         (Delete all added boxes in specified pages.
-        that is, they revert to the original source cropboxes).
+        that is, they will revert to the original source cropboxes).
         """
         numbers, opts = self.cmdparser.parse(args)
         if numbers:
@@ -3270,13 +3270,12 @@ class PDFSlashCmd(_PipeCmd):
         Take one argument, page numbers (optional).
 
         Auto detect page margins and apply (overwrite) them.
+        All previously added boxes are removed.
 
         If the number of box is one,
         the detection is done against this box,
         else (the number is zero or two or more),
         the detection is done against source cropbox.
-
-        All previously added boxes are removed.
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
@@ -3288,13 +3287,13 @@ class PDFSlashCmd(_PipeCmd):
 
         Run tkinter GUI.
 
-        Options:
+        Options (optional):
 
         ``-m``, ``--mediabox``:
             Group pages by source mediabox
         ``-c``, ``--cropbox``:
             Group pages first by source mediabox,
-            and then by source cropbox (for each first groups).
+            and then by source cropbox (for each mediabox group).
             This is the default.
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
@@ -3348,7 +3347,7 @@ class PDFSlashCmd(_PipeCmd):
 
         (Raw PDF values of
         MediaBox, CropBox, BleedBox, TrimBox, ArtBox, Rotate and UserUnit.
-        For boxes, he same values from the previous ones are omitted
+        For boxes, the same values from the previous ones are omitted.
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if not numbers:
