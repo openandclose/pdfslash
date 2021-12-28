@@ -3295,6 +3295,8 @@ class PDFSlashCmd(_PipeCmd):
             Group pages first by source mediabox,
             and then by source cropbox (for each mediabox group).
             This is the default.
+        ``-s``, ``--single``:
+            Not group pages (a page in a group).
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         kind = 'subgroup'
@@ -3303,6 +3305,8 @@ class PDFSlashCmd(_PipeCmd):
                 kind = 'group'
             elif opts[0] in ('-c', '--cropbox'):
                 kind = 'subgroup'
+            elif opts[0] in ('-s', '--single'):
+                kind = 'single'
             else:
                 self.printout('Invald option: %s' % opts)
                 return
