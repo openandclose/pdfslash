@@ -1553,6 +1553,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         for i, index in enumerate(indices):
             page = pdf[i]
             box = self.unrotate(page, boxes[i])
+            pos = self.data['mediabox'][index][:2]
+            box = self._shift_box(box, pos)
             set_cropbox(page)(box)
 
         self._save(pdf, outfile)
