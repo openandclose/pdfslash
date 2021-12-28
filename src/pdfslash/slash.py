@@ -2056,6 +2056,10 @@ _tk_help = """
         left click:     start selection (top-left)
         drag:           expand selection
         release:        end selection (bottom-right)
+
+    mouse (when copy is pending):
+        left click:     paste copied rectangle
+
     keys:
         h:              print this help in terminal
         q:              quit
@@ -2073,6 +2077,7 @@ _tk_help = """
 
         a:              cycle active rectangle
         d:              delete active rectangle
+        c:              copy active rectangle
         z:              zoom in
         Z:              zoom out
         u:              undo (box operations)
@@ -2094,6 +2099,7 @@ class TkRunner(object):
         self._image_id = None
         self._notices = []
         self._cropbox_state = 'normal'
+        self._copied_box = None
 
         self._start = None
         self._end = None
@@ -2151,6 +2157,8 @@ class TkRunner(object):
 
         root.bind('<a>', self._cycle_rect)
         root.bind('<d>', self._remove)
+
+        root.bind('<c>', self._copy_box)
 
         root.bind('<z>', self._zoom)
         root.bind('<Z>', self._zoom)
@@ -2312,16 +2320,23 @@ class TkRunner(object):
         self._cropbox_state = new_state
 
     def _set_start(self, event):
+        if self.i.rects.active_index != 0:
+            self.i.rects.reset_active()
+            self._draw_rects()
+
+        if self._copied_box:
+            self._paste_box(event)
+            return
+
         self._start = event.x, event.y
         if self._sel.box:
             self._sel.box = None
             self._draw_rect(self._sel)
 
-        if self.i.rects.active_index != 0:
-            self.i.rects.reset_active()
-            self._draw_rects()
-
     def _set_selection(self, event):
+        if self._copied_box:
+            return
+
         sbox = *self._start, event.x, event.y
         box = self.i.rects.unscale_box(sbox)
         if not self._sel.box:
@@ -2332,6 +2347,10 @@ class TkRunner(object):
         self._set_info()
 
     def _set_end(self, event):
+        if self._copied_box:
+            self._copied_box = None
+            return
+
         x, y = self._start
         minimum = int(5 * self.i._scaling.scale)
         if (event.x - x) < minimum or (event.y - y) < minimum:
@@ -2416,6 +2435,19 @@ class TkRunner(object):
         self.i._set()
         self._set_info()
 
+    def _copy_box(self, event):
+        rect = self.i.rects.get_active()
+        self._copied_box = rect.box
+        self._set_title()
+
+    def _paste_box(self, event):
+        x, y = event.x, event.y
+        x, y = self.i._scaling.get_unscaled((x, y))
+        w, h = getsize(self._copied_box)
+        box = x, y, x + w, y + h
+        self._sel.box = box
+        self._draw_rect(self._sel)
+
     def _cycle_view(self, event):
         if event.keysym == 'v':
             inc = 1
@@ -2469,11 +2501,18 @@ class TkRunner(object):
 
     def _set_title(self):
         pages = self.i.nstr if self.i.numbers else '(none)'
+
         if self.i._scaling.scale == 1.0:
             scale = ''
         else:
             scale = ' (%g%%)' % (self.i._scaling.scale * 100)
-        self.root.title('%s: %s%s' % (self._title, pages, scale))
+
+        if self._copied_box is None:
+            copy = ''
+        else:
+            copy = ' [copy]'
+
+        self.root.title('%s: %s%s%s' % (self._title, pages, scale, copy))
 
     def _set_label(self):
         group = self.i.g_index + 1, self.i.g_num

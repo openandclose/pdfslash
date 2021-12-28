@@ -130,11 +130,13 @@ title bar and label show some information.
 
     .. code-block:: none
 
-        pdfslash: 1-13,21 (110%)
+        pdfslash: 1-13,21 (110%) [copy]
 
     ``1-13,21``: current page numbers (in current group and current view).
 
     ``(110%)``: current image zoom (when 100%, it is omitted).
+
+    ``[copy]``: string ``copy``, shown only when copy is pending (after key ``c``).
 
 **label example**:
 
