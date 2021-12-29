@@ -1329,7 +1329,7 @@ class Backend(object):
         pass
 
     # optional: only used in interpreter ``do_info``.
-    def get_info(self, numbers, printout):
+    def print_info(self, numbers, printout):
         printout('Not implemented.')
 
     # Each backend decides how to handle when 'is_single_boxes' is False
@@ -1537,7 +1537,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         for page, mediabox in zip(self.pdf, self.data['mediabox']):
             set_cropbox(page)(mediabox)
 
-    def get_info(self, numbers, printout):
+    def print_info(self, numbers, printout):
         info = self.data['info']['doc']
         if info:
             for name, values in info.items():
@@ -3428,7 +3428,7 @@ class PDFSlashCmd(_PipeCmd):
         if not numbers:
             return
 
-        self._doc.backend.get_info(numbers, printout=self.printout)
+        self._doc.backend.print_info(numbers, printout=self.printout)
 
     def do_undo(self, args):
         """
