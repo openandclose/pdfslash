@@ -1309,31 +1309,20 @@ class Backend(object):
 
     def __init__(self, fname):
         self.fname = fname
-        self.pdf = self.load_pdf()
-        self.data = self.get_data()
-        self.mediaboxes, self.cropboxes = self.get_boxes()
+        self.mediaboxes = []
+        self.cropboxes = []
 
-    def load_pdf(self):
-        pass
-
-    def get_data(self):
-        return {}
-
-    def get_boxes(self):
-        return [], []
+        # optional: only used in ``do_info``.
+        data = {}
+        data['info'] = {}
+        self.data = data
 
     def get_img(self, number):
         pass
 
+    # optional: only used in ``do_info``.
     def get_info(self, numbers):
-        try:
-            info = self.data['info']
-        except (TypeError, KeyError):
-            return []
-
-        for name, values in info.items():
-            key = lambda x: values[x - 1]
-            yield name, groupby(numbers, key=key)
+        pass
 
     # Each backend decides how to handle when 'is_single_boxes' is False
     # (when a page has multiple boxes).
@@ -1410,8 +1399,11 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     # from b469ab92 (2021/01/27 'upload v1.18.7').
 
     def __init__(self, *args, **kwargs):
-        self._password = None  # keep password as plaintext
         super().__init__(*args, **kwargs)
+        self._password = None  # keep password as plaintext
+        self.pdf = self.load_pdf()
+        self.get_data()
+        self.mediaboxes, self.cropboxes = self.get_boxes()
 
     def load_pdf(self):
         doc = fitz.open(self.fname)
@@ -1448,10 +1440,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         return doc
 
     def get_data(self):
-        data = {}
-        self._get_data(data)
-        self._get_info(data)
-        return data
+        self._get_data(self.data)
+        self._get_info(self.data)
 
     def _get_data(self, data):
         keys = {
@@ -1526,6 +1516,15 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         set_cropbox = self._compat('set_cropbox', 'setCropBox')
         for page, mediabox in zip(self.pdf, self.data['mediabox']):
             set_cropbox(page)(mediabox)
+
+    def get_info(self, numbers):
+        info = self.data['info']
+        if not info:
+            return
+
+        for name, values in info.items():
+            key = lambda x: values[x - 1]
+            yield name, groupby(numbers, key=key)
 
     def get_img(self, number):  # c.f. 5ms per page, 3s for 600p
         index = number - 1
