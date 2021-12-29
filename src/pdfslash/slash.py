@@ -4,11 +4,19 @@
 
 # Conventions (As long as reasonable):
 #
-# Use 'index' for 0-based sequence, and 'number' or 'num' for 1-based.
+# Use 'index', 'ind' or 'i' for 0-based sequence,
+# and 'number', 'num', 'n' for 1-based.
 #
-# Use 'img' for numpy pixel data, 'image' for actual image (with header etc.).
+# Use 'img' for numpy pixel data,
+# and 'image' for actual image (with header etc.).
 #
-# (The program keeps newly created boxes separately from source cropbox).
+# 'mediabox' and 'cropbox' are defined with
+# four float numbers of left, top, right and bottom,
+# with top-left of mediabox is moved to (0, 0).
+# when passing to img generation,
+# four numbers are clipped to integers.
+
+# A new box created in the program is just called 'box'.
 # Trying to use 'box' for one box in a page, 'boxes' for boxes in a page,
 # 'pageboxes' for list of boxes in a collection of pages.
 
