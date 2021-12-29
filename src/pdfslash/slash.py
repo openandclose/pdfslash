@@ -1467,7 +1467,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
     def _get_info(self, data):
         if getattr(self.pdf, 'xref_get_keys', None) is None:  # v1.18.7
-            return []
+            data['info'] = None
+            return
 
         bboxes = 'MediaBox', 'CropBox', 'BleedBox', 'TrimBox', 'ArtBox'
         others = 'Rotate', 'UserUnit'
