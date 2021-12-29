@@ -59,6 +59,12 @@ except ImportError:
     fitz = None
 
 
+# Global NumParser instance
+# While user can technically customize NumParser for interpreter input,
+# other parts of the code must use a normal version of NumParser instance.
+g_numparser = None
+
+
 _ENV_VAR_DIR = 'PDFSLASH_DIR'
 _CONFIG_FILENAME = 'pdfslash.ini'
 
@@ -646,10 +652,11 @@ class _Pages(object):
         self.numbers = tuple(range(1, len(mediaboxes) + 1))
         self.pages = [_Page(self, n) for n in self.numbers]
 
-        self.numparser = NumParser(len(mediaboxes))
-
         self.selected = [1 for _ in range(len(self.numbers))]
         self.fixed = [0 for _ in range(len(self.numbers))]
+
+        global g_numparser
+        g_numparser = NumParser(len(mediaboxes))
 
     def __len__(self):
         return len(self.pages)
@@ -688,7 +695,7 @@ class _Pages(object):
     def format_msg(self, op, numbers, box='', new_box=''):
         if isinstance(numbers, int):
             numbers = (numbers,)
-        nstr = self.numparser.unparse(numbers)
+        nstr = g_numparser.unparse(numbers)
         if box:
             box = '%d,%d,%d,%d' % box
         if new_box:
@@ -1030,8 +1037,6 @@ class _ImageData(object):
         dev_scale = doc.conf['device_pixel_ratio']
         self._scaling = _Scaling(dev_scale=dev_scale)
 
-        self._numparser = doc.numparser
-
         # persistent img cache (in the Document class)
         cache = doc._img_cache
         if not cache.get(indices):
@@ -1118,7 +1123,7 @@ class _ImageData(object):
 
         indices, img = cache[state]
         self.numbers = ind2num(indices)
-        self.nstr = self._numparser.unparse(self.numbers)
+        self.nstr = g_numparser.unparse(self.numbers)
         self._height, self._width = img.shape
         self.indices, self.img = indices, img
 
@@ -3417,7 +3422,7 @@ class PDFSlashCmd(_PipeCmd):
                 if first:
                     self.printout('%s:' % name)
                     first = False
-                nstr = self.numparser.unparse(nums)
+                nstr = g_numparser.unparse(nums)
                 self.printout('    %-30s  (%s)' % (attr, nstr))
 
     def do_undo(self, args):
