@@ -1325,17 +1325,12 @@ class Backend(object):
         self.mediaboxes = []
         self.cropboxes = []
 
-        # optional: only used in ``do_info``.
-        data = {}
-        data['info'] = {}
-        self.data = data
-
     def get_img(self, number):
         pass
 
-    # optional: only used in ``do_info``.
-    def get_info(self, numbers):
-        pass
+    # optional: only used in interpreter ``do_info``.
+    def get_info(self, numbers, printout):
+        printout('Not implemented.')
 
     # Each backend decides how to handle when 'is_single_boxes' is False
     # (when a page has multiple boxes).
@@ -1415,7 +1410,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         super().__init__(*args, **kwargs)
         self._password = None  # keep password as plaintext
         self.pdf = self.load_pdf()
-        self.get_data()
+        self.data = self.get_data()
         self.mediaboxes, self.cropboxes = self.get_boxes()
 
     def load_pdf(self):
@@ -1453,8 +1448,10 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         return doc
 
     def get_data(self):
-        self._get_data(self.data)
-        self._get_info(self.data)
+        data = {}
+        self._get_data(data)
+        self._get_info(data)
+        return data
 
     def _get_data(self, data):
         keys = {
@@ -1469,10 +1466,20 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                 data[key].append(keys[key](page))
 
     def _get_info(self, data):
+        data['info'] = {}
+        data['info']['doc'] = {}
+        data['info']['pages'] = {}
+
         if getattr(self.pdf, 'xref_get_keys', None) is None:  # v1.18.7
-            data['info'] = None
             return
 
+        self._get_doc_info(data)
+        self._get_page_info(data)
+
+    def _get_doc_info(self, data):
+        pass
+
+    def _get_page_info(self, data):
         bboxes = 'MediaBox', 'CropBox', 'BleedBox', 'TrimBox', 'ArtBox'
         others = 'Rotate', 'UserUnit'
         info = {}
@@ -1501,7 +1508,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                         continue
                 vals.append(None)
 
-        data['info'] = info
+        data['info']['pages'] = info
 
     def get_boxes(self):
         cropbox_position = self._compat('cropbox_position', 'CropBoxPosition')
@@ -1530,14 +1537,26 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         for page, mediabox in zip(self.pdf, self.data['mediabox']):
             set_cropbox(page)(mediabox)
 
-    def get_info(self, numbers):
-        info = self.data['info']
-        if not info:
-            return
+    def get_info(self, numbers, printout):
+        info = self.data['info']['doc']
+        if info:
+            for name, values in info.items():
+                printout('%s: %s' % (name, values))
 
-        for name, values in info.items():
-            key = lambda x: values[x - 1]
-            yield name, groupby(numbers, key=key)
+        info = self.data['info']['pages']
+        if info:
+            for name, values in info.items():
+                first = True
+                key = lambda x: values[x - 1]
+                for groups in groupby(numbers, key=key):
+                    attr, nums = groups
+                    if attr is None:
+                        continue
+                    if first:
+                        printout('%s:' % name)
+                        first = False
+                    nstr = g_numparser.unparse(nums)
+                    printout('    %-30s  (%s)' % (attr, nstr))
 
     def get_img(self, number):  # c.f. 5ms per page, 3s for 600p
         index = number - 1
@@ -3409,21 +3428,7 @@ class PDFSlashCmd(_PipeCmd):
         if not numbers:
             return
 
-        info = self._doc.backend.get_info(numbers)
-        if not info:
-            self.printout('Not implemented.')
-            return
-
-        for name, groups in info:
-            first = True
-            for attr, nums in groups:
-                if attr is None:
-                    continue
-                if first:
-                    self.printout('%s:' % name)
-                    first = False
-                nstr = g_numparser.unparse(nums)
-                self.printout('    %-30s  (%s)' % (attr, nstr))
+        self._doc.backend.get_info(numbers, printout=self.printout)
 
     def do_undo(self, args):
         """
