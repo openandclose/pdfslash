@@ -1402,10 +1402,6 @@ class _PyMuPDFBackend(Backend):
 class PyMuPDFBackend(_PyMuPDFBackend):
     """Implement ``Backend`` using PyMuPDF."""
 
-    # c.f.
-    # PyMuPDF raises 'RuntimeError: mediabox must start at (0,0)'
-    # from b469ab92 (2021/01/27 'upload v1.18.7').
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._password = None  # keep password as plaintext
