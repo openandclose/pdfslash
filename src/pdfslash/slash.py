@@ -2941,8 +2941,8 @@ class CommandParser(object):
         return opts, args
 
     def _is_short_opt(self, tok):
-        numbers = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-        if tok.startswith('-') and len(tok) > 1 and tok[1] not in numbers:
+        digits = list('0123456789')  # ['0', '1', '2', ...]
+        if tok.startswith('-') and len(tok) > 1 and tok[1] not in digits:
             return True
         return False
 
