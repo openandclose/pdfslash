@@ -3185,7 +3185,7 @@ class PDFSlashCmd(_PipeCmd):
             self._end_readline(self.hisfile)
 
     def printout(self, string):
-        self.stdout.write(string)
+        self.stdout.write(str(string))
         self.stdout.write('\n')
 
     def do_select(self, args):
