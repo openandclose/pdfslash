@@ -170,6 +170,17 @@ class TestNumParser:
         assert p(':') == list(range(1, 101))
 
         with pytest.raises(ValueError):
+            assert p('a') == 0
+        with pytest.raises(ValueError):
+            assert p('--') == 0
+        with pytest.raises(ValueError):
+            assert p('5--') == 0
+        with pytest.raises(ValueError):
+            assert p('-5-') == 0
+        with pytest.raises(ValueError):
+            assert p('--5') == 0
+
+        with pytest.raises(ValueError):
             assert p('0') == 0
         with pytest.raises(ValueError):
             assert p('7-6') == 0

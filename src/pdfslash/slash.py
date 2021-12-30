@@ -2656,7 +2656,6 @@ class NumParser(object):
             nums[0] = '1' + nums[0]
         if len(nums[-1]) > 1 and nums[-1].endswith('-'):
             nums[-1] += str(self.length)
-        # when nums = ['--'], chenges to e.g. ['1--512'] ... not so good
 
         def int2(num):
             i = int(num)
