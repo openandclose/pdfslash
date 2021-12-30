@@ -3123,17 +3123,25 @@ class _PipeStdout(object):
 
     def __init__(self, stdout):
         self._stdout = stdout
+        self._output = []
         self.command = None
 
     def write(self, s):
+        self._output.append(s)
+
+    def _run(self):
+        s = ''.join(self._output)
+        self._output = []
+
         if self.command:
+            command = self.command
+            self.command = None
+
             try:
-                subprocess.run(self.command, input=s, stdout=self._stdout,
+                subprocess.run(command, input=s, stdout=self._stdout,
                     shell=True, encoding=self._stdout.encoding)
             except OSError:  # TODO: need more Errors
                 pass
-            finally:
-                self.command = None
         else:
             self._stdout.write(s)
 
@@ -3150,8 +3158,12 @@ class _PipeCmd(_NoErrorCmd):
         self._pipestdout = _PipeStdout(self.stdout)
 
     def precmd(self, line):
-        self._raw_line = line
         return self._wrap_stdout(line)
+
+    def postcmd(self, stop, line):
+        self._pipestdout._run()
+        self.stdout = self._stdout
+        return stop
 
     def _wrap_stdout(self, line):
         line, command = self._split_on_pipe(line)
