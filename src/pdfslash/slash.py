@@ -2692,6 +2692,7 @@ class NumParser(object):
             except (ValueError, IndexError):
                 raise ValueError(self._error_fmt(_error_supl) % nstr)
 
+        numbers = [n for n in numbers if n <= self.length]  # here, no Error
         numbers = sorted(numbers)
         self._prev = numbers
         return numbers

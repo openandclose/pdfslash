@@ -157,6 +157,8 @@ class TestNumParser:
     def test_parse(self):
         p = slash.NumParser(length=100).parse
 
+        assert p('') == []
+
         assert p('1') == [1]
         assert p('8-9') == [8, 9]
         assert p('8-12') == [8, 9, 10, 11, 12]
@@ -168,6 +170,9 @@ class TestNumParser:
 
         assert p('~') == [98, 99, 100]
         assert p(':') == list(range(1, 101))
+
+        assert p('98-103') == [98, 99, 100]
+        assert p('101-103') == []
 
         with pytest.raises(ValueError):
             assert p('a') == 0
