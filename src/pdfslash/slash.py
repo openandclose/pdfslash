@@ -3246,20 +3246,20 @@ class PDFSlashCmd(_PipeCmd):
             return h
 
     def _start_readline(self, fname):
-        # readline.clear_history()
-        readline.read_history_file(fname)
+        if readline and fname:
+            # readline.clear_history()
+            readline.read_history_file(fname)
 
     def _end_readline(self, fname):
-        readline.set_history_length(self.hissize)
-        readline.write_history_file(fname)
+        if readline and fname:
+            readline.set_history_length(self.hissize)
+            readline.write_history_file(fname)
 
     def preloop(self):
-        if self.hisfile:
-            self._start_readline(self.hisfile)
+        self._start_readline(self.hisfile)
 
     def postloop(self):
-        if self.hisfile:
-            self._end_readline(self.hisfile)
+        self._end_readline(self.hisfile)
 
     def printout(self, string):
         self.stdout.write(str(string))
