@@ -51,7 +51,7 @@ def print_imgs(img, scale, a, b):
 def test_scale_and_unscale():
     scaling = slash._Scaling()
     cnt1, cnt2 = 0, 0
-    for s in range(500, 2001):
+    for s in [500, 501] + list(range(502, 2001, 101)) + [1998, 1999, 2000]:
         scale = round(s / 1000, 3)  # 0.5 to 2.0
         if scale == 0:
             continue
