@@ -112,15 +112,18 @@ In any of group and view, you can create a new box (future cropbox) with mouse.
 Click (top-left), drag and release (bottom-right).
 The created box is shown with dotted lines.
 
+If you want to delete the box, just create a new one, or do a short click
+(too small rectangles are removed).
+
 Adjust the box with cursor keys.
 ``Left``, ``Right``, ``Up`` and ``Down`` keys move top-left point by one pixel.
 With ``Shift`` (``Shift + Left`` etc.), the keys move bottom-right point.
 
-By pressing ``Enter (Return)``,
-the box is now registered. Until then, the box existed only as GUI graphic.
-The dotted lines of box change to solid lines.
+To register the box, press ``Enter (Return)`` or ``Shift + Enter``.
+Until then, the box exists only as GUI graphic.
+The dotted lines of box will change to solid lines.
 
-Just pressing ``Enter``,
+When just pressing ``Enter``,
 the new one is appended. The previous boxes are preserved.
 
 With ``Shift + Enter``,
