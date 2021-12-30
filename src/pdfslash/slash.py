@@ -33,6 +33,7 @@ import sys
 import time
 import traceback
 import tkinter as tk
+import zlib
 
 from collections.abc import MutableSequence
 
@@ -3264,6 +3265,11 @@ class PDFSlashCmd(_PipeCmd):
         self.stdout.write(str(string))
         self.stdout.write('\n')
 
+    def get_checksum(self, fname):
+        fpath = os.path.abspath(fname)
+        with open(fpath, 'rb') as f:
+            return '%08x' % (zlib.crc32(f.read()) & 0xffffffff)
+
     def do_select(self, args):
         """
         Take one argument, page numbers.
@@ -3605,6 +3611,13 @@ class PDFSlashCmd(_PipeCmd):
             (pdfslash) exit
             $ cat log.txt | pdfslash -C some.pdf
         """
+        t = time.strftime("%Y-%m-%d %H:%M:%S")
+        fname = self._doc.fname
+        checksum = self.get_checksum(fname)
+        self.printout('# %s' % t)
+        self.printout('# %s' % fname)
+        self.printout('# %s' % checksum)
+
         stacker = self._doc.pages.boxdata.stacker
         msgs = stacker.export()
         self.printout('\n'.join(msgs))
