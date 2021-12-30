@@ -3217,9 +3217,8 @@ class PDFSlashCmd(_PipeCmd):
     hisfile = None  # history file path
     hissize = 1000  # max history file size
 
-    # TODO:
-    # pyhisname = '.Python_history'  # Python history file name
-    # pyhisfile = None  # Python history file path
+    pyhisname = '.python_history'  # Python history file name
+    pyhisfile = None  # Python history file path
 
     def __init__(self, *args, **kwargs):
         doc = kwargs.pop('doc', None)
@@ -3235,6 +3234,7 @@ class PDFSlashCmd(_PipeCmd):
         self.cmdparser = CommandParser(self)
 
         self.hisfile = self._get_history_file(self.hisname)
+        self.pyhisfile = self._get_history_file(self.pyhisname)
 
     def _get_history_file(self, fname):
         config_dir = self._doc.conf['_config_dir']
@@ -3247,7 +3247,7 @@ class PDFSlashCmd(_PipeCmd):
 
     def _start_readline(self, fname):
         if readline and fname:
-            # readline.clear_history()
+            readline.clear_history()
             readline.read_history_file(fname)
 
     def _end_readline(self, fname):
@@ -3590,10 +3590,17 @@ class PDFSlashCmd(_PipeCmd):
             'exit': exit,
             'quit': exit,
         }
+
+        self._end_readline(self.hisfile)
+        self._start_readline(self.pyhisfile)
+
         try:
             code.interact(banner=banner, exitmsg=exitmsg, local=d)
         except SystemExit:
             pass
+
+        self._end_readline(self.pyhisfile)
+        self._start_readline(self.hisfile)
 
     def do_export(self, args):
         """
