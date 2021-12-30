@@ -2541,6 +2541,8 @@ class TkRunner(object):
         box = x, y, x + w, y + h
         self._sel.box = box
         self._draw_rect(self._sel)
+        self._copied_box = 'done'
+        self._set_info()
 
     def _cycle_view(self, event):
         if event.keysym == 'v':
@@ -2601,7 +2603,7 @@ class TkRunner(object):
         else:
             scale = ' (%g%%)' % (self.i._scaling.scale * 100)
 
-        if self._copied_box is None:
+        if self._copied_box in (None, 'done'):
             copy = ''
         else:
             copy = ' [copy]'
