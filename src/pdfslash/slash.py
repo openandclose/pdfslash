@@ -1403,9 +1403,15 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     """Implement ``Backend`` using PyMuPDF."""
 
     def __init__(self, *args, **kwargs):
+        pdf_obj = kwargs.pop('pdf_obj', None)
         super().__init__(*args, **kwargs)
+
         self._password = None  # keep password as plaintext
-        self.pdf = self.load_pdf()
+        if pdf_obj:
+            self.pdf = pdf_obj
+        else:
+            self.pdf = self.load_pdf()
+
         self.data = self.get_data()
         self.mediaboxes, self.cropboxes = self.get_boxes()
 
