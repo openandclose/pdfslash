@@ -55,6 +55,7 @@ if numpy:
 
 try:
     import fitz
+    import fitz.utils
 except ImportError:
     fitz = None
 
@@ -1479,7 +1480,37 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         self._get_page_info(data)
 
     def _get_doc_info(self, data):
-        pass
+        self._get_labels(data)
+
+    def _get_labels(self, data):
+        rules = self.pdf.get_page_labels()  # v1.18.7
+        if not rules:
+            return
+
+        rules.sort(key=lambda x: x['startpage'])
+        startpages = [rule['startpage'] for rule in rules]
+        startpages.append(len(self.pdf))
+
+        i = 0
+        labels = []
+        for n in range(1, len(self.pdf) + 1):
+            if n > startpages[i + 1]:
+                i += 1
+            rule = rules[i]
+
+            startpage = rule['startpage']
+            prefix = rule['prefix']
+            style = rule['style']
+            firstpagenum = rule['firstpagenum']
+
+            pagenumber = n - startpage + firstpagenum - 1
+            if prefix == '' and style == 'D':
+                labels.append(pagenumber)  # adding int as is
+            else:
+                label = fitz.utils.construct_label(style, prefix, pagenumber)
+                labels.append(label)
+
+        data['info']['doc']['labels'] = labels
 
     def _get_page_info(self, data):
         bboxes = 'MediaBox', 'CropBox', 'BleedBox', 'TrimBox', 'ArtBox'
@@ -1540,25 +1571,54 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             set_cropbox(page)(mediabox)
 
     def print_info(self, numbers, printout):
-        info = self.data['info']['doc']
-        if info:
-            for name, values in info.items():
-                printout('%s: %s' % (name, values))
+        ret = self._format_labels(numbers)
+        if ret:
+            printout('Page Labels:')
+            printout(ret)
 
+        ret = self._format_page_attrs(numbers)
+        if ret:
+            printout(ret)
+
+    def _format_labels(self, numbers):
+        labels = self.data['info']['doc'].get('labels')
+        if not labels:
+            return ''
+
+        labels = [labels[n - 1] for n in numbers]
+        ret = []
+        stack = []
+        for label in labels + ['zzzzz']:  # add one iter to handle the last
+            if isinstance(label, int):
+                stack.append(label)
+            else:
+                if stack:
+                    ret.append(g_numparser.unparse(stack))
+                    stack = []
+                ret.append(label)
+
+        return '    %s' % ', '.join(ret[:-1])
+
+    def _format_page_attrs(self, numbers):
         info = self.data['info']['pages']
-        if info:
-            for name, values in info.items():
-                first = True
-                key = lambda x: values[x - 1]
-                for groups in groupby(numbers, key=key):
-                    attr, nums = groups
-                    if attr is None:
-                        continue
-                    if first:
-                        printout('%s:' % name)
-                        first = False
-                    nstr = g_numparser.unparse(nums)
-                    printout('    %-30s  (%s)' % (attr, nstr))
+        if not info:
+            return ''
+
+        ret = []
+        for name, values in info.items():
+            first = True
+            key = lambda x: values[x - 1]
+            for groups in groupby(numbers, key=key):
+                attr, nums = groups
+                if attr is None:
+                    continue
+                if first:
+                    ret.append('%s:' % name)
+                    first = False
+                nstr = g_numparser.unparse(nums)
+                ret.append('    %-30s  (%s)' % (attr, nstr))
+
+        return '\n'.join(ret)
 
     def get_img(self, number):  # c.f. 5ms per page, 3s for 600p
         index = number - 1
@@ -3419,12 +3479,14 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take one argument, page numbers (optional).
 
-        Show some raw page attributes for specified pages.
-        Inheritances are not followed.
+        Show some PDF information for specified pages.
 
-        (Raw PDF values of
-        MediaBox, CropBox, BleedBox, TrimBox, ArtBox, Rotate and UserUnit.
-        For boxes, the same values from the previous ones are omitted.
+        * PageLabels, for the pages, if it is defined.
+
+        * Raw PDF values of
+          MediaBox, CropBox, BleedBox, TrimBox, ArtBox, Rotate and UserUnit.
+          For boxes, the same values from the previous boxes are omitted.
+          Inheritances are not followed.
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if not numbers:
