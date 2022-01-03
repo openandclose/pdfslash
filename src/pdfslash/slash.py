@@ -837,9 +837,6 @@ class _ImgProxy(object):
         self._loaded = _loaded or []
         self._zero_image = None
 
-    def _slice_indices(self, indices):  # TODO: somehow not used now
-        return numpy.isin(self._indices, indices).nonzero()[0]
-
     def __getitem__(self, keys):
         if isinstance(keys, int):
             keys = [keys]
