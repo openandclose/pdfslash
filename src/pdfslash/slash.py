@@ -2230,15 +2230,14 @@ class TkRunner(object):
         root.bind('<h>', self.help)
         root.bind('<q>', self.quit)
 
-        _mv = self._move_selection
-        root.bind('<Left>', _mv)
-        root.bind('<Right>', _mv)
-        root.bind('<Up>', _mv)
-        root.bind('<Down>', _mv)
-        root.bind('<Shift-Left>', _mv)
-        root.bind('<Shift-Right>', _mv)
-        root.bind('<Shift-Up>', _mv)
-        root.bind('<Shift-Down>', _mv)
+        root.bind('<Left>', self._move)
+        root.bind('<Right>', self._move)
+        root.bind('<Up>', self._move)
+        root.bind('<Down>', self._move)
+        root.bind('<Shift-Left>', self._move)
+        root.bind('<Shift-Right>', self._move)
+        root.bind('<Shift-Up>', self._move)
+        root.bind('<Shift-Down>', self._move)
 
         root.bind('<Return>', self._crop)
         root.bind('<Shift-Return>', self._crop)
@@ -2458,7 +2457,7 @@ class TkRunner(object):
 
         self._set_selection(event)
 
-    def _move_selection(self, event):
+    def _move(self, event):
         rect = self.i.rects.get_active()
         if rect.box is None:  # when self._sel is active and no tempbox
             self._notify('no selection')
