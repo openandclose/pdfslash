@@ -2678,7 +2678,8 @@ class TkRunner(object):
         self._remove_notifications()
         x = self.i.width // 2
         y = self.i.height // 2
-        font = ('TkTextFont', 12)
+        fontsize = int(12 * self.i._scaling.scale)
+        font = ('TkTextFont', fontsize)
         t = self.canvas.create_text(x, y,
             fill=COLORS['red'], font=font, text=text, tags='notice')
         n = self.canvas.after(duration, self.canvas.delete, t)
