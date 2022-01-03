@@ -738,15 +738,18 @@ class _Pages(object):
         self.boxdata.set_each(commands, msg=msg)
 
     def modify(self, numbers, old_box, new_box, msg=None):
+        numbers = self.modifiable(numbers)
         self.verify(numbers, new_box)
         msg = msg or self.format_msg('modify', numbers, old_box, new_box)
         self.boxdata.modify(numbers, new_box, old_box, msg=msg)
 
     def discard(self, numbers, box, msg=None):
+        numbers = self.modifiable(numbers)
         msg = msg or self.format_msg('discard', numbers, box)
         self.boxdata.discard(numbers, box, msg=msg)
 
     def clear(self, numbers, msg=None):
+        numbers = self.modifiable(numbers)
         msg = msg or self.format_msg('clear', numbers)
         self.boxdata.clear(numbers, msg=msg)
 
