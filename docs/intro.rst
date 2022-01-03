@@ -118,6 +118,7 @@ If you want to delete the box, just create a new one, or do a short click
 Adjust the box with cursor keys.
 ``Left``, ``Right``, ``Up`` and ``Down`` keys move top-left point by one pixel.
 With ``Shift`` (``Shift + Left`` etc.), the keys move bottom-right point.
+With ``Control``, the keys move the box as a whole.
 
 To register the box, press ``Enter (Return)`` or ``Shift + Enter``.
 Until then, the box exists only as GUI graphic.

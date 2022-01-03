@@ -2161,6 +2161,9 @@ _tk_help = """
 
         <Arrow>:        move top-left point
         Shift+<Arrow>:  move bottom-right point
+        Control+<Arrow>:move rectangle
+        h, j, k, l:     move rectangle (Left, Donw, Up, Right)
+
         Return:         crop by present selection (append)
         Shift+Return:   crop by present selection (replace)
 
@@ -2198,6 +2201,12 @@ class TkRunner(object):
             'Right': (0, 0, 1, 0),
             'Up': (0, 0, 0, -1),
             'Down': (0, 0, 0, 1),
+        },
+        'control': {  # move box as a whole
+            'Left': (-1, 0, -1, 0),
+            'Right': (1, 0, 1, 0),
+            'Up': (0, -1, 0, -1),
+            'Down': (0, 1, 0, 1),
         },
     }
 
@@ -2244,14 +2253,19 @@ class TkRunner(object):
         root.bind('<h>', self.help)
         root.bind('<q>', self.quit)
 
-        root.bind('<Left>', self._move)
-        root.bind('<Right>', self._move)
-        root.bind('<Up>', self._move)
-        root.bind('<Down>', self._move)
-        root.bind('<Shift-Left>', self._move)
-        root.bind('<Shift-Right>', self._move)
-        root.bind('<Shift-Up>', self._move)
-        root.bind('<Shift-Down>', self._move)
+        root.bind('<Left>', self._move1)
+        root.bind('<Right>', self._move1)
+        root.bind('<Up>', self._move1)
+        root.bind('<Down>', self._move1)
+        root.bind('<Shift-Left>', self._move1)
+        root.bind('<Shift-Right>', self._move1)
+        root.bind('<Shift-Up>', self._move1)
+        root.bind('<Shift-Down>', self._move1)
+
+        root.bind('<h>', self._move2)
+        root.bind('<j>', self._move2)
+        root.bind('<k>', self._move2)
+        root.bind('<l>', self._move2)
 
         root.bind('<Return>', self._crop)
         root.bind('<Shift-Return>', self._crop)
@@ -2296,6 +2310,8 @@ class TkRunner(object):
         modifier = getattr(event, 'state', None)
         if modifier & 0x0001:
             return 'shift'
+        elif modifier & 0x0004:
+            return 'control'
         else:
             return ''
 
@@ -2471,14 +2487,23 @@ class TkRunner(object):
 
         self._set_selection(event)
 
-    def _move(self, event):
+    def _move1(self, event):
+        mod = self._get_modifier(event)
+        self._move(mod, event.keysym)
+
+    def _move2(self, event):
+        mod = 'control'
+        keydict = {'h': 'Left', 'j': 'Down', 'k': 'Up', 'l': 'Right'}
+        key = keydict[event.keysym]
+        self._move(mod, key)
+
+    def _move(self, mod, key):
         rect = self.i.rects.get_active()
         if rect.box is None:  # when self._sel is active and no tempbox
             self._notify('no selection')
             return
 
-        mod = self._get_modifier(event)
-        pos = self.move_increment[mod][event.keysym]
+        pos = self.move_increment[mod][key]
         box = shift_box(rect.box, pos)
         self._move_rect(rect, box)
         self._set_info()
