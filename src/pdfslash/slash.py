@@ -1972,7 +1972,6 @@ class _Rects(object):
 
     def append(self):  # always from self.sel
         box, numbers = self.sel.box, self.sel.numbers
-        self.sel.box = None
         msg = self.format_msg('append', numbers, box)
         self.pages.append(numbers, box, msg=msg)
         print(msg)
@@ -1981,7 +1980,6 @@ class _Rects(object):
 
     def overwrite(self):  # always from self.sel
         box, numbers = self.sel.box, self.sel.numbers
-        self.sel.box = None
         msg = self.format_msg('overwrite', numbers, box)
         self.pages.overwrite(numbers, box, msg=msg)
         print(msg)
@@ -1999,9 +1997,6 @@ class _Rects(object):
         return self.rects[new]
 
     def discard(self, rect):
-        if self.active_index == 0:
-            self.sel.box = None
-            return
         box, numbers = rect.box, rect.numbers
         msg = self.format_msg('discard', numbers, box)
         self.pages.discard(numbers, box, msg=msg)
@@ -2383,6 +2378,10 @@ class TkRunner(object):
     def _sel(self):
         return self.i.rects.sel
 
+    def _reset_sel(self):
+        self._sel.box = None
+        self._draw_rect(self._sel)
+
     def _draw_rects(self):
         for rect in self.i.rects:
             self._draw_rect(rect)
@@ -2455,8 +2454,7 @@ class TkRunner(object):
 
         self._start = event.x, event.y
         if self._sel.box:
-            self._sel.box = None
-            self._draw_rect(self._sel)
+            self._reset_sel()
 
     def _set_selection(self, event):
         if self._copied_box:
@@ -2480,8 +2478,7 @@ class TkRunner(object):
         minimum = int(5 * self.i._scaling.scale)
         if (event.x - x) < minimum or (event.y - y) < minimum:
             if self._sel.box:
-                self._sel.box = None
-                self._draw_rect(self._sel)
+                self._reset_sel()
             self._set_info()
             return
 
@@ -2528,7 +2525,7 @@ class TkRunner(object):
             else:
                 rect = self.i.rects.overwrite()
                 self._draw_rects()
-            self._draw_rect(self._sel)
+            self._reset_sel()
         else:
             if rect.box == rect._box:  # when rect is not moved
                 self._notify('not modified')
@@ -2543,8 +2540,11 @@ class TkRunner(object):
 
     def _remove(self, event):
         rect = self.i.rects.get_active()
-        if rect.box is None:  # when self._sel is active and no tempbox
-            self._notify('no box to remove')
+        if rect == self._sel:
+            if self._sel.box is None:
+                self._notify('no box to remove')
+            else:
+                self._reset_sel()
             return
 
         self.i.rects.discard(rect)
@@ -2601,8 +2601,7 @@ class TkRunner(object):
             print('[gui] %s' % msg)
             self._notify(msg)
             return
-        self._sel.box = None
-        self._draw_rect(self._sel)
+        self._reset_sel()
         self._get_image()
         print('[gui] undo - %s' % msg)
 
@@ -2613,8 +2612,7 @@ class TkRunner(object):
             print('[gui] %s' % msg)
             self._notify(msg)
             return
-        self._sel.box = None
-        self._draw_rect(self._sel)
+        self._reset_sel()
         self._get_image()
         print('[gui] redo - %s' % msg)
 
