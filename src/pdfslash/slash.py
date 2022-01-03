@@ -2186,6 +2186,21 @@ class TkRunner(object):
 
     _title = 'pdfslash'
 
+    move_increment = {
+        '': {  # move top-left point (expand or contract)
+            'Left': (-1, 0, 0, 0),
+            'Right': (1, 0, 0, 0),
+            'Up': (0, -1, 0, 0),
+            'Down': (0, 1, 0, 0),
+        },
+        'shift': {  # move bottom-right point (expand or contract)
+            'Left': (0, 0, -1, 0),
+            'Right': (0, 0, 1, 0),
+            'Up': (0, 0, 0, -1),
+            'Down': (0, 0, 0, 1),
+        },
+    }
+
     def __init__(self, imagedata, doc):
         self.i = imagedata
         self._doc = doc
@@ -2462,26 +2477,9 @@ class TkRunner(object):
             self._notify('no selection')
             return
 
-        if event.keysym == 'Left':
-            inc = (-1, 0)
-        elif event.keysym == 'Right':
-            inc = (1, 0)
-        elif event.keysym == 'Up':
-            inc = (0, -1)
-        elif event.keysym == 'Down':
-            inc = (0, 1)
-        incx, incy = inc
-
-        x0, y0, x1, y1 = rect.box
-        modifier = self._get_modifier(event)
-        if modifier == 'shift':
-            x1 += incx
-            y1 += incy
-        else:
-            x0 += incx
-            y0 += incy
-
-        box = x0, y0, x1, y1
+        mod = self._get_modifier(event)
+        pos = self.move_increment[mod][event.keysym]
+        box = shift_box(rect.box, pos)
         self._move_rect(rect, box)
         self._set_info()
 
