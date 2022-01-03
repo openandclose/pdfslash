@@ -2602,6 +2602,8 @@ class TkRunner(object):
             self._notify(msg)
             return
         print('[gui] undo - %s' % msg)
+        self._sel.box = None
+        self._draw_rect(self._sel)
         self._get_image()
 
     def _redo(self, event):
@@ -2612,6 +2614,8 @@ class TkRunner(object):
             self._notify(msg)
             return
         print('[gui] redo - %s' % msg)
+        self._sel.box = None
+        self._draw_rect(self._sel)
         self._get_image()
 
     def _set_info(self):
