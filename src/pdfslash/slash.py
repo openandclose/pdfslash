@@ -3499,14 +3499,18 @@ class PDFSlashCmd(_PipeCmd):
         """
         Take one argument, page numbers (optional).
 
-        Show some PDF information for specified pages.
+        Show some PDF information for *specified pages*.
 
-        * PageLabels, for the pages, if it is defined.
+        * ``PageLabels``
 
         * Raw PDF values of
-          MediaBox, CropBox, BleedBox, TrimBox, ArtBox, Rotate and UserUnit.
-          For boxes, the same values from the previous boxes are omitted.
-          Inheritances are not followed.
+          ``MediaBox``, ``CropBox``, ``BleedBox``, ``TrimBox``, ``ArtBox``,
+          ``Rotate`` and ``UserUnit``
+
+        ``PageLabels`` and ``UserUnit`` are omitted if they are not defined.
+        For boxes, the same values from the previous boxes are omitted.
+
+        Inheritances are not followed.
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if not numbers:
