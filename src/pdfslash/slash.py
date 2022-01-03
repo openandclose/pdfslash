@@ -1572,6 +1572,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             set_cropbox(page)(mediabox)
 
     def print_info(self, numbers, printout):
+        printout('Page Count: %s' % len(numbers))
+
         ret = self._format_labels(numbers)
         if ret:
             printout('Page Labels: %s' % ret)
@@ -3500,7 +3502,7 @@ class PDFSlashCmd(_PipeCmd):
 
         Show some PDF information for *specified pages*.
 
-        * ``PageLabels``
+        * ``Page Count`` and ``PageLabels``
 
         * Raw PDF values of
           ``MediaBox``, ``CropBox``, ``BleedBox``, ``TrimBox``, ``ArtBox``,
