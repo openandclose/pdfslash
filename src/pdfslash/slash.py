@@ -143,6 +143,10 @@ def getsize(box):
     return ints((right - left, bottom - top))
 
 
+def shift_box(box, pos):
+    return tuple(b + p for b, p in zip(box, pos))
+
+
 def groupby(seq, key=None):
     """Iterate on grouped items collected from unsorted Sequence.
 
@@ -1550,7 +1554,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         cropboxes = []
         for page in self.pdf:
             cropbox = tuple(page.rect)
-            cropbox = self._shift_box(cropbox, cropbox_position(page))
+            cropbox = shift_box(cropbox, tuple(cropbox_position(page)) * 2)
             cropboxes.append(cropbox)
 
         self._remove_cropbox()
@@ -1560,11 +1564,6 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             mediaboxes.append(tuple(page.rect))
 
         return mediaboxes, cropboxes
-
-    def _shift_box(self, box, pos):
-        x0, y0, x1, y1 = box
-        x, y = pos
-        return x0 + x, y0 + y, x1 + x, y1 + y
 
     def _remove_cropbox(self):
         set_cropbox = self._compat('set_cropbox', 'setCropBox')
@@ -1650,7 +1649,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             page = pdf[i]
             box = self.unrotate(page, boxes[i])
             pos = self.data['mediabox'][index][:2]
-            box = self._shift_box(box, pos)
+            box = shift_box(box, pos * 2)
             set_cropbox(page)(box)
 
         self._save(pdf, outfile)
