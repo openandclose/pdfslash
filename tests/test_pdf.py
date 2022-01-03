@@ -65,7 +65,7 @@ def test_labels():
     # Must instansiate slash._Pages class to fill global slash.g_numparser
     pages = slash._Pages(backend.mediaboxes, backend.cropboxes)
 
-    p = lambda nums: backend._format_labels(nums).strip()
+    p = backend._format_labels
     ret = []
     printout = ret.append
 

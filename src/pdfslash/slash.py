@@ -1574,8 +1574,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     def print_info(self, numbers, printout):
         ret = self._format_labels(numbers)
         if ret:
-            printout('Page Labels:')
-            printout(ret)
+            printout('Page Labels: %s' % ret)
 
         ret = self._format_page_attrs(numbers)
         if ret:
@@ -1598,7 +1597,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                     stack = []
                 ret.append(label)
 
-        return '    %s' % ', '.join(ret[:-1])
+        return ', '.join(ret[:-1])
 
     def _format_page_attrs(self, numbers):
         info = self.data['info']['pages']
