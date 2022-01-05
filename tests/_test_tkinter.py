@@ -15,7 +15,8 @@ COLORS = slash.COLORS
 # import pytest
 
 
-# Created from editing PDF/UA Reference Suite 1.1 05_BookChapter-german.pdf
+# Created from editing PDF/UA Reference Suite 1.1
+# PDFUA-Ref-2-05_BookChapter-german.pdf
 # https://www.pdfa.org/resource/pdfua-reference-suite/
 # It has 3 different source cropboxes:
 #
