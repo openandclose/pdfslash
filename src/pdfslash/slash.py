@@ -952,9 +952,9 @@ class _ImgGroup(object):
             meta['sub1_num'] = meta['g_num']
             meta['g_num'] = g_num
             meta['sub2_num'] = self._get_number_of_subgroups(indices)
-            for box, indices in self._subgroupby(indices):
-                subg_indices = [self._table[index][1] for index in indices]
-                yield meta, indices, array[subg_indices]
+            for box, s_indices in self._subgroupby(indices):
+                subg_indices = [indices.index(index) for index in s_indices]
+                yield meta, s_indices, array[subg_indices]
 
     def _subgroupby(self, indices):
         key = lambda x: self._csizes[x]
