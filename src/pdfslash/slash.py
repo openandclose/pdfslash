@@ -1720,8 +1720,6 @@ class Document(object):
         # ``_ImageData`` uses this cache dict.
         self._img_cache = {}
 
-        self._bounds = None
-
     def autocrop(self, numbers):  # c.f. 0.8s for 600p
         numbers = self.pages.modifiable(numbers)
         commands = []
