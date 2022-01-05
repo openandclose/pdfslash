@@ -1960,6 +1960,8 @@ class _Rects(object):
 
     @property
     def cropboxes(self):
+        if not self._numbers:
+            return []
         cropboxes = set(self.pages[n].cropbox for n in self.numbers)
         cropboxes -= set((self.pages[self._numbers[0]].mediabox,))
         return [_CropBoxRect(self, box) for box in cropboxes]
