@@ -872,11 +872,11 @@ class _ImgProxy(object):
 class _ImgGroup(object):
     """Group imgs by sizes."""
 
-    def __init__(self, doc):
+    def __init__(self, doc, mediaboxes, cropboxes):
         self._doc = doc
-        self._msizes = [self._get_size(box) for box in doc.backend.mediaboxes]
-        self._csizes = [self._get_size(box) for box in doc.backend.cropboxes]
-        self._indices = list(range(len(self._msizes)))
+        self._msizes = [self._get_size(box) for box in mediaboxes]
+        self._csizes = [self._get_size(box) for box in cropboxes]
+        self._indices = list(range(len(mediaboxes)))
         self._load_groups()
 
     def _get_size(self, box):
@@ -1703,7 +1703,7 @@ class Document(object):
         boxes = self.backend.mediaboxes, self.backend.cropboxes
         self.pages = _Pages(*boxes)
 
-        self.imgs = _ImgGroup(self)
+        self.imgs = _ImgGroup(self, *boxes)
 
         numparser = numparser or NumParser
         self.numparser = numparser(len(self.pages))
