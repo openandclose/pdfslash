@@ -159,20 +159,20 @@ class TestNumParser:
 
         assert p('') == []
 
-        assert p('1') == [1]
-        assert p('8-9') == [8, 9]
-        assert p('8-12') == [8, 9, 10, 11, 12]
-        assert p('11^13') == [11, 13]
-        assert p('11^17') == [11, 13, 15, 17]
-        assert p('14^18') == [14, 16, 18]
-        assert p('3,6,8-10,33') == [3, 6, 8, 9, 10, 33]
-        assert p('98-') == [98, 99, 100]
+        assert p('1') == (1,)
+        assert p('8-9') == (8, 9)
+        assert p('8-12') == (8, 9, 10, 11, 12)
+        assert p('11^13') == (11, 13)
+        assert p('11^17') == (11, 13, 15, 17)
+        assert p('14^18') == (14, 16, 18)
+        assert p('3,6,8-10,33') == (3, 6, 8, 9, 10, 33)
+        assert p('98-') == (98, 99, 100)
 
-        assert p('~') == [98, 99, 100]
+        assert p('~') == (98, 99, 100)
         assert p(':') == list(range(1, 101))
 
-        assert p('98-103') == [98, 99, 100]
-        assert p('101-103') == []
+        assert p('98-103') == (98, 99, 100)
+        assert p('101-103') == ()
 
         with pytest.raises(ValueError):
             assert p('a') == 0
@@ -249,24 +249,24 @@ class TestCommandParser:
             return parser.parse(' '.join(s[:-1]), s[-1])[0]
 
     # numbers only
-        assert p('1', 'n') == [1,]
+        assert p('1', 'n') == (1,)
 
     # append or overwrite (numbers, box)
-        assert p('1', x5, 'nb') == ([1], X5)
-        assert p('1-3', x5, 'nb') == ([1, 2, 3], X5)
+        assert p('1', x5, 'nb') == ((1,), X5)
+        assert p('1-3', x5, 'nb') == ((1, 2, 3), X5)
 
     # discard (numbers, box)
-        assert p('3', b1, 'nB') == ([3], B1)
-        assert p('1,3', b1, 'nB') == ([1, 3], B1)
-        assert p('2', b1, 'nB') == ([2], B1)  # no error (no printout)
-        # pages.discard([2], B1)  # no error (printout)
+        assert p('3', b1, 'nB') == ((3,), B1)
+        assert p('1,3', b1, 'nB') == ((1, 3), B1)
+        assert p('2', b1, 'nB') == ((2,), B1)  # no error (no printout)
+        # pages.discard((2), B1)  # no error (printout)
 
     # modify (numbers, box1, box2)
-        assert p('1', b1, x5, 'nbb') == ('modify', [1], B1, X5)
-        assert p('1,3', b1, x5, 'nbb') == ('modify', [1, 3], B1, X5)
-        assert p('1', '@1', x5, 'nbb') == ('modify', [1], B1, X5)
-        assert p('3', '@1', x5, 'nbb') == ('modify', [3], B3, X5)
-        assert p('3', '@3', x5, 'nbb') == ('modify', [3], B1, X5)
+        assert p('1', b1, x5, 'nbb') == ('modify', (1,), B1, X5)
+        assert p('1,3', b1, x5, 'nbb') == ('modify', (1, 3), B1, X5)
+        assert p('1', '@1', x5, 'nbb') == ('modify', (1,), B1, X5)
+        assert p('3', '@1', x5, 'nbb') == ('modify', (3,), B3, X5)
+        assert p('3', '@3', x5, 'nbb') == ('modify', (3,), B1, X5)
         assert p('1,3', '@1', x5, 'nbb') == (
                 'set_each', [('modify', 1, B1, X5), ('modify', 3, B3, X5)])
 
@@ -274,8 +274,8 @@ class TestCommandParser:
         bstr2 = '-100,-100,+100,+100'
         box2_1 = 0, 10, 220, 230  # box2 result of page 1
         box2_3 = 200, 210, 420, 430  # box2 result of page 3
-        assert p('1', b1, bstr2, 'nbb') == ('modify', [1], B1, box2_1)
-        assert p('1', '@1', bstr2, 'nbb') == ('modify', [1], B1, box2_1)
+        assert p('1', b1, bstr2, 'nbb') == ('modify', (1,), B1, box2_1)
+        assert p('1', '@1', bstr2, 'nbb') == ('modify', (1,), B1, box2_1)
         assert p('1,3', '@1', bstr2, 'nbb') == (
                 'set_each', [(mo, 1, B1, box2_1), (mo, 3, B3, box2_3)])
 

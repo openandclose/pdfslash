@@ -2845,7 +2845,7 @@ class NumParser(object):
                 raise ValueError(self._error_fmt(_error_supl) % nstr)
 
         numbers = [n for n in numbers if n <= self.length]  # here, no Error
-        numbers = sorted(numbers)
+        numbers = tuple(sorted(numbers))
         self._prev = numbers
         return numbers
 
