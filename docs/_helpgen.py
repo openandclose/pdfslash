@@ -58,7 +58,7 @@ def part(text, start='', start_next='', end='', end_before=''):
 
 
 def get_conf(source):
-    text = part(source, start_next='_CONF = {', end_before='# not used')
+    text = part(source, start_next='_CONF = {', end_before='}')
     new = ['[main]', '']
     for line in text.split('\n'):
         if not line.strip():

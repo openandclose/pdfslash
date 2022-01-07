@@ -94,12 +94,11 @@ _CONF = {
     # '15' is briss' default.
     'max_merge_pages': (15, 'int'),
 
-    # not used
-    # Non-scale window size range (min and max)
-    # in ratio to the display size.
-    # Only when below min or above max, either in x or y direction,
-    # the program adjusts the window size (to min or max).
-    # 'winrange': ((0.4, 0.95), 'two_floats'),
+    # Merge method to use in page-image-merging,
+    # either 'briss' (default) or 'simple'.
+    # 'simple' is a bit faster,
+    # and *may* work in some cases where 'briss' doesn't.
+    'merge': ('briss', 'str'),
 }
 
 
@@ -1019,7 +1018,8 @@ class _ImgSet(object):
             return imgs.load_zeros()
         else:
             imgs = imgs.load()
-            return self._doc.imgmerger.merge(imgs)
+            name = self._doc.conf['merge']
+            return self._doc.imgmerger.merge(imgs, method_name=name)
 
     def _select_imgs(self, imgs):
         max_ = self._doc.conf['max_merge_pages']
@@ -1201,36 +1201,46 @@ class _ImageData(object):
 
 
 class ImgMerger(object):
-    """Define imgs merging interface."""
+    """Define imgs merging interface.
 
-    def merge(self, imgs):
-        pass
+    the only requirement is to define ``merge``.
+    """
 
-    # not used
-    def merge2(self, img1, img2):
-        # return 255 - ((255 - img1) + (255 - img2))
-        # return self.merge(numpy.asarray((img1, img2)))
-        pass
+    def merge(self, imgs, **kwargs):
+        if len(imgs) == 1:
+            return self.singlepage(imgs)
+
+        name = kwargs.pop('method_name')
+        method = getattr(self, name, None)
+        if not method:
+            print('Invald merge method name: %r' % name)
+            return self.zeros(imgs)
+        return method(imgs)
+
+    # when method name is invalid, return black img.
+    def zeros(self, imgs):
+        shape = imgs.shape[1:]
+        return numpy.zeros(shape, dtype=UINT8)
 
     # when dealing only one img,
-    # return similar-looking img rather than the original.
+    # return similar-looking pale img rather than the original.
     def singlepage(self, imgs):
         img = 255 - (255 - imgs[0]) // 3
         return img.astype(UINT8)
 
+    def briss(self, imgs):
+        """Implement briss's merger method (in ClusterImageData.java).
 
-class BrissImgMerger(ImgMerger):
-    """Implement briss's merger method (in ClusterImageData.java).
-
-    https://github.com/fatso83/briss-archived
-    """
-
-    def merge(self, imgs):
-        if len(imgs) == 1:
-            return self.singlepage(imgs)
-
-        # c.f. 4.2s for 600p (without _select_imgs)
+        https://github.com/fatso83/briss-archived
+        """
         img = 255 - numpy.std(imgs, axis=0)
+        return img.astype(UINT8)
+
+    def simple(self, imgs):
+        """Implement simpler method, better if usable when briss is not."""
+        img = numpy.square(numpy.average(imgs, axis=0) / 255)
+        img = numpy.square(img)
+        img = img * 110 + 140
         return img.astype(UINT8)
 
 
@@ -1711,7 +1721,7 @@ class Document(object):
         boxparser = boxparser or BoxParser
         self.boxparser = boxparser(self.pages)
 
-        imgmerger = imgmerger or BrissImgMerger
+        imgmerger = imgmerger or ImgMerger
         self.imgmerger = imgmerger()
 
         cropfinder = cropfinder or BrissCropFinder
@@ -1719,6 +1729,18 @@ class Document(object):
 
         # ``_ImageData`` uses this cache dict.
         self._img_cache = {}
+
+    def print_conf_options(self):
+        conf_self = self.conf['_self']
+        conf_self.print_items(self.conf)
+
+    def set_conf_option(self, key, val):
+        if key == 'merge':
+            if val != self.conf['merge']:
+                self._img_cache = {}
+
+        conf_self = self.conf['_self']
+        conf_self.set_item(self.conf, key, val)
 
     def autocrop(self, numbers):  # c.f. 0.8s for 600p
         numbers = self.pages.modifiable(numbers)
@@ -3577,13 +3599,14 @@ class PDFSlashCmd(_PipeCmd):
 
             Set winpos 0,0
         """
-        conf = self._doc.conf
-        conf_self = conf['_self']
         if not args:
-            conf_self.print_items(conf)
+            self._doc.print_conf_options()
         else:
             key, val = args.split(' ', maxsplit=1)
-            conf_self.set_item(conf, key, val)
+            try:
+                self._doc.set_conf_option(key, val)
+            except ValueError:
+                pass
 
     def do_Python(self, args):
         """
