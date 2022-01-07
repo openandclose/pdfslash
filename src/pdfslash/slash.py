@@ -1672,24 +1672,32 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
     def write(self, numbers, boxes, outfile, is_single_boxes=True):
         indices = num2ind(numbers)
+        _time('start')
         pdf = self.load_pdf()  # creating new pdf object
+        _time('(write) PDF reload')
 
         if is_single_boxes:
+            _time('start')
             pdf.select(indices)
+            _time('(write) page select')
         else:
             self._copy_pages(pdf, numbers, indices, boxes)  # deep copy
             self._adjut_toc(pdf, indices, boxes)
 
         set_cropbox = self._compat('set_cropbox', 'setCropBox')
 
+        _time('start')
         for i, index in enumerate(indices):
             page = pdf[i]
             box = self.unrotate(page, boxes[i])
             pos = self.data['mediabox'][index][:2]
             box = shift_box(box, pos * 2)
             set_cropbox(page)(box)
+        _time('(write) set cropboxes')
 
+        _time('start')
         self._save(pdf, outfile)
+        _time('(write) fitz.save')
         pdf.close()
 
     def _copy_pages(self, pdf, numbers, indices, boxes):
