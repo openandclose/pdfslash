@@ -1677,9 +1677,10 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         _time('(write) PDF reload')
 
         if is_single_boxes:
-            _time('start')
-            pdf.select(indices)
-            _time('(write) page select')
+            if len(indices) != len(pdf):
+                _time('start')
+                pdf.select(indices)
+                _time('(write) page select')
         else:
             self._copy_pages(pdf, numbers, indices, boxes)  # deep copy
             self._adjut_toc(pdf, indices, boxes)
