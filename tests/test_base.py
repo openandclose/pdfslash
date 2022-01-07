@@ -160,6 +160,8 @@ class TestNumParser:
         assert p('') == []
 
         assert p('1') == (1,)
+        assert p('1,2,3,4') == (1, 2, 3, 4)
+        assert p('1,3,5,7') == (1, 3, 5, 7)
         assert p('8-9') == (8, 9)
         assert p('8-12') == (8, 9, 10, 11, 12)
         assert p('11^13') == (11, 13)
