@@ -116,6 +116,8 @@ COLORS = {
 _PRINT_TIME = False
 _TIMES = []
 
+_SAVE_IMG = False
+
 
 def _time(msg=''):
     # Always use it in pairs (start and end), nesting is possible.
@@ -1035,6 +1037,7 @@ class _ImgSet(object):
             _t('start')
             img = self._doc.imgmerger.merge(imgs, method_name=name)
             _time('merge image, %d pages' % len(imgs))
+            self._save_img(img, debug)
             return img
 
     def _select_imgs(self, imgs):
@@ -1044,6 +1047,15 @@ class _ImgSet(object):
             return imgs
         indices = numpy.linspace(0, length - 1, num=max_, dtype=INT)
         return imgs[indices]
+
+    def _save_img(self, img, debug=False):
+        if _SAVE_IMG and debug and fitz:
+            samples = img.tobytes()
+            h, w = img.shape
+            pixmap = fitz.Pixmap(fitz.csGRAY, w, h, samples, 0)
+            t = time.time()
+            print('    saving image...')
+            pixmap.save('merged_image_%d.png' % t)
 
 
 class _ImageData(object):
@@ -3876,6 +3888,9 @@ def _build_argument_parser():
     h = '[DEBUG] print time for some processes'
     parser.add_argument('--_time', '-_t', action='store_true', help=h)
 
+    h = '[DEBUG] save merged image used for GUI in current directory'
+    parser.add_argument('--_save', '-_s', action='store_true', help=h)
+
     return parser
 
 
@@ -3888,6 +3903,10 @@ def main(args=None, runner=None):
     if args._time:
         global _PRINT_TIME
         _PRINT_TIME = True
+
+    if args._save:
+        global _SAVE_IMG
+        _SAVE_IMG = True
 
     _time('start')
     runner = runner or Runner
