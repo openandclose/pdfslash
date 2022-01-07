@@ -3348,6 +3348,10 @@ class PDFSlashCmd(_PipeCmd):
         self.stdout.write(str(string))
         self.stdout.write('\n')
 
+    def _printout(self, string):  # no pipe ('|') check version
+        self._stdout.write(str(string))
+        self._stdout.write('\n')
+
     def get_checksum(self, fname):
         fpath = os.path.abspath(fname)
         with open(fpath, 'rb') as f:
@@ -3429,7 +3433,7 @@ class PDFSlashCmd(_PipeCmd):
             try:
                 op(numbers, box)
             except Exception as e:  # TODO
-                self.printout('Error while processing box: %s' % str(e))
+                self._printout('Error while processing box: %s' % str(e))
                 return
 
     def do_append(self, args):
@@ -3467,7 +3471,7 @@ class PDFSlashCmd(_PipeCmd):
             try:
                 op(*ret[1:])
             except Exception as e:  # TODO
-                self.printout('Error while processing box: %s' % str(e))
+                self._printout('Error while processing box: %s' % str(e))
                 return
 
     def do_discard(self, args):
@@ -3485,7 +3489,7 @@ class PDFSlashCmd(_PipeCmd):
             try:
                 self._pages.discard(numbers, box)
             except Exception as e:  # TODO
-                self.printout('Error while processing box: %s' % str(e))
+                self._printout('Error while processing box: %s' % str(e))
                 return
 
     def do_clear(self, args):
@@ -3544,7 +3548,7 @@ class PDFSlashCmd(_PipeCmd):
             elif opts[0] in ('-s', '--single'):
                 kind = 'single'
             else:
-                self.printout('Invald option: %s' % opts)
+                self._printout('Invald option: %s' % opts)
                 return
 
         if numbers:
@@ -3558,7 +3562,7 @@ class PDFSlashCmd(_PipeCmd):
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
-            self.printout('writing...')
+            self._printout('writing...')
             self._doc.write(numbers)
 
     def do_show(self, args):
@@ -3610,7 +3614,7 @@ class PDFSlashCmd(_PipeCmd):
         msg = self._doc.pages.undo()
         if msg is None:
             msg = self._doc.MSGS['err_undo']
-        print(msg, file=self.stdout)
+        self._printout(msg)
 
     def do_redo(self, args):
         """
@@ -3621,7 +3625,7 @@ class PDFSlashCmd(_PipeCmd):
         msg = self._doc.pages.redo()
         if msg is None:
             msg = self._doc.MSGS['err_redo']
-        print(msg, file=self.stdout)
+        self._printout(msg)
 
     def do_Set(self, args):
         """
@@ -3723,7 +3727,7 @@ class PDFSlashCmd(_PipeCmd):
 
         Exit the program.
         """
-        self.printout('Exiting...')
+        self._printout('Exiting...')
         return True
 
     def emptyline(self):
