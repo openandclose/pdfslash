@@ -1002,7 +1002,7 @@ class _ImgSet(object):
 
     def get(self, indices):
         for meta, indices, imgs in self.imgs.get(indices, self.kind):
-            both = (indices, self._get_img(imgs, debug=True))
+            both = (indices, self._get_img(imgs, save=True))
 
             odds, o_indices = self._get_odds(indices)
             odds = (odds, self._get_img(imgs[o_indices]))
@@ -1019,25 +1019,25 @@ class _ImgSet(object):
     def _get_evens(self, indices):
         return filter_numbers(indices, 1, need_indices=True)
 
-    def _get_img(self, imgs, debug=False):
+    def _get_img(self, imgs, save=False):
         imgs = self._select_imgs(imgs)
         if len(imgs) == 0:
             # Sometimes there are no odd or even pages,
             # then gui draws a black image.
             return imgs.load_zeros()
         else:
-            _t = lambda msg: debug and _time(msg)
-            _t('start')
+            _time('start')
             imgs, cnt = imgs.load()
             if cnt == 0:
-                _t('pop')
+                _time('pop')
             else:
-                _t('PDF to image, %d pages' % cnt)
+                _time('PDF to image, %d pages' % cnt)
             name = self._doc.conf['merge']
-            _t('start')
+            _time('start')
             img = self._doc.imgmerger.merge(imgs, method_name=name)
             _time('merge image, %d pages' % len(imgs))
-            self._save_img(img, debug)
+            if _SAVE_IMG and save and fitz:
+                self._save_img(img, save)
             return img
 
     def _select_imgs(self, imgs):
@@ -1048,14 +1048,13 @@ class _ImgSet(object):
         indices = numpy.linspace(0, length - 1, num=max_, dtype=INT)
         return imgs[indices]
 
-    def _save_img(self, img, debug=False):
-        if _SAVE_IMG and debug and fitz:
-            samples = img.tobytes()
-            h, w = img.shape
-            pixmap = fitz.Pixmap(fitz.csGRAY, w, h, samples, 0)
-            t = time.time()
-            print('    saving image...')
-            pixmap.save('merged_image_%d.png' % t)
+    def _save_img(self, img, save=False):
+        samples = img.tobytes()
+        h, w = img.shape
+        pixmap = fitz.Pixmap(fitz.csGRAY, w, h, samples, 0)
+        t = time.time()
+        print('    saving image...')
+        pixmap.save('merged_image_%d.png' % t)
 
 
 class _ImageData(object):
