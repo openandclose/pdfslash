@@ -16,19 +16,19 @@ def test_imgproxy():
     proxy = slash._ImgProxy(array, loader, indices)
 
     proxy = proxy[[2, 4, 7]]
-    imgs = proxy.load()
+    imgs, cnt = proxy.load()
     assert list(imgs[:, 0, 0]) == [500, 900, 1500]
 
     proxy = proxy[[1, 2]]
-    imgs = proxy.load()
+    imgs, cnt = proxy.load()
     assert list(imgs[:, 0, 0]) == [900, 1500]
 
     proxy = proxy[[1]]
-    imgs = proxy.load()
+    imgs, cnt = proxy.load()
     assert list(imgs[:, 0, 0]) == [1500]
 
     proxy = proxy[0]
-    imgs = proxy.load()
+    imgs, cnt = proxy.load()
     assert list(imgs[:, 0, 0]) == [1500]
 
 

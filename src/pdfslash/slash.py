@@ -118,11 +118,16 @@ _TIMES = []
 
 
 def _time(msg=''):
+    # Always use it in pairs (start and end), nesting is possible.
     if _PRINT_TIME:
         t = time.time()
-        if _TIMES:
-            print('    [time] %-32s: %.4fs' % (msg, (t - _TIMES[-1])))
-        _TIMES.append(t)
+        if msg in ('', 'start'):
+            _TIMES.append(t)
+        elif msg in ('pop',):
+            t0 = _TIMES.pop()
+        else:
+            t0 = _TIMES.pop()
+            print('    [time] %-32s: %.4fs' % (msg, (t - t0)))
 
 
 def ints(seq):
@@ -851,12 +856,14 @@ class _ImgProxy(object):
         return self.__class__(array, self.loader, indices, self._loaded)
 
     def load(self):
+        cnt = 0
         for i, index in enumerate(self._indices):
             if index not in self._loaded:
                 index = int(index)  # from numpy int to python int
                 self.array[i] = self.loader(index)
                 self._loaded.append(index)
-        return self.array
+                cnt += 1
+        return self.array, cnt
 
     def load_zeros(self):
         if self._zero_image is None:
@@ -993,7 +1000,7 @@ class _ImgSet(object):
 
     def get(self, indices):
         for meta, indices, imgs in self.imgs.get(indices, self.kind):
-            both = (indices, self._get_img(imgs))
+            both = (indices, self._get_img(imgs, debug=True))
 
             odds, o_indices = self._get_odds(indices)
             odds = (odds, self._get_img(imgs[o_indices]))
@@ -1010,16 +1017,25 @@ class _ImgSet(object):
     def _get_evens(self, indices):
         return filter_numbers(indices, 1, need_indices=True)
 
-    def _get_img(self, imgs):
+    def _get_img(self, imgs, debug=False):
         imgs = self._select_imgs(imgs)
         if len(imgs) == 0:
             # Sometimes there are no odd or even pages,
             # then gui draws a black image.
             return imgs.load_zeros()
         else:
-            imgs = imgs.load()
+            _t = lambda msg: debug and _time(msg)
+            _t('start')
+            imgs, cnt = imgs.load()
+            if cnt == 0:
+                _t('pop')
+            else:
+                _t('PDF to image, %d pages' % cnt)
             name = self._doc.conf['merge']
-            return self._doc.imgmerger.merge(imgs, method_name=name)
+            _t('start')
+            img = self._doc.imgmerger.merge(imgs, method_name=name)
+            _time('merge image, %d pages' % len(imgs))
+            return img
 
     def _select_imgs(self, imgs):
         max_ = self._doc.conf['max_merge_pages']
@@ -1631,7 +1647,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         return '\n'.join(ret)
 
-    def get_img(self, number):  # c.f. 5ms per page, 3s for 600p
+    def get_img(self, number):
         index = number - 1
         page = self.pdf[index]
         width, height = getsize(self.mediaboxes[index])
@@ -1742,9 +1758,10 @@ class Document(object):
         conf_self = self.conf['_self']
         conf_self.set_item(self.conf, key, val)
 
-    def autocrop(self, numbers):  # c.f. 0.8s for 600p
+    def autocrop(self, numbers):
         numbers = self.pages.modifiable(numbers)
         commands = []
+        _time('start')
         for num in numbers:
             boxes = self.pages.get_boxes(num, fallback=False)
             if len(boxes) == 1:
@@ -1755,9 +1772,11 @@ class Document(object):
             command = 'overwrite', num, box
             commands.append(command)
         self.pages.set_each(commands)
+        _time('autocrop, %d pages' % len(numbers))
 
     def _autocrop(self, num, box):
-        img = self.imgs[num - 1].load()[0]
+        img, cnt = self.imgs[num - 1].load()
+        img = img[0]
         newimg = self._narrow_view(img, box)
         newbox = self.cropfinder.find(newimg)
         return self._unnarrow_view(newbox, box)
@@ -1786,14 +1805,19 @@ class Document(object):
     def _get_tkrunner(self, numbers, kind='subgroup'):
         indices = num2ind(numbers)
         imagedata = _ImageData(self, indices, kind)
-        return TkRunner(imagedata, self)
+        _time('start')
+        tkrunner = TkRunner(imagedata, self)
+        _time('tkinter init')
+        return tkrunner
 
     def write(self, numbers):
         numbers = self.pages.selectable(numbers)
         ret = self.pages.get_boxes_flattened(numbers)
         is_single_boxes, numbers, boxes = ret
         name = self._create_outfilename()
+        _time('start')
         self.backend.write(numbers, boxes, name, is_single_boxes)
+        _time('write, %d pages' % len(numbers))
 
     def _create_outfilename(self):
         fname = self.fname
@@ -3849,13 +3873,14 @@ def _build_argument_parser():
         "(reading from a file).")
     parser.add_argument('--cmdfile', '-f', help=h)
 
-    h = argparse.SUPPRESS
-    parser.add_argument('--_time', action='store_true', help=h)
+    h = '[DEBUG] print time for some processes'
+    parser.add_argument('--_time', '-_t', action='store_true', help=h)
 
     return parser
 
 
 def main(args=None, runner=None):
+    _time('start')
     args = args or sys.argv[1:]
     parser = _build_argument_parser()
     args = parser.parse_args(args)
@@ -3863,10 +3888,12 @@ def main(args=None, runner=None):
     if args._time:
         global _PRINT_TIME
         _PRINT_TIME = True
-        _time('start')
 
+    _time('start')
     runner = runner or Runner
-    runner(args).run()
+    runner = runner(args)
+    _time('Interpreter init')
+    runner.run()
 
 
 if __name__ == '__main__':
