@@ -1233,11 +1233,15 @@ class _ImageData(object):
         return self.rects.redo()
 
 
-class ImgMerger(object):
-    """Define imgs merging interface.
+class ImgMergerBase(object):
+    """Define imgs merging interface."""
 
-    the only requirement is to define ``merge``.
-    """
+    def merge(self, imgs):
+        pass
+
+
+class ImgMerger(ImgMergerBase):
+    """Implement actual ImgMerger."""
 
     def merge(self, imgs, **kwargs):
         if len(imgs) == 1:
