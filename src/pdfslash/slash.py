@@ -1414,10 +1414,10 @@ class _PyMuPDFBackend(Backend):
             for n in reversed(numbers):
                 pdf.delete_page(n)
 
-    # mostly the same arguments as fitz's '.ez_save' (v1.18.11)
+    # The same arguments as fitz's '.ez_save' (v1.18.11) except 'garbage'
     def _save(self, pdf, outfile, args=None):
         kwargs = dict(
-            garbage=3,
+            garbage=2,  # ez_save has 'garbage=3'
             clean=False,
             deflate=True,
             incremental=False,
@@ -3573,15 +3573,16 @@ class PDFSlashCmd(_PipeCmd):
         Create new PDF file with specified (or *selected*) pages.
 
         It uses ``PyMuPDF``'s ``fitz.Document.save`` method,
-        with the same arguments as ``fitz.Document.ez_save``.
+        with the same arguments as ``fitz.Document.ez_save``,
+        except 'garbage=2' (instead of '3').
 
         Options (optional):
 
-        ``-f``, ``--fast``:
-            Shortcut to ``-a{'garbage':1}``.
-            Try this when normal writing freezes.
+        ``-m``, ``--more``:
+            Shortcut to ``-a{'garbage':3}``.
+            For shorter PDF, it seems OK. May make file size smaller.
         ``-a``, ``--args``:
-            Update the default arguments (of ``.ez_save``).
+            Update the default arguments.
             The string after, say, ``-a`` must be valid Python code,
             evaluating to a dictionary, with no spaces.
         """
@@ -3591,8 +3592,8 @@ class PDFSlashCmd(_PipeCmd):
             args, code = None, None
             if opts:
                 opts = opts[0]
-                if opts in ('-f', '--fast'):
-                    args = {'garbage': 1}
+                if opts in ('-m', '--more'):
+                    args = {'garbage': 3}
                 elif opts[:2] == '-a':
                     code = opts[2:]
                 elif opts[:6] == '--args':
