@@ -1467,6 +1467,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         self.data = self.get_data()
         self.mediaboxes, self.cropboxes = self.get_boxes()
 
+        self._cache = {}  # img cache
+
     def load_pdf(self):
         doc = fitz.open(self.fname)
         return self.decrypt(doc)
@@ -1668,6 +1670,12 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         return '\n'.join(ret)
 
     def get_img(self, number):
+        cache = self._cache.get(number)
+        if cache is None:
+            cache = self._cache[number] = self._get_img(number)
+        return cache
+
+    def _get_img(self, number):
         index = number - 1
         page = self.pdf[index]
         width, height = getsize(self.mediaboxes[index])
