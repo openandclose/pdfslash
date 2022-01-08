@@ -205,6 +205,12 @@ def unrotate(w, h, rot, box):
     return rotate(w, h, 360 - rot, box)
 
 
+def get_checksum(fname):
+    fpath = os.path.abspath(fname)
+    with open(fpath, 'rb') as f:
+        return '%08x' % (zlib.crc32(f.read()) & 0xffffffff)
+
+
 class PDFSlashError(Exception):
     """Errors the program defines."""
 
@@ -3363,11 +3369,6 @@ class PDFSlashCmd(_PipeCmd):
         self._stdout.write(str(string))
         self._stdout.write('\n')
 
-    def get_checksum(self, fname):
-        fpath = os.path.abspath(fname)
-        with open(fpath, 'rb') as f:
-            return '%08x' % (zlib.crc32(f.read()) & 0xffffffff)
-
     def do_select(self, args):
         """
         Take one argument, page numbers.
@@ -3749,10 +3750,10 @@ class PDFSlashCmd(_PipeCmd):
         """
         t = time.strftime("%Y-%m-%d %H:%M:%S")
         fname = self._doc.fname
-        checksum = self.get_checksum(fname)
+        checksum = get_checksum(fname)
         self.printout('# %s' % t)
         self.printout('# %s' % fname)
-        self.printout('# %s' % checksum)
+        self.printout('# hash: %s' % checksum)
 
         stacker = self._doc.pages.boxdata.stacker
         msgs = stacker.export()
@@ -3890,12 +3891,23 @@ class Runner(object):
         if not line:
             return
         if line.startswith('#'):
+            self.check_pdffile(line)
             return
 
         m = re.match(r'\[[a-z]+\] ', line)
         if m:
             return line[m.end():]
         return line
+
+    def check_pdffile(self, line):
+        intro = '# hash: '
+        if line.startswith(intro) and not self.args.nohash:
+            oldhash = line[len(intro):]
+            current = get_checksum(self.args.pdffile)
+            if oldhash != current:
+                fmt = ('Different file hash from one in initial commands: '
+                    'old: %s, current: %s.')
+                raise ValueError(fmt % (oldhash, current))
 
     def run(self):
         return self.pcmd.cmdloop()
@@ -3925,6 +3937,11 @@ def _build_argument_parser():
     h = ('run initial commands before showing prompt '
         "(reading from a file).")
     parser.add_argument('--cmdfile', '-f', help=h)
+
+    h = ('do not perform initial commands verification. '
+        "Otherwise the program aborts when a line starts with '# hash: ', "
+        'and the value is different from PDF file.')
+    parser.add_argument('--nocheck', '-n', action='store_true', help=h)
 
     h = '[DEBUG] print time for some processes'
     parser.add_argument('--_time', '-_t', action='store_true', help=h)
