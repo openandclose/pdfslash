@@ -1801,6 +1801,11 @@ class Document(object):
         # ``_ImageData`` uses this cache dict.
         self._img_cache = {}
 
+    def free(self):
+        self.imgmerger._cache = {}
+        self.backend._cache = {}
+        self._img_cache = {}
+
     def print_conf_options(self):
         conf_self = self.conf['_self']
         conf_self.print_items(self.conf)
@@ -3785,6 +3790,15 @@ class PDFSlashCmd(_PipeCmd):
         stacker = self._doc.pages.boxdata.stacker
         msgs = stacker.export()
         self.printout('\n'.join(msgs))
+
+    def do_free(self, args):
+        """
+        Take no argument.
+
+        Free all image cache in the program.
+        Use when the program is grabbing too much memory.
+        """
+        self._doc.free()
 
     def do_exit(self, args):
         """
