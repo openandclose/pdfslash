@@ -3746,7 +3746,7 @@ class PDFSlashCmd(_PipeCmd):
 
             (pdfslash) export | cat > log.txt
             (pdfslash) exit
-            $ cat log.txt | pdfslash -C some.pdf
+            $ pdfslash -f log.txt some.pdf
         """
         t = time.strftime("%Y-%m-%d %H:%M:%S")
         fname = self._doc.fname
@@ -3932,10 +3932,6 @@ def _build_argument_parser():
     h = ('run initial commands before showing prompt '
         "(split multiple commands with ';').")
     parser.add_argument('--command', '-c', help=h)
-
-    h = ('run initial commands before showing prompt '
-        "(from standard input).")
-    parser.add_argument('--Command', '-C', action='store_true', help=h)
 
     h = ('run initial commands before showing prompt '
         "(reading from a file).")
