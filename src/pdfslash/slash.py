@@ -1409,8 +1409,8 @@ class _PyMuPDFBackend(Backend):
                 pdf.delete_page(n)
 
     # mostly the same arguments as fitz's '.ez_save' (v1.18.11)
-    def _save(self, pdf, outfile):
-        args = dict(
+    def _save(self, pdf, outfile, args=None):
+        kwargs = dict(
             garbage=3,
             clean=False,
             deflate=True,
@@ -1431,15 +1431,18 @@ class _PyMuPDFBackend(Backend):
                 deflate_images=True,
                 deflate_fonts=True,
             )
-            args.update(new)
+            kwargs.update(new)
 
         if 'no_new_id' in annotations:  # from v1.19.0
             new = dict(
                 no_new_id=True,
             )
-            args.update(new)
+            kwargs.update(new)
 
-        pdf.save(outfile, **args)
+        if args:
+            kwargs.update(args)
+
+        pdf.save(outfile, **kwargs)
 
 
 class PyMuPDFBackend(_PyMuPDFBackend):
@@ -1670,7 +1673,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         array.shape = (height, width)
         return array
 
-    def write(self, numbers, boxes, outfile, is_single_boxes=True):
+    def write(self, numbers, boxes, outfile, args, is_single_boxes=True):
         indices = num2ind(numbers)
         _time('start')
         pdf = self.load_pdf()  # creating new pdf object
@@ -1697,7 +1700,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         _time('(write) set cropboxes')
 
         _time('start')
-        self._save(pdf, outfile)
+        self._save(pdf, outfile, args)
         _time('(write) fitz.save')
         pdf.close()
 
@@ -1830,13 +1833,13 @@ class Document(object):
         _time('tkinter init')
         return tkrunner
 
-    def write(self, numbers):
+    def write(self, numbers, args):
         numbers = self.pages.selectable(numbers)
         ret = self.pages.get_boxes_flattened(numbers)
         is_single_boxes, numbers, boxes = ret
         name = self._create_outfilename()
         _time('start')
-        self.backend.write(numbers, boxes, name, is_single_boxes)
+        self.backend.write(numbers, boxes, name, args, is_single_boxes)
         _time('write, %d pages' % len(numbers))
 
     def _create_outfilename(self):
@@ -3567,11 +3570,37 @@ class PDFSlashCmd(_PipeCmd):
         Take one argument, page numbers (optional).
 
         Create new PDF file with specified (or *selected*) pages.
+
+        It uses ``PyMuPDF``'s ``fitz.Document.save`` method,
+        with the same arguments as ``fitz.Document.ez_save``.
+
+        Options (optional):
+
+        ``-f``, ``--fast``:
+            Shortcut to ``-a{'garbage':1}``.
+            Try this when normal writing freezes.
+        ``-a``, ``--args``:
+            Update the default arguments (of ``.ez_save``).
+            The string after, say, ``-a`` must be valid Python code,
+            evaluating to a dictionary, with no spaces.
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
             self._printout('writing...')
-            self._doc.write(numbers)
+            args, code = None, None
+            if opts:
+                opts = opts[0]
+                if opts in ('-f', '--fast'):
+                    args = {'garbage': 1}
+                elif opts[:2] == '-a':
+                    code = opts[2:]
+                elif opts[:6] == '--args':
+                    code = opts[6:]
+                if code:
+                    args = eval(code)
+                    self._printout('adding args, %r' % args)
+
+            self._doc.write(numbers, args=args)
 
     def do_show(self, args):
         """
