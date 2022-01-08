@@ -3868,10 +3868,13 @@ class Runner(object):
 
     def queue_commands(self):
         if self.args.cmdfile:
-            with open(self.args.cmdfile) as f:
-                commands = f.read()
-        elif self.args.Command:
-            commands = sys.stdin.read()
+            try:
+                with open(self.args.cmdfile) as f:
+                    commands = f.read()
+            except (FileNotFoundError, IsADirectoryError):
+                fmt = 'Error: file not found, or is directory: %r'
+                print(fmt % self.args.cmdfile)
+                sys.exit(1)
         elif self.args.command:
             commands = self.args.command
         else:
