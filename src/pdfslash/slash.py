@@ -1137,7 +1137,7 @@ class _ImageData(object):
     def prev(self):
         index = self.g_index - 1
         if index < 0:
-            if len(self._d_cache) < self.g_num:
+            if len(self._cache) < self.g_num:
                 raise LookupError
             index = self.g_num - 1
 
