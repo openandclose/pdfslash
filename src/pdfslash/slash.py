@@ -167,7 +167,7 @@ def groupby(seq, key=None):
         except KeyError:
             _groups[key(item)] = [i]
     for k, group in _groups.items():
-        yield k, [seq[i] for i in group]
+        yield k, tuple(seq[i] for i in group)
 
 
 def filter_numbers(numbers, which=0, need_indices=False):
@@ -890,7 +890,7 @@ class _ImgGroup(object):
         self._doc = doc
         self._msizes = [self._get_size(box) for box in mediaboxes]
         self._csizes = [self._get_size(box) for box in cropboxes]
-        self._indices = list(range(len(mediaboxes)))
+        self._indices = tuple(range(len(mediaboxes)))
         self._load_groups()
 
     def _get_size(self, box):
@@ -1008,7 +1008,7 @@ class _ImgSet(object):
 
     def get(self, indices):
         for meta, indices, imgs in self.imgs.get(indices, self.kind):
-            both = (indices, self._get_img(imgs, tuple(indices), save=True))
+            both = (indices, self._get_img(imgs, indices, save=True))
 
             odds, o_indices = self._get_odds(indices)
             odds = (odds, self._get_img(imgs[o_indices], odds))
