@@ -3610,11 +3610,11 @@ class PDFSlashCmd(_PipeCmd):
         Show current boxes for specified pages.
 
         If selected or fixed,
-        pages are shown with headers 's' and 'f' respectively.
+        pages are shown with headers ``'s'`` and ``'f'`` respectively.
 
         (Source cropboxes are formatted with three digit fractional part.
         So they are a bit different from actual PDF values
-        e.g. as viewed by 'info' command.)
+        e.g. as viewed by ``info`` command.)
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:

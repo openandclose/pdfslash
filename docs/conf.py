@@ -68,3 +68,5 @@ extensions = [
 import _helpgen
 
 html_context = _helpgen.main()
+
+smartquotes = False
