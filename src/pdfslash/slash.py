@@ -1008,13 +1008,13 @@ class _ImgSet(object):
 
     def get(self, indices):
         for meta, indices, imgs in self.imgs.get(indices, self.kind):
-            both = (indices, self._get_img(imgs, save=True))
+            both = (indices, self._get_img(imgs, tuple(indices), save=True))
 
             odds, o_indices = self._get_odds(indices)
-            odds = (odds, self._get_img(imgs[o_indices]))
+            odds = (odds, self._get_img(imgs[o_indices], odds))
 
             evens, e_indices = self._get_evens(indices)
-            evens = (evens, self._get_img(imgs[e_indices]))
+            evens = (evens, self._get_img(imgs[e_indices], evens))
 
             yield meta, both, odds, evens
 
@@ -1025,7 +1025,7 @@ class _ImgSet(object):
     def _get_evens(self, indices):
         return filter_numbers(indices, 1, need_indices=True)
 
-    def _get_img(self, imgs, save=False):
+    def _get_img(self, imgs, indices, save=False):
         imgs = self._select_imgs(imgs)
         if len(imgs) == 0:
             # Sometimes there are no odd or even pages,
@@ -1040,7 +1040,7 @@ class _ImgSet(object):
                 _time('PDF to image, %d pages' % cnt)
             name = self._doc.conf['merge']
             _time('start')
-            img = self._doc.imgmerger.merge(imgs, method_name=name)
+            img = self._doc.imgmerger.merge(imgs, indices, method_name=name)
             _time('merge image, %d pages' % len(imgs))
             if _SAVE_IMG and save and fitz:
                 self._save_img(img, save)
@@ -1236,6 +1236,9 @@ class _ImageData(object):
 class ImgMergerBase(object):
     """Define imgs merging interface."""
 
+    def __init__(self):
+        self._cache = {}
+
     def merge(self, imgs):
         pass
 
@@ -1243,7 +1246,7 @@ class ImgMergerBase(object):
 class ImgMerger(ImgMergerBase):
     """Implement actual ImgMerger."""
 
-    def merge(self, imgs, **kwargs):
+    def merge(self, imgs, indices, **kwargs):
         if len(imgs) == 1:
             return self.singlepage(imgs)
 
@@ -1252,7 +1255,18 @@ class ImgMerger(ImgMergerBase):
         if not method:
             print('Invald merge method name: %r' % name)
             return self.zeros(imgs)
-        return method(imgs)
+
+        cache = self._cache.get(name)
+        if cache is None:
+            self._cache[name] = {}
+        cache = self._cache[name].get(indices)
+        if cache is None:
+            img = method(imgs)
+            if not isinstance(img, numpy.ndarray):
+                print('Invald merge method name: %r' % name)
+                return self.zeros(imgs)
+            cache = self._cache[name][indices] = img
+        return cache
 
     # when method name is invalid, return black img.
     def zeros(self, imgs):
