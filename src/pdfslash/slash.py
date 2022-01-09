@@ -1855,12 +1855,15 @@ class Document(object):
         x, y = box[:2]
         return x + left, y + top, x + right, y + bottom
 
-    def preview(self, numbers, kind='subgroup'):
+    def preview(self, numbers, kind='subgroup', _quit=False):
         # numbers = self.pages.selectable(numbers)
         numbers = self.pages.modifiable(numbers)
         runner = self._get_tkrunner(numbers, kind)
-        runner.run()
-        return runner
+        if _quit:
+            runner.quit()
+        else:
+            runner.run()
+            return runner
 
     def _get_tkrunner(self, numbers, kind='subgroup'):
         indices = num2ind(numbers)
@@ -2416,11 +2419,11 @@ class TkRunner(object):
         else:
             return ''
 
-    def quit(self, event):
+    def quit(self, event=None):
         self._remove_notifications()
         self.root.destroy()
 
-    def help(self, event):
+    def help(self, event=None):
         print(_tk_help)
 
     def _next(self, event=None):
@@ -3580,9 +3583,12 @@ class PDFSlashCmd(_PipeCmd):
             This is the default.
         ``-s``, ``--single``:
             Not group pages (a page in a group).
+        ``-_q``, ``--_quit``:
+            Create GUI and immediately quit (for test).
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         kind = 'subgroup'
+        _quit = False
         if opts:
             if opts[0] in ('-m', '--mediabox'):
                 kind = 'group'
@@ -3590,12 +3596,14 @@ class PDFSlashCmd(_PipeCmd):
                 kind = 'subgroup'
             elif opts[0] in ('-s', '--single'):
                 kind = 'single'
+            elif opts[0] in ('-_q', '--_quit'):
+                _quit = True
             else:
                 self._printout('Invald option: %s' % opts)
                 return
 
         if numbers:
-            self._doc.preview(numbers, kind=kind)
+            self._doc.preview(numbers, kind=kind, _quit=_quit)
 
     def do_write(self, args):
         """
