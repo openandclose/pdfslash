@@ -177,11 +177,11 @@ def filter_numbers(numbers, which=0, need_indices=False):
         2: lambda x: not x % 2,  # evens
     }
     func = filters[which]
-    numbers = tuple(n for n in numbers if func(n))
+    nums = tuple(n for n in numbers if func(n))
     if not need_indices:
-        return numbers
+        return nums
     number_indices = [i for i, n in enumerate(numbers) if func(n)]
-    return numbers, number_indices  # note: tuple and list
+    return nums, number_indices  # note: tuple and list
 
 
 def rotate(w, h, rot, box):
