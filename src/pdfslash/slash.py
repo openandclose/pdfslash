@@ -844,12 +844,15 @@ class _ImgProxy(object):
     _errorfmt = ('This is numpy array proxy. '
         'It only accepts first axis indexing (int or list). Got: %r.')
 
-    def __init__(self, array, loader, _indices, _loaded=None):
-        self.array = array  # initially, numpy.zeros
+    def __init__(self, array, loader, root, current=None, _loaded=None):
+        self.array = array
         self.loader = loader
-        if not isinstance(_indices, numpy.ndarray):
-            _indices = numpy.asarray(_indices)
-        self._indices = _indices
+        if not isinstance(root, numpy.ndarray):
+            root = numpy.asarray(root)
+        self.root = root  # root (global) indices
+        if current is None:
+            current = numpy.arange(len(root))
+        self.current = current  # current (in-group) indices
         self._loaded = _loaded or []
         self._zero_image = None
 
@@ -857,21 +860,24 @@ class _ImgProxy(object):
         if isinstance(keys, int):
             keys = [keys]
         try:
-            indices = self._indices[keys]
+            current = self.current[keys]
         except IndexError:
             raise IndexError(self._errorfmt % keys)
-        array = self.array[keys]
-        return self.__class__(array, self.loader, indices, self._loaded)
+        array, loader, root = self.array, self.loader, self.root
+        return self.__class__(array, loader, root, current, self._loaded)
 
     def load(self):
         cnt = 0
-        for i, index in enumerate(self._indices):
+        indices = self.root[self.current]
+        for i, index in zip(self.current, indices):
             if index not in self._loaded:
                 index = int(index)  # from numpy int to python int
                 self.array[i] = self.loader(index)
                 self._loaded.append(index)
                 cnt += 1
-        return self.array, cnt
+
+        array = self.array[self.current]
+        return array, cnt
 
     def load_zeros(self):
         if self._zero_image is None:
@@ -880,7 +886,7 @@ class _ImgProxy(object):
         return self._zero_image
 
     def __len__(self):
-        return len(self._indices)
+        return len(self.current)
 
 
 class _ImgGroup(object):
@@ -1048,7 +1054,7 @@ class _ImgSet(object):
 
     def _select_imgs(self, imgs):
         max_ = self._doc.conf['max_merge_pages']
-        length = len(imgs._indices)
+        length = len(imgs)
         if length <= max_:
             return imgs
         indices = numpy.linspace(0, length - 1, num=max_, dtype=INT)
