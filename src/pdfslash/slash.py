@@ -1721,9 +1721,11 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             if len(indices) != len(pdf):
                 _time('start')
                 pdf.select(indices)
-                _time('(write) page select')
+                _time('(write) page select,  %d pages' % len(indices))
         else:
+            _time('start')
             self._copy_pages(pdf, numbers, indices, boxes)  # deep copy
+            _time('(write) page copy and select,  %d pages' % len(indices))
             self._adjut_toc(pdf, indices, boxes)
 
         set_cropbox = self._compat('set_cropbox', 'setCropBox')
@@ -1739,7 +1741,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         _time('start')
         self._save(pdf, outfile, args)
-        _time('(write) fitz.save')
+        _time('(write) save (fitz.save)')
         pdf.close()
 
     def _copy_pages(self, pdf, numbers, indices, boxes):
@@ -1874,9 +1876,7 @@ class Document(object):
     def _get_tkrunner(self, numbers, kind='subgroup'):
         indices = num2ind(numbers)
         imagedata = _ImageData(self, indices, kind)
-        _time('start')
         tkrunner = TkRunner(imagedata, self)
-        _time('tkinter init')
         return tkrunner
 
     def write(self, numbers, args):
@@ -1884,9 +1884,7 @@ class Document(object):
         ret = self.pages.get_boxes_flattened(numbers)
         is_single_boxes, numbers, boxes = ret
         name = self._create_outfilename()
-        _time('start')
         self.backend.write(numbers, boxes, name, args, is_single_boxes)
-        _time('write, %d pages' % len(numbers))
 
     def _create_outfilename(self):
         fname = self.fname
@@ -2333,7 +2331,9 @@ class TkRunner(object):
         self._start = None
         self._end = None
 
+        _time('start')
         self.build()
+        _time('tkinter init')
 
     def run(self):
         print('running tkinter...',
@@ -3907,9 +3907,15 @@ class Runner(object):
 
     def __init__(self, args):
         self.args = args
+        _time('start')
         self.conf = self.get_conf()
+        _time('conf init')
+        _time('start')
         self.doc = self.get_doc()
+        _time('doc init (fitz.open)')
+        _time('start')
         self.pcmd = self.get_pcmd()
+        _time('Interpreter init')
         self.queue_commands()
 
     def get_conf(self):
@@ -4007,7 +4013,6 @@ def _build_argument_parser():
 
 
 def main(args=None, runner=None):
-    _time('start')
     args = args or sys.argv[1:]
     parser = _build_argument_parser()
     args = parser.parse_args(args)
@@ -4020,10 +4025,8 @@ def main(args=None, runner=None):
         global _SAVE_IMG
         _SAVE_IMG = True
 
-    _time('start')
     runner = runner or Runner
     runner = runner(args)
-    _time('Interpreter init')
     runner.run()
 
 
