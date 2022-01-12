@@ -3009,6 +3009,9 @@ class BoxParser(object):
         cache = self._cache
         if cache['pageboxes'] is None:
             pageboxes = self._pages.get_pageboxes(numbers, fallback=False)
+            if [] in pageboxes:
+                index = pageboxes.index([])
+                raise NoBoxToProcessError(index + 1)
             cache['pageboxes'] = pageboxes
         return cache['pageboxes']
 
@@ -3076,7 +3079,7 @@ class BoxParser(object):
                             boxes1 = None
                         return box1, boxes1
 
-        except (ValueError, IndexError):
+        except ValueError:
             pass
 
         raise ValueError('Invalid box string: %s' % bstr1)
@@ -3225,7 +3228,7 @@ class CommandParser(object):
         if numbers:
             try:
                 return self.boxparser.parse(numbers, bstr1, bstr2, 'bb')
-            except ValueError as e:
+            except (ValueError, NoBoxToProcessError) as e:
                 self.printout('Error while parsing box: %s' % str(e))
                 return
 
