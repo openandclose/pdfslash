@@ -20,9 +20,10 @@ COLORS = slash.COLORS
 # https://www.pdfa.org/resource/pdfua-reference-suite/
 # It has 3 different source cropboxes:
 #
-# 1-13,21        0,0,595,841
-# 14-16          0,0,530,780    (by 'crop 14-16 30,30,560,810')
-# 17-20          0,0,500,750    (by 'crop 17-20 50,50,550,800')
+# page          cropbox             size
+# 1-13,21       0,0,595,841         595,841
+# 14-16         30,30,560,810       530,780    (by 'crop 14-16 30,30,560,810')
+# 17-20         50,50,550,800       500,750    (by 'crop 17-20 50,50,550,800')
 PDFF = 'PDFUA-Ref-2-05_BookChapter-german-3cboxes.pdf'
 PDFF = os.path.join(os.path.dirname(__file__), PDFF)
 
@@ -84,7 +85,6 @@ def run(doc, numbers=None):
     return tkrunner
 
 
-# not used
 def close(t):
     t.quit(Event())
 
@@ -119,19 +119,27 @@ def check_tk_rects(t, data):  # data is a list of rect.box, rect.color
 
     rects = sorted(rects, key=lambda r: t.canvas.bbox(r))
     for r, (box, color) in zip(rects, data):
-        for i, n in enumerate(t.canvas.bbox(r)):
-            assert abs(box[i] - n) < 3
         assert COLORS[color] == t.canvas.itemcget(r, 'outline')
+        is_same_box(box, t.canvas.bbox(r))
 
 
-# TODO: !!! currently no-op !!!
-def check_tk_image(t, shape):
-    return
-    w, h = shape
+def check_tk_image(t, m_shape, c_shape):
     width = t.i.width
     height = t.i.height
-    assert abs(width - w) < 2
-    assert abs(height - h) < 2
+    is_same_box(m_shape, (width, height))
+
+    gid = t.canvas.find_withtag('cropbox')[0]
+    if c_shape is None:
+        return
+    is_same_box(c_shape, t.canvas.bbox(gid))
+
+
+def is_same_box(box, rect):
+    # It seems outline width (1) is added externally to the shape.
+    box = slash.shift_box(box, (-1, -1, 1, 1))
+    for b, r in zip(box, rect):
+        # assert abs(b - r) < 2
+        b == r
 
 
 def move_rect(t, which='rightdown', times=10):  # rightdown or leftup
@@ -230,20 +238,22 @@ def test_rects():
     check_tk_rects(t, ((box3b, 'blue'), (box4, 'lightblue')))
 
     # img groups
-    shape1 = (595, 841)  # 1-13,21
-    shape2 = (530, 780)  # 14-16
-    shape3 = (500, 750)  # 17-20
-    check_tk_image(t, shape1)
+    isize = (595, 841)  # mediabox size
+    shape1 = (0, 0, 595, 841)  # crpobox coords 1-13,21
+    shape2 = (30,30,560,810)  # crpobox coords 14-16
+    shape3 = (50,50,550,800)  # crpobox coords 17-20
+
+    check_tk_image(t, isize, None)
     press_key(t, '<n>')  # next
-    check_tk_image(t, shape2)
+    check_tk_image(t, isize, shape2)
     press_key(t, '<n>')  # next
-    check_tk_image(t, shape3)
+    check_tk_image(t, isize, shape3)
     press_key(t, '<n>')  # next
-    check_tk_image(t, shape1)
+    check_tk_image(t, isize, None)
     press_key(t, '<p>')  # previous
-    check_tk_image(t, shape3)
+    check_tk_image(t, isize, shape3)
     press_key(t, '<p>')  # previous
-    check_tk_image(t, shape2)
+    check_tk_image(t, isize, shape2)
 
     box11 = 100, 100, 400, 600  # on shape2
     create_sel(t, box11)
@@ -260,29 +270,29 @@ def test_rects():
     check_tk_rects(t, ((box12, 'blue'),))
 
     press_key(t, '<u>')  # undo (back to shape2)
-    check_tk_image(t, shape2)
+    check_tk_image(t, isize, shape2)
     check_tk_boxes(t, (14, 15, 16), [box11])
     check_tk_boxes(t, (17, 18, 19, 20), [])
     check_tk_rects(t, ((box11, 'blue'),))
 
-    press_key(t, '<u>')  # undo (back to shape1)
-    check_tk_image(t, shape1)
+    press_key(t, '<u>')  # undo (back to isize)
+    check_tk_image(t, isize, None)
     check_tk_boxes(t, (14, 15, 16), [])
     check_tk_boxes(t, (17, 18, 19, 20), [])
     check_tk_rects(t, ((box3b, 'blue'), (box4, 'lightblue')))
 
     press_key(t, '<r>')  # redo (back to shape2)
-    check_tk_image(t, shape2)
+    check_tk_image(t, isize, shape2)
     check_tk_boxes(t, (14, 15, 16), [box11])
     check_tk_boxes(t, (17, 18, 19, 20), [])
     check_tk_rects(t, ((box11, 'blue'),))
 
     # zoom
     assert get_scale(t) == 1
-    check_tk_image(t, shape2)
+    check_tk_image(t, isize, shape2)
     press_key(t, '<z>')
     assert get_scale(t) == 1.1
-    check_tk_image(t, get_scaled(t, shape2))
+    check_tk_image(t, get_scaled(t, isize), get_scaled(t, shape2))
     box11z = get_scaled(t, box11)
     check_tk_boxes(t, (14, 15, 16), [box11])
     check_tk_rects(t, ((box11z, 'blue'),))
@@ -290,7 +300,7 @@ def test_rects():
     press_key(t, '<Z>')
     press_key(t, '<Z>')
     assert get_scale(t) == 0.9
-    check_tk_image(t, get_scaled(t, shape2))
+    check_tk_image(t, get_scaled(t, isize), get_scaled(t, shape2))
     box11ZZ = get_scaled(t, box11)
     check_tk_boxes(t, (14, 15, 16), [box11])
     check_tk_rects(t, ((box11ZZ, 'blue'),))
@@ -310,15 +320,17 @@ def test_rects__bug_img_group_mix_up_on_second_tk_invocation():
     pump_events(t.root)
 
     # img groups
-    shape1 = (595, 841)  # 1-13,21
-    shape2 = (530, 780)  # 14-16
-    shape3 = (500, 750)  # 17-20
-    check_tk_image(t, shape1)
+    isize = (595, 841)  # mediabox size
+    shape1 = (0, 0, 595, 841)  # crpobox coords 1-13,21
+    shape2 = (30,30,560,810)  # crpobox coords 14-16
+    shape3 = (50,50,550,800)  # crpobox coords 17-20
+
+    check_tk_image(t, isize, None)
     press_key(t, '<n>')  # next
-    check_tk_image(t, shape2)
+    check_tk_image(t, isize, shape2)
     press_key(t, '<n>')  # next
-    check_tk_image(t, shape3)
+    check_tk_image(t, isize, shape3)
     press_key(t, '<n>')  # next
-    check_tk_image(t, shape1)
+    check_tk_image(t, isize, None)
 
     close(t)
