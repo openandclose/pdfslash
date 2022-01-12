@@ -813,7 +813,11 @@ class _Pages(object):
         new_numbers = []
         new_boxes = []
         for n in numbers:
-            boxes = self.get_boxes(n)
+            boxes = self.get_boxes(n, fallback=False)
+            if boxes == []:
+                new_numbers.append(n)
+                new_boxes.append(None)
+                continue
             for box in boxes:
                 new_numbers.append(n)
                 new_boxes.append(box)
@@ -1731,6 +1735,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         _time('start')
         for i, index in enumerate(indices):
+            if boxes[i] is None:
+                continue
             page = pdf[i]
             box = self.unrotate(page, boxes[i])
             pos = self.data['mediabox'][index][:2]
