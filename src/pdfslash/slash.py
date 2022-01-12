@@ -235,7 +235,7 @@ class DuplicateBoxError(UserInputError):
 class NoBoxToProcessError(UserInputError):
     """Raise when trying to edit non-existent box in a page."""
 
-    msg = 'cannot process non-existent box; page: %d, box: %s'
+    msg = 'cannot process non-existent box; page: %d'
 
 
 class _Stack(object):
@@ -555,7 +555,7 @@ class _BoxData(object):
         try:
             index = boxes.index(old_box)
         except ValueError:
-            raise NoBoxToProcessError(i + 1, old_box)
+            raise NoBoxToProcessError(i + 1)
         commands = [('replace', (i, index), tuple(box))]
         return commands
 
@@ -564,7 +564,7 @@ class _BoxData(object):
         try:
             index = boxes.index(old_box)
         except ValueError:
-            raise NoBoxToProcessError(i + 1, old_box)
+            raise NoBoxToProcessError(i + 1)
         commands = [('remove', (i, index), None)]
         return commands
 
