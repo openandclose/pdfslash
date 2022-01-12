@@ -1721,11 +1721,11 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             if len(indices) != len(pdf):
                 _time('start')
                 pdf.select(indices)
-                _time('(write) page select,  %d pages' % len(indices))
+                _time('(write) page select, %d pages' % len(indices))
         else:
             _time('start')
             self._copy_pages(pdf, numbers, indices, boxes)  # deep copy
-            _time('(write) page copy and select,  %d pages' % len(indices))
+            _time('(write) page copy and select, %d pages' % len(indices))
             self._adjut_toc(pdf, indices, boxes)
 
         set_cropbox = self._compat('set_cropbox', 'setCropBox')
