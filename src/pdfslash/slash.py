@@ -798,9 +798,9 @@ class _Pages(object):
     def get_boxes(self, number, fallback=True):
         page = self[number]
         if fallback:
-            return page.boxes or [page.cropbox]
+            return page.boxes.data or [page.cropbox]
         else:
-            return page.boxes
+            return page.boxes.data
 
     def get_pageboxes(self, numbers=None, fallback=True):
         numbers = numbers or self.numbers
