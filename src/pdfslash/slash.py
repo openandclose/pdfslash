@@ -1723,7 +1723,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                 _time('(write) page select, %d pages' % len(indices))
         else:
             _time('start')
-            self._copy_pages(pdf, numbers, indices, boxes)  # deep copy
+            self._copy_pages(pdf, indices)  # deep copy
             _time('(write) page copy and select, %d pages' % len(indices))
             self._adjut_toc(pdf, indices, boxes)
 
@@ -1743,9 +1743,9 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         _time('(write) save (fitz.save)')
         pdf.close()
 
-    def _copy_pages(self, pdf, numbers, indices, boxes):
+    def _copy_pages(self, pdf, indices):
         length = len(pdf)
-        excluded = [n - 1 for n in range(1, length + 1) if n not in numbers]
+        excluded = [i for i in range(length) if i not in indices]
         if excluded:
             self._delete_pages(pdf, excluded)
         prev = -1
