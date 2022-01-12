@@ -812,13 +812,12 @@ class _Pages(object):
         # [5, [A, B, C]] -> [5, 5, 5], [A, B, C]
         new_numbers = []
         new_boxes = []
-        is_single_boxes = self.is_single_boxes(numbers)
         for n in numbers:
             boxes = self.get_boxes(n)
             for box in boxes:
                 new_numbers.append(n)
                 new_boxes.append(box)
-        return is_single_boxes, new_numbers, new_boxes
+        return new_numbers, new_boxes
 
     def is_single_boxes(self, numbers):  # Each page has zero or one box.
         return all(len(self.get_boxes(n)) == 1 for n in numbers)
@@ -1881,10 +1880,10 @@ class Document(object):
 
     def write(self, numbers, args):
         numbers = self.pages.selectable(numbers)
-        ret = self.pages.get_boxes_flattened(numbers)
-        is_single_boxes, numbers, boxes = ret
+        nums, boxes = self.pages.get_boxes_flattened(numbers)
+        is_single_boxes = self.pages.is_single_boxes(numbers)
         name = self._create_outfilename()
-        self.backend.write(numbers, boxes, name, args, is_single_boxes)
+        self.backend.write(nums, boxes, name, args, is_single_boxes)
 
     def _create_outfilename(self):
         fname = self.fname
