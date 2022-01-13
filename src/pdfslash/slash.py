@@ -1502,9 +1502,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
     def decrypt(self, doc):
         is_encrypted = self._compat('is_encrypted', 'isEncrypted')
-        if is_encrypted(doc):
-            if self._password:
-                doc.authenticate(self._password)
+        if self._password:
+            doc.authenticate(self._password)
         if is_encrypted(doc):
             doc.authenticate('')
         cnt = 0
