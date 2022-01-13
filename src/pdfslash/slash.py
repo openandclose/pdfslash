@@ -1434,11 +1434,11 @@ class _PyMuPDFBackend(Backend):
         return wrapper
 
     # v1.18.13 introduced list type argument
-    def _delete_pages(self, pdf, numbers):
+    def _delete_pages(self, pdf, indices):
         try:
-            pdf.delete_pages(numbers)
+            pdf.delete_pages(indices)
         except TypeError:
-            for n in reversed(numbers):
+            for n in reversed(indices):
                 pdf.delete_page(n)
 
     # The same arguments as fitz's '.ez_save' (v1.18.11) except 'garbage'
