@@ -191,17 +191,19 @@ def rotate(w, h, rot, box):
     if rot == 0:
         new = box
     elif rot == 90:
-        new = [w - box[3], box[0], w - box[1], box[2]]
+        new = [h - box[3], box[0], h - box[1], box[2]]
     elif rot == 180:
         new = [w - box[2], h - box[3], w - box[0], h - box[1]]
     elif rot == 270:
-        new = [box[1], h - box[2], box[3], h - box[0]]
+        new = [box[1], w - box[2], box[3], w - box[0]]
     else:
         new = box  # illegal in PDF reference
     return ints(new)
 
 
 def unrotate(w, h, rot, box):
+    if rot in (90, 270):
+        w, h = h, w
     return rotate(w, h, 360 - rot, box)
 
 

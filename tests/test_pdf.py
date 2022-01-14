@@ -20,6 +20,12 @@ def _get_data():
     cbox = boxes[0][0]
     return w, h, cbox, boxes
 
+def test_rotation():
+    w, h, cbox, boxes = _get_data()
+    for box, rot in boxes:
+        assert slash.rotate(w, h, rot, cbox) == box
+
+
 def test_unrotation():
     w, h, cbox, boxes = _get_data()
     for box, rot in boxes:
