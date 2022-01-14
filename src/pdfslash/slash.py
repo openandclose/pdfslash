@@ -1737,9 +1737,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             if boxes[i] is None:
                 continue
             page = pdf[i]
-            box = self.unrotate(page, boxes[i])
-            pos = self.data['mediabox'][index][:2]
-            box = shift_box(box, pos * 2)
+            box = self.unrotate(index, boxes[i])
             set_cropbox(page)(box)
         _time('(write) set cropboxes')
 
@@ -1765,10 +1763,17 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     def _adjut_toc(self, pdf, numbers, boxes):
         pass
 
-    def unrotate(self, page, box):
-        rot = page.rotation
-        w, h = page.mediabox[2:]
-        return unrotate(w, h, rot, box)
+    def unrotate(self, index, box):
+        mediabox = self.data['mediabox'][index]
+        rotation = self.data['rotation'][index]
+
+        w, h = getsize(mediabox)
+        box = unrotate(w, h, rotation, box)
+
+        pos = mediabox[:2]
+        box = shift_box(box, pos * 2)
+
+        return box
 
 
 class Document(object):
