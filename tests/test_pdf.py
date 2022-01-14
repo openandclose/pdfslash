@@ -8,43 +8,38 @@ import pdfslash.slash as slash
 
 # Rotation ---------------------------------------
 
-mediabox = (0, 0, 9, 14)
-boxes = (
-    (1, 2, 6, 10),  # rotation: 0
-    (4, 1, 12, 6),  # rotation: 90
-    (3, 4, 8, 12),  # rotation: 180
-    (2, 3, 10, 8),  # rotation: 270
-)
-
-
-def get_fitz_unrotated(page, box):
-    box = fitz.Rect(box)
-    box = box * page.derotation_matrix
-    box = box.normalize()
-    return slash.ints(box)
-
-
-def test_rotation():
-    rot = 0
+def _get_data():
+    mediabox = (0, 0, 9, 14)
+    boxes = (
+        ((1, 2, 6, 10), 0),
+        ((4, 1, 12, 6), 90),
+        ((3, 4, 8, 12), 180),
+        ((2, 3, 10, 8), 270),
+    )
     w, h = mediabox[2:]
-    doc = fitz.open()
-    for _, box in zip(range(4), boxes):
-        page = doc.new_page(width=w, height=h)
-        page.set_rotation(rot)
-        assert slash.unrotate(w, h, rot, box) == boxes[0]
-        rot += 90
+    cbox = boxes[0][0]
+    return w, h, cbox, boxes
+
+def test_unrotation():
+    w, h, cbox, boxes = _get_data()
+    for box, rot in boxes:
+        assert slash.unrotate(w, h, rot, box) == cbox
 
 
-def _test_fitz_rotation():
-    # check returning the same results as test_rotation.
-    rot = 0
-    w, h = mediabox[2:]
+def _test_fitz_unrotation():
+    # check returning the same results as test_unrotation.
+    def get_fitz_unrotated(page, box):
+        box = fitz.Rect(box)
+        box = box * page.derotation_matrix
+        box = box.normalize()
+        return slash.ints(box)
+
+    w, h, cbox, boxes = _get_data()
     doc = fitz.open()
-    for _, box in zip(range(4), boxes):
-        page = doc.new_page(width=w, height=h)
+    page = doc.new_page(width=w, height=h)
+    for box, rot in boxes:
         page.set_rotation(rot)
-        assert get_fitz_unrotated(page, box) == boxes[0]
-        rot += 90
+        assert get_fitz_unrotated(page, box) == cbox
 
 
 # Page Labels ------------------------------------
