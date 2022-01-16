@@ -22,8 +22,12 @@ COLORS = slash.COLORS
 #
 # page          cropbox             size
 # 1-13,21       0,0,595,841         595,841
-# 14-16         30,30,560,810       530,780    (by 'crop 14-16 30,30,560,810')
-# 17-20         50,50,550,800       500,750    (by 'crop 17-20 50,50,550,800')
+# 14-16         30,30,560,810       530,780    (by 'crop 14-16 30,31,560,811')
+# 17-20         50,50,550,800       500,750    (by 'crop 17-20 50,41,550,791')
+#
+# c.f. It has non integer mediabox ([0 0 595.276 841.89]),
+# so integer croppings are being displaced by one.
+
 PDFF = 'PDFUA-Ref-2-05_BookChapter-german-3cboxes.pdf'
 PDFF = os.path.join(os.path.dirname(__file__), PDFF)
 
@@ -128,9 +132,10 @@ def check_tk_image(t, m_shape, c_shape):
     height = t.i.height
     is_same_box(m_shape, (width, height))
 
-    gid = t.canvas.find_withtag('cropbox')[0]
     if c_shape is None:
+        assert t.canvas.find_withtag('cropbox') == ()
         return
+    gid = t.canvas.find_withtag('cropbox')[0]
     is_same_box(c_shape, t.canvas.bbox(gid))
 
 

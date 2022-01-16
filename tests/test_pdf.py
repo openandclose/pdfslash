@@ -48,6 +48,50 @@ def _test_fitz_unrotation():
         assert get_fitz_unrotated(page, box) == cbox
 
 
+# ImgBox ----------------------------------------
+
+def isclose(box1, box2):
+    for a, b in zip(box1, box2):
+        assert abs(a - b) < 0.0001
+
+
+def test_cropbox_pos():
+    def check(mbox, new_cropbox, new_cbox, pdfbox):
+        doc = fitz.open()
+        w, h = mbox[2:]
+        page = doc.new_page(width=w, height=h)
+        cbox = page.cropbox
+        b = slash._PyMuPDFImgBox(mbox, cbox, 0)
+        new_cropbox = b.new_cropbox(new_cropbox)
+        isclose(new_cropbox, new_cbox)
+        page.set_cropbox(new_cropbox)
+        assert doc.xref_get_key(page.xref, 'CropBox')[1] == pdfbox
+
+    mbox = 0, 0, 9, 14
+    new_cropbox = 1, 2, 6, 10
+    new_cbox = 1, 2, 6, 10
+    pdfbox = '[1 4 6 12]'
+    check(mbox, new_cropbox, new_cbox, pdfbox)
+
+    mbox = 0, 0, 9.1, 14.1
+    new_cropbox = 1, 2, 6, 10
+    new_cbox = 1, 2.1, 6, 10.1
+    pdfbox = '[1 4 6 12]'
+    check(mbox, new_cropbox, new_cbox, pdfbox)
+
+    mbox = 0.1, 0.1, 10, 15
+    new_cropbox = 1, 2, 6, 10
+    new_cbox = 1.1, 3, 6.1, 11
+    pdfbox = '[1.1 4 6.1 12]'
+    check(mbox, new_cropbox, new_cbox, pdfbox)
+
+    mbox = 0.1, 0.1, 10.2, 15.2
+    new_cropbox = 1, 2, 6, 10
+    new_cbox = 1.1, 3.2, 6.1, 11.2
+    pdfbox = '[1.1 4 6.1 12]'
+    check(mbox, new_cropbox, new_cbox, pdfbox)
+
+
 # Page Labels ------------------------------------
 
 def test_labels():

@@ -25,6 +25,7 @@ import argparse
 import code
 import configparser
 import cmd
+import math
 import os
 import re
 import subprocess
@@ -1494,7 +1495,11 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             self.pdf = self.load_pdf()
 
         self.data = self.get_data()
-        self.mediaboxes, self.cropboxes = self.get_boxes()
+        self.imgboxes = self.get_imgboxes()
+
+        self.mediaboxes = tuple(imgbox.mediabox for imgbox in self.imgboxes)
+        self.cropboxes = tuple(imgbox.cropbox for imgbox in self.imgboxes)
+        self.remove_cropboxes()
 
         self._cache = {}  # img cache
 
@@ -1624,28 +1629,6 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         data['info']['pages'] = info
 
-    def get_boxes(self):
-        cropbox_position = self._compat('cropbox_position', 'CropBoxPosition')
-
-        cropboxes = []
-        for page in self.pdf:
-            cropbox = tuple(page.rect)
-            cropbox = shift_box(cropbox, tuple(cropbox_position(page)) * 2)
-            cropboxes.append(cropbox)
-
-        self._remove_cropbox()
-
-        mediaboxes = []
-        for page in self.pdf:
-            mediaboxes.append(tuple(page.rect))
-
-        return mediaboxes, cropboxes
-
-    def _remove_cropbox(self):
-        set_cropbox = self._compat('set_cropbox', 'setCropBox')
-        for page, mediabox in zip(self.pdf, self.data['mediabox']):
-            set_cropbox(page)(mediabox)
-
     def print_info(self, numbers, printout):
         printout('Page Count: %s' % len(numbers))
 
@@ -1697,6 +1680,22 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         return '\n'.join(ret)
 
+    def get_imgboxes(self):
+        imgboxes = []
+        mboxes = self.data['mediabox']
+        cboxes = self.data['cropbox']
+        rotations = self.data['rotation']
+        for mbox, cbox, rot in zip(mboxes, cboxes, rotations):
+            imgboxes.append(_PyMuPDFImgBox(mbox, cbox, rot))
+        return imgboxes
+
+    # c.f. since v1.19.4, 'set_mediabox' removes cropbox,
+    # so it can be used instead.
+    def remove_cropboxes(self):
+        set_cropbox = self._compat('set_cropbox', 'setCropBox')
+        for page, imgbox in zip(self.pdf, self.imgboxes):
+            set_cropbox(page)(imgbox.mediabox2cropbox)
+
     def get_img(self, number):
         cache = self._cache.get(number)
         if cache is None:
@@ -1706,7 +1705,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     def _get_img(self, number):
         index = number - 1
         page = self.pdf[index]
-        width, height = getsize(self.mediaboxes[index])
+        width, height = self.mediaboxes[index][2:]
         clip = (0, 0, width, height)  # clipping them to ints
         get_pixmap = self._compat('get_pixmap', 'getPixmap')(page)
         bytes_ = get_pixmap(
@@ -1739,7 +1738,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             if boxes[i] is None:
                 continue
             page = pdf[i]
-            box = self.unrotate(index, boxes[i])
+            box = self.imgboxes[index].new_cropbox(boxes[i])
             set_cropbox(page)(box)
         _time('(write) set cropboxes')
 
@@ -1765,17 +1764,74 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     def _adjut_toc(self, pdf, numbers, boxes):
         pass
 
-    def unrotate(self, index, box):
-        mediabox = self.data['mediabox'][index]
-        rotation = self.data['rotation'][index]
 
-        w, h = getsize(mediabox)
-        box = unrotate(w, h, rotation, box)
+class _PyMuPDFImgBox(object):
+    """Translate PyMuPDF's box values.
 
-        pos = mediabox[:2]
-        box = shift_box(box, pos * 2)
+    mbox and cbox:
+        PyMuPDF values of Page.mediabox and Page.cropbox
+        (Already top-left origin, y decendant, Python floats).
+    mediabox and cropbox:
+        values to pass to array processes and GUI
+        (clipped to integers, with mediabox's (x0, y0) as origin).
+    MediaBox and CropBox:
+        raw PDF values
+        (bottom-left origin, y ascendant, real number strings).
+    """
 
+    def __init__(self, mbox, cbox, rotation):
+        self.mbox = mbox
+        self.cbox = cbox
+        rot = self.rot = rotation % 360
+        if rot not in (0, 90, 180, 270):
+            raise ValueError('Invalid rotation: %g' % rot)
+
+    def ints(self, box):
+        w, h = getsize(box)
+        x0, y0 = box[:2]
+        x0, y0 = math.ceil(x0), math.ceil(y0)
+        return x0, y0, x0 + w, y0 + h
+
+    @property
+    def size(self):
+        return getsize(self.mbox)
+
+    @property
+    def mediabox(self):
+        w, h = self.size
+        box = 0, 0, w, h
+        if self.rot in (90, 270):
+            box = box[0], box[1], box[3], box[2]
         return box
+
+    @property
+    def cropbox(self):
+        return self.rotate(self.ints(self.cbox))
+
+    # See https://pymupdf.readthedocs.io/en/latest/glossary.html#MediaBox
+    # for details of mbox and cbox origins.
+    @ property
+    def mediabox2cropbox(self):
+        box = self.mbox
+        box = shift_box(box, (0, -self.mbox[1]) * 2)
+        return box
+
+    def new_cropbox(self, box):
+        box = self.unrotate(box)
+        # moving bottom remainder to top,
+        # adjusting to y-direction changes when converting to PDF values
+        mbox = self.mbox
+        pos = mbox[0], math.ceil(mbox[1])
+        remainder = mbox[3] - math.floor(mbox[3])
+        pos = pos[0], pos[1] + remainder
+        box = shift_box(box, pos * 2)
+        return box
+
+    def rotate(self, box):
+        return rotate(*self.size, self.rot, box)
+
+    def unrotate(self, box):
+        return unrotate(*self.size, self.rot, box)
 
 
 class Document(object):
