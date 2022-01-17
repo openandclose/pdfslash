@@ -2,9 +2,13 @@
 Changelog
 =========
 
-(Although I published this program,
-I want to keep developing as if they are local commits,
-changing and breaking things rather mercilessly.
+v0.2.0 (2022-01-17)
+-------------------
 
-The plan is from version 0.2.0 (pre-alpha -> alpha),
-I will consider writing relatively proper Changelog.)
+* Done initial iteration
+  (initial feature additions and design check)
+
+v0.1.0 (2021-11-15)
+-------------------
+
+* Initial commit
