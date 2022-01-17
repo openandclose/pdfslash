@@ -1409,7 +1409,7 @@ class Backend(object):
         pass
 
     # optional: only used in interpreter ``do_info``.
-    def print_info(self, numbers, printout):
+    def print_info(self, numbers, printout, opt=None):
         printout('Not implemented.')
 
     # Each backend decides how to handle when 'is_single_boxes' is False
@@ -1681,14 +1681,16 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         self.data['info']['pages'] = info
 
-    def print_info(self, numbers, printout):
+    def print_info(self, numbers, printout, opt=None):
         printout('Page Count: %s' % len(numbers))
 
         ret = self._format_labels(numbers)
         if ret:
             printout('Page Labels: %s' % ret)
 
-        ret = self._format_page_attrs(numbers)
+        if not opt:
+            opt = 'round'
+        ret = self._format_page_attrs(numbers, opt)
         if ret:
             printout(ret)
 
@@ -1711,8 +1713,11 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         return ', '.join(ret[:-1])
 
-    def _format_page_attrs(self, numbers):
-        info = self.data['info']['pages']
+    def _format_page_attrs(self, numbers, opt):
+        if opt == 'pdf':
+            info = self.data['info']['_pages']
+        else:
+            info = self.data['info']['pages']
         if not info:
             return ''
 
@@ -1727,7 +1732,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                 if first:
                     ret.append('%s:' % name)
                     first = False
-                attr = self._format_attr(attr)
+                if opt == 'round':
+                    attr = self._format_attr(attr)
                 nstr = g_numparser.unparse(nums)
                 ret.append('    %-30s  (%s)' % (attr, nstr))
 
@@ -3824,24 +3830,52 @@ class PDFSlashCmd(_PipeCmd):
         * ``MediaBox``, ``CropBox``, ``BleedBox``, ``TrimBox``, ``ArtBox``,
           ``Rotate`` and ``UserUnit``
 
-        Boxes are shown in MuPDF-PyMuPDF coordinates
-        (y descendant, bottom-left of MediaBox is the origin for non-mediabox).
-        See PyMuPDF doc if you are confused, e.g.
-        https://pymupdf.readthedocs.io/en/latest/glossary.html#MediaBox
-
         For boxes,
         the (almost) same values from the previous boxes are omitted.
 
         ``PageLabels`` and ``UserUnit`` are omitted if they are not defined.
 
         The values are as when PDf file was first loaded.
-        User crop coomands don't update them (they are not written).
+        User crop commands don't update them (they are not written).
+
+        Options (optional):
+
+        When option is not ``'--pdf'``,
+        Boxes are shown in MuPDF-PyMuPDF coordinates
+        (y descendant, bottom-left of MediaBox is the origin for non-mediabox).
+        See PyMuPDF doc if you are confused, e.g.
+        https://pymupdf.readthedocs.io/en/latest/glossary.html#MediaBox
+
+        When option is ``'--pdf'``,
+        Boxes are shown in raw PDF strings.
+        Page attribute inheritances are not followed
+        (``MediaBox``, ``CropBox`` and ``Rotate``).
+
+        ``-r``, ``--round``:
+            round MuPDF float numbers.
+        ``-n``, ``--noround``:
+            not round MuPDF float numbers.
+        ``-p``, ``--pdf``:
+            print PDF string values.
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if not numbers:
             return
 
-        self._doc.backend.print_info(numbers, printout=self.printout)
+        if opts:
+            opt = opts[0]
+            if opt in ('-r', '--round'):
+                opt = 'round'
+            elif opt in ('-n', '--noround'):
+                opt = 'noround'
+            elif opt in ('-p', '--pdf'):
+                opt = 'pdf'
+            else:
+                opt = 'round'
+        else:
+            opt = 'round'
+
+        self._doc.backend.print_info(numbers, printout=self.printout, opt=opt)
 
     def do_undo(self, args):
         """
