@@ -1540,15 +1540,17 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
     def _get_data(self, data):
         keys = {
-            'mediabox': self._compat('mediabox', 'MediaBox'),
-            'cropbox': self._compat('cropbox', 'CropBox'),
-            'rotation': self._compat('rotation',),
+            'mediabox': (self._compat('mediabox', 'MediaBox'), tuple),
+            'cropbox': (self._compat('cropbox', 'CropBox'), tuple),
+            'rotation': (self._compat('rotation',), lambda x: x),
         }
         for key in keys:
             data[key] = []
         for page in self.pdf:
             for key in keys:
-                data[key].append(keys[key](page))
+                val = keys[key][0](page)
+                val = keys[key][1](val)
+                data[key].append(val)
 
     def _get_info(self, data):
         data['info'] = {}
