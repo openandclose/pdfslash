@@ -150,6 +150,11 @@ def shift_box(box, pos):
     return tuple(b + p for b, p in zip(box, pos))
 
 
+def isclose(box1, box2):
+    for a, b in zip(box1, box2):
+        assert abs(a - b) < 0.0001
+
+
 def groupby(seq, key=None):
     """Iterate on grouped items collected from unsorted Sequence.
 

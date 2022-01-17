@@ -50,11 +50,6 @@ def _test_fitz_unrotation():
 
 # ImgBox ----------------------------------------
 
-def isclose(box1, box2):
-    for a, b in zip(box1, box2):
-        assert abs(a - b) < 0.0001
-
-
 def test_cropbox_pos():
     def check(mbox, new_cropbox, new_cbox, pdfbox):
         doc = fitz.open()
@@ -63,7 +58,7 @@ def test_cropbox_pos():
         cbox = page.cropbox
         b = slash._PyMuPDFImgBox(mbox, cbox, 0)
         new_cropbox = b.new_cropbox(new_cropbox)
-        isclose(new_cropbox, new_cbox)
+        slash.isclose(new_cropbox, new_cbox)
         page.set_cropbox(new_cropbox)
         assert doc.xref_get_key(page.xref, 'CropBox')[1] == pdfbox
 
