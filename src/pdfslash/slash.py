@@ -133,10 +133,6 @@ def _time(msg=''):
             print('    [time] %-32s: %.4fs' % (msg, (t - t0)))
 
 
-def ints(seq):
-    return tuple(int(s) for s in seq)
-
-
 def num2ind(numbers):  # numbers to indices (1-based to 0-based)
     return tuple(n - 1 for n in numbers)
 
@@ -147,7 +143,7 @@ def ind2num(indices):  # indices to numbers (0-based to 1-based)
 
 def getsize(box):
     left, top, right, bottom = box
-    return ints((right - left, bottom - top))
+    return int(right - left), int(bottom - top)
 
 
 def shift_box(box, pos):
@@ -199,7 +195,7 @@ def rotate(w, h, rot, box):
         new = [box[1], w - box[2], box[3], w - box[0]]
     else:
         new = box  # illegal in PDF reference
-    return ints(new)
+    return tuple(new)
 
 
 def unrotate(w, h, rot, box):
@@ -1921,7 +1917,7 @@ class Document(object):
 
         ``CropFinder`` doesn't know about this.
         """
-        left, top, right, bottom = ints(box)
+        left, top, right, bottom = box
         return img[top:bottom + 1, left:right + 1]
 
     def _unnarrow_view(self, newbox, box):
