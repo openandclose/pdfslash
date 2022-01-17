@@ -10,8 +10,6 @@ Various commands, including GUI, are called from there.
 Intended to create more readable PDF documents for e-reader devices,
 for personal reading.
 
-(Now it is very alpha. I'm not even bothering writing Changelog.)
-
 .. image:: screen.png
     :alt: pdfslash gui window
     :width: 308px
@@ -41,6 +39,9 @@ Installation
 
 You also need to install ``PyMuPDF`` and ``Numpy``.
 
+(To use ``'info'`` interpreter command,
+``PyMuPDF v1.18.7`` or later is required).
+
 
 Main Workflow
 -------------
@@ -49,7 +50,7 @@ It requires one argument, pdf filename.
 
 .. code-block:: none
 
-    $ pdfslash some-pdf-file
+    $ pdfslash some.pdf
 
 Upon invocation, users are faced with a commandline prompt.
 

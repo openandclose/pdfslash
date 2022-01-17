@@ -79,7 +79,7 @@ _CONFIGFUNC = {
 }
 
 _CONF = {
-    # The ratio of what gui thinks as device pixel, to PDF pixel.
+    # The ratio of computer display pixel, to PDF pixel.
     'device_pixel_ratio': (1.0, 'float'),
 
     # Gui window position to the display margin (x and y).
@@ -3717,7 +3717,7 @@ class PDFSlashCmd(_PipeCmd):
         Auto detect page margins and apply (overwrite) them.
         All previously added boxes are removed.
 
-        If the number of box is one,
+        If the number of previous boxes is one,
         the detection is done against this box,
         else (the number is zero or two or more),
         the detection is done against source cropbox.
@@ -3741,9 +3741,9 @@ class PDFSlashCmd(_PipeCmd):
             and then by source cropbox (for each mediabox group).
             This is the default.
         ``-s``, ``--single``:
-            Not group pages (a page in a group).
+            Group each page in each group, to navigate pages one by one.
         ``-_q``, ``--_quit``:
-            Create GUI and immediately quit (for test).
+            Create GUI window and immediately quit (for test).
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         kind = 'subgroup'
@@ -3812,8 +3812,8 @@ class PDFSlashCmd(_PipeCmd):
         pages are shown with headers ``'s'`` and ``'f'`` respectively.
 
         (Source cropboxes are formatted with three digit fractional part.
-        So they are a bit different from actual PDF values
-        e.g. as viewed by ``info`` command.)
+        So they are a bit different from actual PDF real numbers
+        e.g. as viewed by ``info --pdf`` command.)
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if numbers:
@@ -3822,6 +3822,8 @@ class PDFSlashCmd(_PipeCmd):
     def do_info(self, args):
         """
         Take one argument, page numbers (optional).
+
+        [PyMuPDF v1.18.7 or later is required]
 
         Show some PDF information for *specified pages*.
 
@@ -3836,13 +3838,14 @@ class PDFSlashCmd(_PipeCmd):
         ``PageLabels`` and ``UserUnit`` are omitted if they are not defined.
 
         The values are as when PDf file was first loaded.
-        User crop commands don't update them (they are not written).
+        User crop commands don't update them.
 
         Options (optional):
 
-        When option is not ``'--pdf'``,
-        Boxes are shown in MuPDF-PyMuPDF coordinates
+        When option is not ``'--pdf'``, values are PyMuPDF values.
+        Especially, boxes are shown in MuPDF-PyMuPDF coordinates
         (y descendant, bottom-left of MediaBox is the origin for non-mediabox).
+
         See PyMuPDF doc if you are confused, e.g.
         https://pymupdf.readthedocs.io/en/latest/glossary.html#MediaBox
 
@@ -3852,9 +3855,9 @@ class PDFSlashCmd(_PipeCmd):
         (``MediaBox``, ``CropBox`` and ``Rotate``).
 
         ``-r``, ``--round``:
-            round MuPDF float numbers.
+            round PyMuPDF float numbers (default).
         ``-n``, ``--noround``:
-            not round MuPDF float numbers.
+            not round PyMuPDF float numbers.
         ``-p``, ``--pdf``:
             print PDF string values.
         """
@@ -3929,12 +3932,14 @@ class PDFSlashCmd(_PipeCmd):
         (current ``Document`` and ``Document.pages`` object).
 
         You are supposed to know the source code.
-        And even I am not sure when this command is useful.
 
         For now, you can use it only for reading (not writing),
         otherwise, it will terribly break undo and redo.
 
-        To exit this Python interpreter,
+        (But if you are careful, not using undo and redo,
+        then you *may* be able to save PDF file successfully).
+
+        To exit *this* Python interpreter,
         run ``exit()`` or send ``EOF``.
         """
         banner = ('Entering Python interpreter...\n'
@@ -3973,14 +3978,18 @@ class PDFSlashCmd(_PipeCmd):
         Print all box edit history in chronological order.
 
         Conceptually, if they are supplied as input again,
-        the program should 'replay' the same edits
-        (not much tested).
+        the program should 'replay' the same edits.
 
         .. code-block:: none
 
             (pdfslash) export | cat > log.txt
             (pdfslash) exit
             $ pdfslash -f log.txt some.pdf
+
+        It also prints file hash (crc32 to be exact) as comment,
+        and 'replay' will fail if the hash is different
+        from the current input PDF file ('some.pdf' in the example above).
+        You can use commandline option ``--nocheck`` in this case.
         """
         t = time.strftime("%Y-%m-%d %H:%M:%S")
         fname = self._doc.fname
@@ -3999,6 +4008,9 @@ class PDFSlashCmd(_PipeCmd):
 
         Free all image cache in the program.
         Use when the program is grabbing too much memory.
+
+        (The program caches almost all GUI image
+        and intermediate numpy arrays).
         """
         self._doc.free()
 
@@ -4188,7 +4200,8 @@ def _build_argument_parser():
 
     h = ('do not perform initial commands verification. '
         "Otherwise the program aborts when a line starts with '# hash: ', "
-        'and the value is different from PDF file.')
+        'and the value is different from input PDF file. '
+        "This is for 'export' command.")
     parser.add_argument('--nocheck', '-n', action='store_true', help=h)
 
     h = '[DEBUG] print time for some processes'

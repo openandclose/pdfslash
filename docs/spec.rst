@@ -10,6 +10,14 @@ General
 In user interfaces,
 PDF bounding boxes are always rotation-applied ones.
 
+**box**:
+
+Coordinate values of User created boxes are always integers.
+Float numbers are not possible.
+
+User boxes in a page must be unique.
+Duplicate boxes (the same boxes in a page) are not possible.
+
 
 Config
 ------
@@ -24,7 +32,8 @@ If there is a user-directory,
 and the system can use Python standard library
 `readline <https://docs.python.org/3/library/readline.html>`__,
 the program uses a file ``'.history'`` (automatically created)
-for the readline's history file.
+for the readline's history file
+(And ``.python_history`` for ``Python`` command).
 
 If there is a file ``'pdfslash.ini'`` in the directory,
 the program reads it and update the configuration.
@@ -148,7 +157,7 @@ title bar and label show some information.
 
     ``both``: current view (``both``, ``odds``, or ``evens``).
 
-    ``595x842``: current source mediabox size. ``left`` and ``top`` are always zeros.([0, 0, 595, 841]).
+    ``595x842``: current source mediabox size (GUI canvas size). ``left`` and ``top`` are always zeros.(``0,0,595,841``).
 
     ``sel``: active box (either string ``'sel'`` or ``'box'``).
 
