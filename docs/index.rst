@@ -14,6 +14,7 @@ pdfslash documentation
 
     Introduction <intro>
     Spec <spec>
+    Note <note>
 
 
 

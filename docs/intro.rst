@@ -37,7 +37,8 @@ Installation
 
     $ pip install pdfslash
 
-You also need to install ``PyMuPDF`` and ``Numpy``.
+The command installs the program, a single pure Python module.
+But you also need to install ``PyMuPDF`` and ``Numpy`` yourself.
 
 (To use ``'info'`` interpreter command,
 ``PyMuPDF v1.18.7`` or later is required).
