@@ -11,10 +11,9 @@
 # and 'image' for actual image (with header etc.).
 #
 # 'mediabox' and 'cropbox' are defined with
-# four float numbers of left, top, right and bottom,
-# with top-left of mediabox is moved to (0, 0).
-# when passing to img generation,
-# four numbers are clipped to integers.
+# four integers of left, top, right and bottom,
+# with top-left of mediabox is moved to (0, 0)
+# (in y descendant coordinate space).
 
 # A new box created in the program is just called 'box'.
 # Trying to use 'box' for one box in a page, 'boxes' for boxes in a page,
