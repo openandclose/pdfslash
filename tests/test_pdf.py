@@ -58,7 +58,7 @@ def test_cropbox_pos():
         cbox = page.cropbox
         b = slash._PyMuPDFImgBox(mbox, cbox, 0)
         new_cropbox = b.new_cropbox(new_cropbox)
-        slash.isclose(new_cropbox, new_cbox)
+        assert slash.isclose(new_cropbox, new_cbox) is True
         page.set_cropbox(new_cropbox)
         assert doc.xref_get_key(page.xref, 'CropBox')[1] == pdfbox
 

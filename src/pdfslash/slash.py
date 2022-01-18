@@ -151,7 +151,9 @@ def shift_box(box, pos):
 
 def isclose(box1, box2):
     for a, b in zip(box1, box2):
-        assert abs(a - b) < 0.0001
+        if abs(a - b) > 0.0001:
+            return False
+    return True
 
 
 def groupby(seq, key=None):
