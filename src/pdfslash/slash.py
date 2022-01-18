@@ -5,7 +5,7 @@
 # Conventions (As long as reasonable):
 #
 # Use 'index', 'ind' or 'i' for 0-based sequence,
-# and 'number', 'num', 'n' for 1-based.
+# and 'number', 'num' or 'n' for 1-based.
 #
 # Use 'img' for numpy pixel data,
 # and 'image' for actual image (with header etc.).
@@ -3837,7 +3837,7 @@ class PDFSlashCmd(_PipeCmd):
 
         ``PageLabels`` and ``UserUnit`` are omitted if they are not defined.
 
-        The values are as when PDf file was first loaded.
+        The values are as when PDF file was first loaded.
         User crop commands don't update them.
 
         Options (optional):
