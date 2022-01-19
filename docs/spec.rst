@@ -12,7 +12,7 @@ PDF bounding boxes are always rotation-applied ones.
 
 **box**:
 
-Coordinate values of User created boxes are always integers.
+Coordinate values of user created boxes are always integers.
 Float numbers are not possible.
 
 User boxes in a page must be unique.

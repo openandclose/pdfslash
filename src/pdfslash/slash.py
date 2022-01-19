@@ -1603,7 +1603,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         data['info']['doc']['labels'] = labels
 
-    # c.f. v1.19.4 adds direct APIs for otheri boxes, e.g. Page.bleedbox
+    # c.f. v1.19.4 adds direct APIs for other boxes, e.g. Page.bleedbox
     def _get_page_info(self, data):
         bboxes = 'MediaBox', 'CropBox', 'BleedBox', 'TrimBox', 'ArtBox'
         others = 'Rotate', 'UserUnit'
