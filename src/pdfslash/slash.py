@@ -1591,7 +1591,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
             startpage = rule['startpage']
             prefix = rule['prefix']
-            style = rule['style']
+            style = rule.get('style', '')
             firstpagenum = rule['firstpagenum']
 
             pagenumber = n - startpage + firstpagenum - 1
