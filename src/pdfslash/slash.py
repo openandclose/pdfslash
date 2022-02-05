@@ -1599,6 +1599,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                 labels.append(pagenumber)  # adding int as is
             else:
                 label = fitz.utils.construct_label(style, prefix, pagenumber)
+                if label == '':
+                    label = '(none)'
                 labels.append(label)
 
         data['info']['doc']['labels'] = labels
