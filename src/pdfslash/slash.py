@@ -1496,6 +1496,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         else:
             self.pdf = self.load_pdf()
 
+        self._info_error = False
         self.data = self.get_data()
         self.imgboxes = self.get_imgboxes()
         self.get_data2()  # adjust data using imgboxes
@@ -1542,7 +1543,11 @@ class PyMuPDFBackend(_PyMuPDFBackend):
     def get_data(self):
         data = {}
         self._get_data(data)
-        self._get_info(data)
+        try:
+            self._get_info(data)
+        except Exception as e:
+            self._info_error = True
+            print(str(e))
         return data
 
     def _get_data(self, data):
@@ -1638,7 +1643,13 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         data['info']['_pages'] = info
 
     def get_data2(self):
-        self._get_mupdf_page_info()
+        if self._info_error:
+            return
+        try:
+            self._get_mupdf_page_info()
+        except Exception as e:
+            self._info_error = True
+            print(str(e))
 
     def _get_mupdf_page_info(self):
         bboxes = 'mediabox', 'cropbox', 'bleedbox', 'trimbox', 'artbox'
@@ -1717,10 +1728,13 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         return ', '.join(ret[:-1])
 
     def _format_page_attrs(self, numbers, opt):
+        if self._info_error:
+            return
+
         if opt == 'pdf':
-            info = self.data['info']['_pages']
+            info = self.data['info'].get('_pages')
         else:
-            info = self.data['info']['pages']
+            info = self.data['info'].get('pages')
         if not info:
             return ''
 
