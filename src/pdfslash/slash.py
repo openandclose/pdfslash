@@ -1648,7 +1648,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         for i in range(len(self.pdf)):
             mbox = self.imgboxes[i].mbox
             info['mediabox'].append(mbox)
-            seen = set(mbox)
+            seen = set((mbox,))
 
             cbox = self.imgboxes[i].cbox
             if cbox not in seen:
