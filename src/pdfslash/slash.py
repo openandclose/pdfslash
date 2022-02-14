@@ -3864,14 +3864,16 @@ class PDFSlashCmd(_PipeCmd):
 
         When option is not ``'--pdf'``, values are PyMuPDF values.
         Especially, boxes are shown in MuPDF-PyMuPDF coordinates
-        (y descendant, bottom-left of MediaBox is the origin for non-mediabox).
+        (boxes are flipped, y axis reversed,
+        with previous bottom-left of MediaBox as the top-left origin
+        for non-mediabox).
 
         See PyMuPDF doc if you are confused, e.g.
         https://pymupdf.readthedocs.io/en/latest/glossary.html#MediaBox
 
         When option is ``'--pdf'``,
         Boxes are shown in raw PDF strings.
-        Page attribute inheritances are not followed
+        In this case, page attribute inheritances are not followed
         (``MediaBox``, ``CropBox`` and ``Rotate``).
 
         ``-r``, ``--round``:

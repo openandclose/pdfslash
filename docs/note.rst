@@ -58,7 +58,7 @@ It becomes in MuPDF-PyMuPDF:
 
     ``Rect(0.0, 0.0, 595.2760009765625, 841.8900146484375)``
 
-When setting cropbox ``(10, 10, 585, 831)`` by ``fitz.set_cropbox``:
+When setting cropbox ``(10, 10, 585, 831)`` by ``fitz.Page.set_cropbox``:
 
     ``Rect(10.0, 10.0, 585.0, 831.0)``
 
