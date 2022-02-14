@@ -95,17 +95,17 @@ Commands
 
 {{ _fromsource_cmds }}
 
-**do_crop**
+**crop**
 
-Alias for ``do_append``.
+Alias for ``append``.
 
-**do_quit**
+**quit**
 
-Alias for ``do_exit``.
+Alias for ``exit``.
 
-**do_EOF**
+**(EOF)**
 
-Alias for ``do_exit``. Send actual ``EOF``.
+Alias for ``exit``. Send actual ``EOF``.
 
 **'|' (pipe)**
 
