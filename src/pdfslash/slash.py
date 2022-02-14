@@ -2836,6 +2836,9 @@ class TkRunner(object):
 
     def _copy_box(self, event):
         rect = self.i.rects.get_active()
+        if rect.box is None:
+            self._notify('no active box to copy')
+            return
         self._copied_box = rect.box
         self._set_title()
 
