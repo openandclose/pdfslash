@@ -2431,7 +2431,7 @@ _tk_help = """
         left click:     paste copied rectangle
 
     keys:
-        h:              print this help in terminal
+        H:              print this help in terminal
         q:              quit
 
         <Arrow>:        move top-left point
@@ -2527,7 +2527,7 @@ class TkRunner(object):
         canvas.bind("<B1-Motion>", self._set_selection)
         canvas.bind("<ButtonRelease-1>", self._set_end)
 
-        root.bind('<h>', self.help)
+        root.bind('<H>', self.help)
         root.bind('<q>', self.quit)
 
         root.bind('<Left>', self._move1)

@@ -2,6 +2,22 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+**Change:**
+
+* Fix overwritten 'h' key to 'H' (GUI help method)
+
+  'h' is used in 'move rectangle' ('h', 'j', 'k', 'l').
+
+  Before:
+    h:  print help in terminal
+  
+  After:
+    H:  print help in terminal
+  
+
 v0.2.2 (2022-02-05)
 -------------------
 
