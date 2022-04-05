@@ -1889,10 +1889,10 @@ class _PyMuPDFImgBox(object):
     @property
     def mediabox(self):
         w, h = self.size
-        box = 0, 0, w, h
-        if self.rot in (90, 270):
-            box = box[0], box[1], box[3], box[2]
-        return box
+        if self.rot in (0, 180):
+            return 0, 0, w, h
+        else:  # 90 or 270
+            return 0, 0, h, w
 
     @property
     def cropbox(self):
