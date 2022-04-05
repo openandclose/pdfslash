@@ -21,6 +21,8 @@ Unreleased
 
 * Fix `--nocheck` commandline argument (it didn't work previously)
 
+* Fix pdf y-direction adjusting error
+
 
 v0.2.2 (2022-02-05)
 -------------------

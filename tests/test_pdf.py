@@ -76,14 +76,14 @@ def test_cropbox_pos():
 
     mbox = 0.1, 0.1, 10, 15
     new_cropbox = 1, 2, 6, 10
-    new_cbox = 1.1, 3, 6.1, 11
-    pdfbox = '[1.1 4 6.1 12]'
+    new_cbox = 1.1, 2, 6.1, 10
+    pdfbox = '[1.1 5 6.1 13]'
     check(mbox, new_cropbox, new_cbox, pdfbox)
 
     mbox = 0.1, 0.1, 10.2, 15.2
     new_cropbox = 1, 2, 6, 10
-    new_cbox = 1.1, 3.2, 6.1, 11.2
-    pdfbox = '[1.1 4 6.1 12]'
+    new_cbox = 1.1, 2.2, 6.1, 10.2
+    pdfbox = '[1.1 5 6.1 13]'
     check(mbox, new_cropbox, new_cbox, pdfbox)
 
 
