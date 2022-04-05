@@ -1903,7 +1903,9 @@ class _PyMuPDFImgBox(object):
         # moving bottom remainder to top,
         # adjusting to y-direction changes when converting to PDF values
         mbox = self.mbox
-        remainder = mbox[3] - math.floor(mbox[3])
+        # >>> math.modf(-5.5)
+        # (-0.5499999999999998, -5.0)
+        remainder = abs(math.modf(mbox[3])[0])
         pos = mbox[0], remainder
         box = shift_box(box, pos * 2)
         return box
