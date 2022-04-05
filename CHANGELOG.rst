@@ -17,6 +17,10 @@ Unreleased
   After:
     H:  print help in terminal
 
+**Fix:**
+
+* Fix `--nocheck` commandline argument (it didn't work previously)
+
 
 v0.2.2 (2022-02-05)
 -------------------

@@ -4187,7 +4187,7 @@ class Runner(object):
 
     def check_pdffile(self, line):
         intro = '# hash: '
-        if line.startswith(intro) and not self.args.nohash:
+        if line.startswith(intro) and not self.args.nocheck:
             oldhash = line[len(intro):]
             current = get_checksum(self.args.pdffile)
             if oldhash != current:
