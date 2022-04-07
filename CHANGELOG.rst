@@ -5,6 +5,10 @@ Changelog
 Unreleased
 ----------
 
+
+v0.2.3 (2022-04-07)
+-------------------
+
 **Change:**
 
 * Change overwritten 'h' key to 'H' (GUI help method) [5394c9c5]
