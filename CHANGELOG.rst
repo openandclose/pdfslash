@@ -7,21 +7,21 @@ Unreleased
 
 **Change:**
 
-* Change overwritten 'h' key to 'H' (GUI help method)
+* Change overwritten 'h' key to 'H' (GUI help method) [5394c9c5]
 
   'h' is used in 'move rectangle' ('h', 'j', 'k', 'l').
 
   Before:
     h:  print help in terminal
-  
+
   After:
     H:  print help in terminal
 
 **Fix:**
 
-* Fix `--nocheck` commandline argument (it didn't work previously)
+* Fix `--nocheck` commandline argument (it didn't work previously) [ce1481e1]
 
-* Fix pdf y-direction adjusting error
+* Fix pdf y-direction adjusting error [9e9144e6]
 
 
 v0.2.2 (2022-02-05)
