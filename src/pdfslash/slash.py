@@ -1908,7 +1908,10 @@ class _PyMuPDFImgBox(object):
 
     @property
     def cropbox(self):
-        return self.rotate(self.ints(self.cbox))
+        box = shift_box(self.cbox, (-self.mbox[0], 0) * 2)
+        box = self.ints(box)
+        box = self.rotate(box)
+        return box
 
     def new_cropbox(self, box):
         box = self.unrotate(box)
