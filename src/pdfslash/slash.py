@@ -1943,7 +1943,8 @@ class _PyMuPDFImgBox(object):
 
     def _shift_pdfbox(self, box):
         box = box[0], box[3], box[2], box[1]
-        box = shift_box(box, (0, -self.mbox[1]) * 2)
+        box = shift_box(box, (-self.mbox[0], -self.mbox[1]) * 2)
+        box = self.ints(box)
         return box
 
 
