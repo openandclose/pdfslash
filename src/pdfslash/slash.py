@@ -1845,7 +1845,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             if boxes[i] is None:
                 continue
             page = pdf[i]
-            box = self.imgboxes[index].new_cropbox(boxes[i])
+            box = self.imgboxes[index].cropbox2cbox(boxes[i])
             set_cropbox(page)(box)
         _time('(write) set cropboxes')
 
@@ -1913,11 +1913,11 @@ class _PyMuPDFImgBox(object):
         box = self.rotate(box)
         return box
 
-    def new_cropbox(self, box):
+    def cropbox2cbox(self, box):
         box = self.unrotate(box)
+        mbox = self.mbox
         # moving bottom remainder to top,
         # adjusting to y-direction changes when converting to PDF values
-        mbox = self.mbox
         # >>> math.modf(-5.5)
         # (-0.5499999999999998, -5.0)
         remainder = abs(math.modf(mbox[3])[0])
