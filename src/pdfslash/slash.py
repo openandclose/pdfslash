@@ -1725,8 +1725,6 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         if ret:
             printout('Page Labels: %s' % ret)
 
-        if not opt:
-            opt = 'round'
         ret = self._format_page_attrs(numbers, opt)
         if ret:
             printout(ret)
@@ -1758,6 +1756,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             info = self.data['info'].get('_pages')
         else:
             info = self.data['info'].get('pages')
+
         if not info:
             return ''
 
@@ -1772,20 +1771,10 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                 if first:
                     ret.append('%s:' % name)
                     first = False
-                if opt == 'round':
-                    attr = self._format_attr(attr)
                 nstr = g_numparser.unparse(nums)
                 ret.append('    %-30s  (%s)' % (attr, nstr))
 
         return '\n'.join(ret)
-
-    def _format_attr(self, attr):
-        if isinstance(attr, str):
-            return attr
-        if isinstance(attr, (int, float)):
-            attr = [attr]
-        attr = ['%g' % v for v in attr]
-        return ','.join(attr)
 
     def get_imgboxes(self):
         imgboxes = []
@@ -3881,10 +3870,6 @@ class PDFSlashCmd(_PipeCmd):
         In this case, page attribute inheritances are not followed
         (``MediaBox``, ``CropBox`` and ``Rotate``).
 
-        ``-r``, ``--round``:
-            round PyMuPDF float numbers (default).
-        ``-n``, ``--noround``:
-            not round PyMuPDF float numbers.
         ``-p``, ``--pdf``:
             print PDF string values.
         """
@@ -3894,16 +3879,12 @@ class PDFSlashCmd(_PipeCmd):
 
         if opts:
             opt = opts[0]
-            if opt in ('-r', '--round'):
-                opt = 'round'
-            elif opt in ('-n', '--noround'):
-                opt = 'noround'
-            elif opt in ('-p', '--pdf'):
+            if opt in ('-p', '--pdf'):
                 opt = 'pdf'
             else:
-                opt = 'round'
+                opt = None
         else:
-            opt = 'round'
+            opt = None
 
         self._doc.backend.print_info(numbers, printout=self.printout, opt=opt)
 
