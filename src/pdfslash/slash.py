@@ -1924,7 +1924,7 @@ class _PyMuPDFImgBox(object):
 
     @ property
     def mbox2cbox(self):
-        return self._shift_pdfbox(self.mbox, is_mediabox=True)
+        return shift_box(self.mbox, (0, -self.mbox[1]) * 2)
 
     def pdfbox2box(self, box):  # parse other PDF box string (TrimBox etc.)
         box = self._parse_pdfbox(box)
@@ -1938,9 +1938,8 @@ class _PyMuPDFImgBox(object):
         box = [float(v) for v in box]
         return box
 
-    def _shift_pdfbox(self, box, is_mediabox=False):
-        if not is_mediabox:
-            box = box[0], box[3], box[2], box[1]
+    def _shift_pdfbox(self, box):
+        box = box[0], box[3], box[2], box[1]
         box = shift_box(box, (0, -self.mbox[1]) * 2)
         return box
 
