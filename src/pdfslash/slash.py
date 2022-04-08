@@ -172,13 +172,6 @@ def shift_box(box, pos):
     return tuple(b + p for b, p in zip(box, pos))
 
 
-def isclose(box1, box2):
-    for a, b in zip(box1, box2):
-        if abs(a - b) > 0.0001:
-            return False
-    return True
-
-
 def groupby(seq, key=None):
     """Iterate on grouped items collected from unsorted Sequence.
 
@@ -1520,9 +1513,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             self.pdf = self.load_pdf()
 
         self._info_error = False
-        self.data = self.get_data()
         self.imgboxes = self.get_imgboxes()
-        self.get_data2()  # adjust data using imgboxes
+        self.data = self.get_data()
 
         self.mediaboxes = tuple(imgbox.mediabox for imgbox in self.imgboxes)
         self.cropboxes = tuple(imgbox.cropbox for imgbox in self.imgboxes)
@@ -1563,39 +1555,52 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             self._password = password
         return doc
 
+    def get_imgboxes(self):
+        imgboxes = []
+        for mbox, cbox, rotation in self._get_imgboxes_data():
+            imgboxes.append(_PyMuPDFImgBox(mbox, cbox, rotation))
+        return imgboxes
+
+    def _get_imgboxes_data(self):
+        keys = {
+            'mbox': self._compat('mediabox', 'MediaBox'),
+            'cbox': self._compat('cropbox', 'CropBox'),
+            'rotation': self._compat('rotation',),
+        }
+
+        for page in self.pdf:
+            mbox = tuple(keys['mbox'](page))
+            cbox = tuple(keys['cbox'](page))
+            rotation = keys['rotation'](page)
+            yield mbox, cbox, rotation
+
+    # c.f. since v1.19.4, 'set_mediabox' removes cropbox,
+    # so it can be used instead.
+    def remove_cropboxes(self):
+        set_cropbox = self._compat('set_cropbox', 'setCropBox')
+        for page, imgbox in zip(self.pdf, self.imgboxes):
+            set_cropbox(page)(imgbox.mbox2cbox)
+
     def get_data(self):
         data = {}
-        self._get_data(data)
-        try:
-            self._get_info(data)
-        except Exception as e:
-            self._info_error = True
-            print(str(e))
-        return data
-
-    def _get_data(self, data):
-        keys = {
-            'mediabox': (self._compat('mediabox', 'MediaBox'), tuple),
-            'cropbox': (self._compat('cropbox', 'CropBox'), tuple),
-            'rotation': (self._compat('rotation',), lambda x: x),
-        }
-        for key in keys:
-            data[key] = []
-        for page in self.pdf:
-            for key in keys:
-                val = keys[key][0](page)
-                val = keys[key][1](val)
-                data[key].append(val)
-
-    def _get_info(self, data):
         data['info'] = {}
         data['info']['doc'] = {}
-        data['info']['_pages'] = {}
+        data['info']['_pages'] = {}  # raw pdf boxes data
+        data['info']['pages'] = {}  # pdfslash boxes data
 
         if getattr(self.pdf, 'xref_get_keys', None) is None:  # v1.18.7
             return
 
+        try:
+            self._get_data(data)
+        except Exception as e:
+            print(str(e))
+            return
+        return data
+
+    def _get_data(self, data):
         self._get_doc_info(data)
+        self._get_raw_page_info(data)
         self._get_page_info(data)
 
     def _get_doc_info(self, data):
@@ -1634,7 +1639,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         data['info']['doc']['labels'] = labels
 
     # c.f. v1.19.4 adds direct APIs for other boxes, e.g. Page.bleedbox
-    def _get_page_info(self, data):
+    def _get_raw_page_info(self, data):
         bboxes = 'MediaBox', 'CropBox', 'BleedBox', 'TrimBox', 'ArtBox'
         others = 'Rotate', 'UserUnit'
         info = {}
@@ -1665,16 +1670,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
         data['info']['_pages'] = info
 
-    def get_data2(self):
-        if self._info_error:
-            return
-        try:
-            self._get_mupdf_page_info()
-        except Exception as e:
-            self._info_error = True
-            print(str(e))
-
-    def _get_mupdf_page_info(self):
+    def _get_page_info(self, data):
         bboxes = 'mediabox', 'cropbox', 'bleedbox', 'trimbox', 'artbox'
         others = 'rotate', 'userunit'
         info = {}
@@ -1682,41 +1678,38 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             info[name] = []
 
         for i in range(len(self.pdf)):
-            mbox = self.imgboxes[i].mbox
-            info['mediabox'].append(mbox)
-            seen = set((mbox,))
+            mediabox = self.imgboxes[i].mediabox
+            info['mediabox'].append(mediabox)
+            seen = set((mediabox,))
 
-            cbox = self.imgboxes[i].cbox
-            if cbox not in seen:
-                seen.add(cbox)
-                info['cropbox'].append(cbox)
+            cropbox = self.imgboxes[i].cropbox
+            if cropbox not in seen:
+                seen.add(cropbox)
+                info['cropbox'].append(cropbox)
             else:
                 info['cropbox'].append(None)
 
             for name in ('BleedBox', 'TrimBox', 'ArtBox'):
                 vals = info[name.lower()]
-                box = self.data['info']['_pages'][name][i]
+                box = data['info']['_pages'][name][i]
                 if box is not None:
                     box = self.imgboxes[i].pdfbox2box(box)
-                    for b in seen:
-                        if isclose(box, b):
-                            vals.append(None)
-                            break
-                    else:
+                    if box not in seen:
                         seen.add(box)
                         vals.append(box)
-                else:
-                    vals.append(None)
+                        continue
+
+                vals.append(None)
 
             rot = self.imgboxes[i].rot
             info['rotate'].append(rot)
 
             for name in ('UserUnit',):
                 vals = info[name.lower()]
-                val = self.data['info']['_pages'][name][i]
+                val = data['info']['_pages'][name][i]
                 vals.append(val)  # val may be 'None'
 
-        self.data['info']['pages'] = info
+        data['info']['pages'] = info
 
     def print_info(self, numbers, printout, opt=None):
         printout('Page Count: %s' % len(numbers))
@@ -1775,22 +1768,6 @@ class PyMuPDFBackend(_PyMuPDFBackend):
                 ret.append('    %-30s  (%s)' % (attr, nstr))
 
         return '\n'.join(ret)
-
-    def get_imgboxes(self):
-        imgboxes = []
-        mboxes = self.data['mediabox']
-        cboxes = self.data['cropbox']
-        rotations = self.data['rotation']
-        for mbox, cbox, rot in zip(mboxes, cboxes, rotations):
-            imgboxes.append(_PyMuPDFImgBox(mbox, cbox, rot))
-        return imgboxes
-
-    # c.f. since v1.19.4, 'set_mediabox' removes cropbox,
-    # so it can be used instead.
-    def remove_cropboxes(self):
-        set_cropbox = self._compat('set_cropbox', 'setCropBox')
-        for page, imgbox in zip(self.pdf, self.imgboxes):
-            set_cropbox(page)(imgbox.mbox2cbox)
 
     def get_img(self, number):
         cache = self._cache.get(number)
