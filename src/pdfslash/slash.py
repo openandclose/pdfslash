@@ -10,12 +10,35 @@
 # Use 'img' for numpy pixel data,
 # and 'image' for actual image (with header etc.).
 #
-# 'mediabox' and 'cropbox' are defined with
-# four integers of left, top, right and bottom,
-# with top-left of mediabox is moved to (0, 0)
-# (in y descendant coordinate space).
-
+# MediaBox and CropBox (PDF boxes):
+# raw PDF values
+# ((left, bottom, right, top). y-ascendant. real number strings).
+#
+# mbox and cbox (PyMuPDF boxes):
+# PyMuPDF values of Page.mediabox and Page.cropbox
+# pre-rotation. (left, top, right, bottm). y-descendant. Python floats.
+# While mbox values are superficially the same as PDF values,
+# cbox values are in the coords in which mbox's top (y0) is moved to 0.
+# see https://pymupdf.readthedocs.io/en/latest/glossary.html#MediaBox
+# (This is necessary, in general, when you transform y-axis direction).
+#
+# mediabox and cropbox (pdfslash boxes):
+# The values the program uses.
+# after-rotation. (left, top, right, bottm). y-descendant. integers.
+# After y-axis transform, mediabox's left-top (x0, y0) is moved to (0, 0),
+# both for mediabox and cropbox (and then rotation is applied).
+# (This is necessary when you handle image or pixel rectangles, like in GUI,
+# but for consistency, they are used in all other interfaces).
+#
+# Example:
+# When Mediabox and CropBox are both '[1 2 100.1 200.2]',
+# mbox is (1.0, 2.0, 100.0999984741211, 200.1999969482422),
+# cbox is (1.0, 0.0, 100.0999984741211, 198.1999969482422),
+# mediabox is (0, 0, 99, 198),
+# cropbox is (0, 0, 99, 198).
+#
 # A new box created in the program is just called 'box'.
+#
 # Trying to use 'box' for one box in a page, 'boxes' for boxes in a page,
 # 'pageboxes' for list of boxes in a collection of pages.
 
@@ -1850,18 +1873,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
 
 
 class _PyMuPDFImgBox(object):
-    """Translate PyMuPDF's box values.
-
-    mbox and cbox:
-        PyMuPDF values of Page.mediabox and Page.cropbox
-        (Already top-left origin, y descendant, Python floats).
-    mediabox and cropbox:
-        values to pass to array processes and GUI
-        (clipped to integers, with mediabox's (x0, y0) as origin).
-    MediaBox and CropBox:
-        raw PDF values
-        (bottom-left origin, y ascendant, real number strings).
-    """
+    """Translate PyMuPDF's box values."""
 
     def __init__(self, mbox, cbox, rotation):
         self.mbox = mbox
@@ -1910,8 +1922,6 @@ class _PyMuPDFImgBox(object):
         box = shift_box(box, pos * 2)
         return box
 
-    # See https://pymupdf.readthedocs.io/en/latest/glossary.html#MediaBox
-    # for details of mbox and cbox origins.
     @ property
     def mbox2cbox(self):
         return self._shift_pdfbox(self.mbox, is_mediabox=True)
@@ -3862,15 +3872,6 @@ class PDFSlashCmd(_PipeCmd):
         User crop commands don't update them.
 
         Options (optional):
-
-        When option is not ``'--pdf'``, values are PyMuPDF values.
-        Especially, boxes are shown in MuPDF-PyMuPDF coordinates
-        (boxes are flipped, y axis reversed,
-        with previous bottom-left of MediaBox as the top-left origin
-        for non-mediabox).
-
-        See PyMuPDF doc if you are confused, e.g.
-        https://pymupdf.readthedocs.io/en/latest/glossary.html#MediaBox
 
         When option is ``'--pdf'``,
         Boxes are shown in raw PDF strings.

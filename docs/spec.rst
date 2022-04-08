@@ -2,20 +2,18 @@
 Spec
 ====
 
-General
--------
+Box
+---
 
-**rotation**:
+In this program,
+Box values are always expressed as (left, top, right, bottom),
+in the coordinates in which
+rotation is already applied, y-descendant,
+``MediaBox``'s left-top moved to (0, 0), floats clipped to integers.
 
-In user interfaces,
-PDF bounding boxes are always rotation-applied ones.
+User created boxes must also be integers.
 
-**box**:
-
-Coordinate values of user created boxes are always integers.
-Float numbers are not possible.
-
-User boxes in a page must be unique.
+In addition, they must be unique in a page.
 Duplicate boxes (the same boxes in a page) are not possible.
 
 
