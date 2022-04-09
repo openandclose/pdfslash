@@ -33,7 +33,7 @@ I'd like to know if there are any PDF-crop programs with this merging feature,
 other than ``briss``.
 
 
-Box Conversion
+Box Adjustment
 --------------
 
 I think there are two complications

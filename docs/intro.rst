@@ -131,7 +131,7 @@ the new one is appended. The previous boxes are preserved.
 
 With ``Shift + Enter``,
 the new one replaces all the previous boxes.
-That is, if any, they were removed.
+That is, if any, they are removed.
 
 **Edit**:
 
@@ -143,7 +143,7 @@ But Pressing ``a``,
 the active box cycles to one of previous boxes in order, if any.
 The color changes to orange.
 In this state, you can edit previous boxes with cursor and ``Enter`` keys
-(Other previous boxes are preserved).
+(No ``Shift + Enter`` key in this case).
 
 With ``u`` and ``r``, the program performs undo and redo.
 They are only for box registrations, other states are initialized.

@@ -155,7 +155,7 @@ title bar and label show some information.
 
     ``both``: current view (``both``, ``odds``, or ``evens``).
 
-    ``595x842``: current source mediabox size (GUI canvas size). ``left`` and ``top`` are always zeros.(``0,0,595,841``).
+    ``595x842``: current source mediabox size (GUI canvas size). ``left`` and ``top`` are always zeros (``0,0,595,841``).
 
     ``sel``: active box (either string ``'sel'`` or ``'box'``).
 

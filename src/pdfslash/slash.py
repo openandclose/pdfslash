@@ -3779,8 +3779,9 @@ class PDFSlashCmd(_PipeCmd):
         Options (optional):
 
         ``-m``, ``--more``:
-            Shortcut to ``-a{'garbage':3}``.
-            For shorter PDF, it seems OK. May make file size smaller.
+            Shortcut for ``-a{'garbage':3}``.
+            For shorter PDF, it seems OK. May make file size smaller,
+            but it tends to get very slower.
         ``-a``, ``--args``:
             Update the default arguments.
             The string after, say, ``-a`` must be valid Python code,
@@ -3840,13 +3841,10 @@ class PDFSlashCmd(_PipeCmd):
 
         Options (optional):
 
-        When option is ``'--pdf'``,
-        Boxes are shown in raw PDF strings.
-        In this case, page attribute inheritances are not followed
-        (``MediaBox``, ``CropBox`` and ``Rotate``).
-
         ``-p``, ``--pdf``:
-            print PDF string values.
+            print raw PDF string values as is.
+            In this case, page attribute inheritances are not followed
+            (``MediaBox``, ``CropBox`` and ``Rotate``).
         """
         numbers, opts = self.cmdparser.parse(args, allow_blank=True)
         if not numbers:
@@ -4178,7 +4176,7 @@ def _build_argument_parser():
     parser.add_argument('--command', '-c', help=h)
 
     h = ('run initial commands before showing prompt '
-        "(reading from a file).")
+        "(reading from a file, one command a line).")
     parser.add_argument('--cmdfile', '-f', help=h)
 
     h = ('do not perform initial commands verification. '
