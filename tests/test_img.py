@@ -27,7 +27,7 @@ def test_imgproxy():
     imgs, cnt = proxy.load()
     assert list(imgs[:, 0, 0]) == [1500]
 
-    proxy = proxy[0]
+    proxy = proxy[[0]]
     imgs, cnt = proxy.load()
     assert list(imgs[:, 0, 0]) == [1500]
 
