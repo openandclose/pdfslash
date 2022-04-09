@@ -1881,15 +1881,17 @@ class _PyMuPDFImgBox(object):
 
     def cropbox2cbox(self, box):
         box = self.unrotate(box)
-        mbox = self.mbox
-        # moving bottom remainder to top,
-        # adjusting to y-direction changes when converting to PDF values
+        box = shift_box(box, (self.mbox[0], 0) * 2)
+        return self._adjust_cbox(box)
+
+    def _adjust_cbox(self, box):
+        # moving bottom remainder to top, trying to get integer PDF values
         # >>> math.modf(-5.5)
         # (-0.5499999999999998, -5.0)
+        mbox = self.mbox
         remainder = abs(math.modf(mbox[3] - mbox[1])[0])
-        pos = mbox[0], remainder
-        box = shift_box(box, pos * 2)
-        return box
+        pos = 0, remainder
+        return shift_box(box, pos * 2)
 
     @ property
     def mbox2cbox(self):
