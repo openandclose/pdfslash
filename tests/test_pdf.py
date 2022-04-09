@@ -59,40 +59,40 @@ def isclose(box1, box2):
 
 
 def test_cropbox_pos():
-    def check(mbox, new_cropbox, new_cbox, pdfbox):
+    def check(mbox, new_cropbox, expected1, expected2):
         doc = fitz.open()
         w, h = mbox[2] - mbox[0], mbox[3] - mbox[1]
         page = doc.new_page(width=w, height=h)
         cbox = page.cropbox
         b = slash._PyMuPDFImgBox(mbox, cbox, 0)
-        new_cropbox = b.cropbox2cbox(new_cropbox)
-        assert isclose(new_cropbox, new_cbox) is True
-        page.set_cropbox(new_cropbox)
-        assert doc.xref_get_key(page.xref, 'CropBox')[1] == pdfbox
+        new_cbox = b.cropbox2cbox(new_cropbox)
+        assert isclose(new_cbox, expected1) is True
+        page.set_cropbox(new_cbox)
+        assert doc.xref_get_key(page.xref, 'CropBox')[1] == expected2
 
     mbox = 0, 0, 9, 14
     new_cropbox = 1, 2, 6, 10
-    new_cbox = 1, 2, 6, 10
-    pdfbox = '[1 4 6 12]'
-    check(mbox, new_cropbox, new_cbox, pdfbox)
+    expected1 = 1, 2, 6, 10
+    expected2 = '[1 4 6 12]'
+    check(mbox, new_cropbox, expected1, expected2)
 
     mbox = 0, 0, 9.1, 14.1
     new_cropbox = 1, 2, 6, 10
-    new_cbox = 1, 2.1, 6, 10.1
-    pdfbox = '[1 4 6 12]'
-    check(mbox, new_cropbox, new_cbox, pdfbox)
+    expected1 = 1, 2.1, 6, 10.1
+    expected2 = '[1 4 6 12]'
+    check(mbox, new_cropbox, expected1, expected2)
 
     mbox = 0.1, 0.1, 10, 15
     new_cropbox = 1, 2, 6, 10
-    new_cbox = 1.1, 2.9, 6.1, 10.9
-    pdfbox = '[1.1 4 6.1 12]'
-    check(mbox, new_cropbox, new_cbox, pdfbox)
+    expected1 = 1.1, 2.9, 6.1, 10.9
+    expected2 = '[1.1 4 6.1 12]'
+    check(mbox, new_cropbox, expected1, expected2)
 
     mbox = 0.1, 0.1, 10.2, 15.2
     new_cropbox = 1, 2, 6, 10
-    new_cbox = 1.1, 2.1, 6.1, 10.1
-    pdfbox = '[1.1 5 6.1 13]'
-    check(mbox, new_cropbox, new_cbox, pdfbox)
+    expected1 = 1.1, 2.1, 6.1, 10.1
+    expected2 = '[1.1 5 6.1 13]'
+    check(mbox, new_cropbox, expected1, expected2)
 
 
 # Page Labels ------------------------------------
