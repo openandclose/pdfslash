@@ -88,10 +88,22 @@ def test_cropbox_pos():
     expected2 = '[1.1 4 6.1 12]'
     check(mbox, new_cropbox, expected1, expected2)
 
+    mbox = 0.1, 0.1, 10.1, 15.1
+    new_cropbox = 1, 2, 6, 10
+    expected1 = 1.1, 2, 6.1, 10
+    expected2 = '[1.1 5 6.1 13]'
+    check(mbox, new_cropbox, expected1, expected2)
+
     mbox = 0.1, 0.1, 10.2, 15.2
     new_cropbox = 1, 2, 6, 10
     expected1 = 1.1, 2.1, 6.1, 10.1
     expected2 = '[1.1 5 6.1 13]'
+    check(mbox, new_cropbox, expected1, expected2)
+
+    mbox = -0.1, -0.1, 10, 15
+    new_cropbox = 1, 2, 6, 10
+    expected1 = 0.9, 2.1, 5.9, 10.1
+    expected2 = '[.9 5 5.9 13]'
     check(mbox, new_cropbox, expected1, expected2)
 
 
