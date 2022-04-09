@@ -518,11 +518,9 @@ class _BoxData(object):
     'append', 'overwrite', 'modify', 'discard', 'clear' and 'set_each'.
     """
 
-    def __init__(self, mediaboxes, cropboxes):
-        self.mediaboxes = [tuple(mediabox) for mediabox in mediaboxes]
-        self.cropboxes = [tuple(cropbox) for cropbox in cropboxes]
+    def __init__(self, numbers):
+        self.numbers = numbers
         self.boxdict = _Boxdict(self)
-        self.numbers = tuple(range(1, len(mediaboxes) + 1))
         self.boxes = [_Boxes(n, self.boxdict) for n in self.numbers]
         self.stacker = _Stacker(self.boxes)
 
@@ -645,11 +643,11 @@ class _Page(object):
 
     @property
     def mediabox(self):
-        return self.pages.boxdata.mediaboxes[self.number - 1]
+        return self.pages.mediaboxes[self.number - 1]
 
     @property
     def cropbox(self):
-        return self.pages.boxdata.cropboxes[self.number - 1]
+        return self.pages.cropboxes[self.number - 1]
 
     @property
     def boxes(self):
@@ -687,8 +685,10 @@ class _Pages(object):
     """Define page data interface."""
 
     def __init__(self, mediaboxes, cropboxes):
-        self.boxdata = _BoxData(mediaboxes, cropboxes)
+        self.mediaboxes = mediaboxes
+        self.cropboxes = cropboxes
         self.numbers = tuple(range(1, len(mediaboxes) + 1))
+        self.boxdata = _BoxData(self.numbers)
         self.pages = [_Page(self, n) for n in self.numbers]
 
         self.selected = [1 for _ in range(len(self.numbers))]

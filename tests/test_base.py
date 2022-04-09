@@ -58,10 +58,6 @@ class TestStacker:
 
 class TestBoxData:
 
-    def create_data(self):
-        boxes = [(0, 0, 595, 842) for _ in range(8)]
-        return boxes, boxes
-
     def check(self, boxdata, numbers, expected):
         for n in numbers:
             assert repr(boxdata.boxes[n - 1]) == str(expected)
@@ -74,7 +70,8 @@ class TestBoxData:
         box1 = (100, 100, 300, 300)
         box2 = (200, 200, 500, 500)
 
-        boxdata = slash._BoxData(*self.create_data())
+        numbers = tuple(range(1, 9))
+        boxdata = slash._BoxData(numbers)
 
         # 1
         boxdata.overwrite((1, 2, 3), box1, msg='msg1')
