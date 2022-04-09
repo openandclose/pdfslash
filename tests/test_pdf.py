@@ -100,7 +100,7 @@ def test_cropbox_pos():
 def test_labels():
     doc = fitz.open()
     for i in range(20):
-        page = doc.new_page()
+        doc.new_page()
 
     labels = [
         {'startpage': 0, 'prefix': 'A-', 'style': 'D', 'firstpagenum': 1},
@@ -111,11 +111,9 @@ def test_labels():
 
     backend = slash.PyMuPDFBackend(fname='', pdf_obj=doc)
     # Must instansiate slash._Pages class to fill global slash.g_numparser
-    pages = slash._Pages(backend.mediaboxes, backend.cropboxes)
+    slash._Pages(backend.mediaboxes, backend.cropboxes)
 
     p = backend._format_labels
-    ret = []
-    printout = ret.append
 
     numbers = tuple(range(1, 21))
     expected = 'A-1, A-2, A-3, A-4, I, II, III, IV, V, VI, VII, 1-9'
