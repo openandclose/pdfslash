@@ -61,7 +61,7 @@ def isclose(box1, box2):
 def test_cropbox_pos():
     def check(mbox, new_cropbox, new_cbox, pdfbox):
         doc = fitz.open()
-        w, h = mbox[2:]
+        w, h = mbox[2] - mbox[0], mbox[3] - mbox[1]
         page = doc.new_page(width=w, height=h)
         cbox = page.cropbox
         b = slash._PyMuPDFImgBox(mbox, cbox, 0)
@@ -84,13 +84,13 @@ def test_cropbox_pos():
 
     mbox = 0.1, 0.1, 10, 15
     new_cropbox = 1, 2, 6, 10
-    new_cbox = 1.1, 2, 6.1, 10
-    pdfbox = '[1.1 5 6.1 13]'
+    new_cbox = 1.1, 2.9, 6.1, 10.9
+    pdfbox = '[1.1 4 6.1 12]'
     check(mbox, new_cropbox, new_cbox, pdfbox)
 
     mbox = 0.1, 0.1, 10.2, 15.2
     new_cropbox = 1, 2, 6, 10
-    new_cbox = 1.1, 2.2, 6.1, 10.2
+    new_cbox = 1.1, 2.1, 6.1, 10.1
     pdfbox = '[1.1 5 6.1 13]'
     check(mbox, new_cropbox, new_cbox, pdfbox)
 
