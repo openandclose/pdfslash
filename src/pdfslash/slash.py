@@ -2177,7 +2177,7 @@ class _Rects(object):
         self.active_index = 0
         self.update()
 
-    def update(self, is_new_changeset=True):
+    def update(self):
         # let's not remove invalids rect during gui invocation.
         # for box in self.rects:
         #     if box not in self.boxdict:
@@ -2328,14 +2328,14 @@ class _Rects(object):
         msg = self.pages.undo()
         if msg is None:
             return
-        self.update(is_new_changeset=False)
+        self.update()
         return msg
 
     def redo(self):
         msg = self.pages.redo()
         if msg is None:
             return
-        self.update(is_new_changeset=False)
+        self.update()
         return msg
 
 
