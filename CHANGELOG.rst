@@ -17,6 +17,10 @@ Unreleased
 
   Now, all boxes in interfaces are img box type ('top-left' aligned).
 
+**Add:**
+
+* Add x key for exact coords paste (GUI)
+
 
 v0.2.3 (2022-04-07)
 -------------------

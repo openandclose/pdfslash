@@ -2413,9 +2413,6 @@ _tk_help = """
         drag:           expand selection
         release:        end selection (bottom-right)
 
-    mouse (when copy is pending):
-        left click:     paste copied rectangle
-
     keys:
         H:              print this help in terminal
         q:              quit
@@ -2441,6 +2438,11 @@ _tk_help = """
         Z:              zoom out
         u:              undo (box operations)
         r:              redo (box operations)
+
+    (when copy is pending):
+        left click:     paste copied rectangle
+        x:              paste copied rectangle (the same coords)
+
     -----------------------------------------------------------
 """.lstrip('\n')
 
@@ -2545,6 +2547,7 @@ class TkRunner(object):
         root.bind('<d>', self._remove)
 
         root.bind('<c>', self._copy_box)
+        root.bind('<x>', self._paste_box_from_key)
 
         root.bind('<z>', self._zoom)
         root.bind('<Z>', self._zoom)
@@ -2717,7 +2720,7 @@ class TkRunner(object):
             self._draw_rects()
 
         if self._copied_box:
-            self._paste_box(event)
+            self._paste_box_from_click(event)
             return
 
         self._start = event.x, event.y
@@ -2828,14 +2831,27 @@ class TkRunner(object):
         self._copied_box = rect.box
         self._set_title()
 
-    def _paste_box(self, event):
+    def _paste_box_from_click(self, event):
         x, y = event.x, event.y
         x, y = self.i._scaling.get_unscaled((x, y))
         w, h = getsize(self._copied_box)
         box = x, y, x + w, y + h
+        self._paste_box(box)
+
+    def _paste_box_from_key(self, event):
+        if not self._copied_box:
+            return
+        if self.i.rects.active_index == self._copied_box:
+            self._notify("can't paste in the same pages")
+            return
+        self._paste_box()
+
+    def _paste_box(self, box=None):
+        box = box or self._copied_box
         self._sel.box = box
         self._draw_rect(self._sel)
-        self._copied_box = 'done'
+        # if from click, wait drag and release, then to 'None'
+        self._copied_box = 'done' if box else None
         self._set_info()
 
     def _cycle_view(self, event):
