@@ -1173,7 +1173,11 @@ class _ImageData(object):
 
         self.update(g_index=index)
 
-    def update(self, g_index=None, im_state=None, scale=None):
+    def update(self, g_index=None, im_state=None, scale=None,
+            reset_rects=True):
+        if reset_rects and self.rects.active_index != 0:
+            self.rects.reset_active()
+
         if g_index is not None:
             self.g_index = g_index
         if im_state is not None:
@@ -1225,7 +1229,7 @@ class _ImageData(object):
             scale = self._scaling._prev()
         if scale is None:  # no change
             return
-        self.update(scale=scale)
+        self.update(scale=scale, reset_rects=False)
 
     def _get_stack_data(self):
         return [self.g_index, self.im_state, self._scaling._scale]
