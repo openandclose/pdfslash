@@ -3249,9 +3249,7 @@ class BoxParser(object):
                         return box1, boxes1
 
         except (ValueError, IndexError):
-            pass
-
-        raise ValueError('Invalid box string: %s' % bstr1)
+            raise ValueError('Invalid box string: %s' % bstr1)
 
     def _get_box2(self, numbers, box1, boxes1, bstr2):  # boxmod
         box = [b for b in bstr2.split(',')]  # box: box2
