@@ -482,7 +482,10 @@ class _Boxes(MutableSequence):
         self.data = initlist or []
 
     def __getitem__(self, index):
-        return self.data[index]
+        try:
+            return self.data[index]
+        except IndexError:
+            raise NoBoxToProcessError(self._num)
 
     def __setitem__(self, index, item):
         self.check_duplicate(item)
@@ -509,6 +512,9 @@ class _Boxes(MutableSequence):
 
     def __repr__(self):
         return repr(self.data)
+
+    def __iter__(self):
+        return self.data.__iter__()
 
 
 class _BoxData(object):
@@ -571,19 +577,13 @@ class _BoxData(object):
 
     def _modify(self, i, box, old_box):
         boxes = self.boxes[i]
-        try:
-            index = boxes.index(old_box)
-        except ValueError:
-            raise NoBoxToProcessError(i + 1)
+        index = boxes.index(old_box)
         commands = [('replace', (i, index), tuple(box))]
         return commands
 
     def _discard(self, i, box, old_box):
         boxes = self.boxes[i]
-        try:
-            index = boxes.index(old_box)
-        except ValueError:
-            raise NoBoxToProcessError(i + 1)
+        index = boxes.index(old_box)
         commands = [('remove', (i, index), None)]
         return commands
 
