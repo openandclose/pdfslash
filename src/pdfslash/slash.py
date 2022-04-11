@@ -486,12 +486,12 @@ class _Boxes(MutableSequence):
 
     def __setitem__(self, index, item):
         self.check_duplicate(item)
-        old_item = self.data[index]
+        old_item = self[index]
         self.data[index] = item
         self._boxdict.replace(self._num, item, old_item)
 
     def __delitem__(self, index):
-        item = self.data[index]
+        item = self[index]
         del self.data[index]
         self._boxdict.remove(self._num, item)
 
