@@ -363,6 +363,7 @@ class _Stacker(object):
 
     def rollback(self):
         self._rollback(self._commands)
+        self._msg = ''
 
     def _get_item(self, obj, key):
         if hasattr(obj, '__getitem__'):
@@ -789,6 +790,9 @@ class _Pages(object):
         numbers = self.modifiable(numbers)
         msg = msg or self.format_msg('clear', numbers)
         self.boxdata.clear(numbers, msg=msg)
+
+    def check_msg(self):
+        return self.boxdata.stacker._msg
 
     def undo(self):
         return self.boxdata.undo()
@@ -2178,6 +2182,11 @@ class _Rects(object):
         self.update()
 
     def update(self):
+        msg = self.pages.check_msg()
+        if not msg:
+            return
+        print(msg)
+
         # let's not remove invalids rect during gui invocation.
         # for box in self.rects:
         #     if box not in self.boxdict:
@@ -2240,7 +2249,6 @@ class _Rects(object):
         box, numbers = self.sel.box, self.sel.numbers
         msg = self.format_msg('append', numbers, box)
         self.pages.append(numbers, box, msg=msg)
-        print(msg)
         self.update()
         return self.rects[box]
 
@@ -2248,7 +2256,6 @@ class _Rects(object):
         box, numbers = self.sel.box, self.sel.numbers
         msg = self.format_msg('overwrite', numbers, box)
         self.pages.overwrite(numbers, box, msg=msg)
-        print(msg)
         self.update()
         return self.rects[box]
 
@@ -2257,7 +2264,6 @@ class _Rects(object):
         rect.box = None
         msg = self.format_msg('modify', rect.numbers, old, new)
         self.pages.modify(rect.numbers, old, new, msg=msg)
-        print(msg)
         self.reset_active()
         self.update()
         return self.rects[new]
@@ -2266,7 +2272,6 @@ class _Rects(object):
         box, numbers = rect.box, rect.numbers
         msg = self.format_msg('discard', numbers, box)
         self.pages.discard(numbers, box, msg=msg)
-        print(msg)
         self.update()
         self.reset_active()
 
