@@ -3188,10 +3188,6 @@ class BoxParser(object):
             cache['pageboxes'] = pageboxes
         return cache['pageboxes']
 
-    def _copy_pageboxes(self, numbers):
-        pageboxes = self._get_pageboxes(numbers)
-        return [list(boxes.data) for boxes in pageboxes]
-
     def parse(self, numbers, *args):
         table = (
             ('b', '_parse_b'),
