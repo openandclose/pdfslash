@@ -3248,7 +3248,7 @@ class BoxParser(object):
                             boxes1 = None
                         return box1, boxes1
 
-        except ValueError:
+        except (ValueError, IndexError):
             pass
 
         raise ValueError('Invalid box string: %s' % bstr1)
