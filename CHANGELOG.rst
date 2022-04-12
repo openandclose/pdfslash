@@ -5,6 +5,18 @@ Changelog
 Unreleased
 ----------
 
+**Change:**
+
+* Change and Fix box coords inconsistency
+
+  PyMuPDF box coords are mediabox 'top' aligned,
+  and the program normally used them,
+  while img box coords are mediabox 'top-left' aligned.
+
+  I have benn using them very inconsistently.
+
+  Now, all boxes in interfaces are img box type ('top-left' aligned).
+
 
 v0.2.3 (2022-04-07)
 -------------------
