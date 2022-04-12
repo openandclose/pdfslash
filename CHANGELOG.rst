@@ -5,6 +5,11 @@ Changelog
 Unreleased
 ----------
 
+---
+
+v0.3.0 (2022-04-13)
+-------------------
+
 **Change:**
 
 * Change and Fix box coords inconsistency
@@ -13,7 +18,7 @@ Unreleased
   and the program normally used them,
   while img box coords are mediabox 'top-left' aligned.
 
-  I have benn using them very inconsistently.
+  I have been using them very inconsistently.
 
   Now, all boxes in interfaces are img box type ('top-left' aligned).
 
