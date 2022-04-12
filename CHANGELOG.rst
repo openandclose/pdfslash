@@ -12,7 +12,7 @@ v0.3.0 (2022-04-13)
 
 **Change:**
 
-* Change and Fix box coords inconsistency
+* Change and Fix box coords inconsistency [676dca64]
 
   PyMuPDF box coords are mediabox 'top' aligned,
   and the program normally used them,
@@ -24,7 +24,7 @@ v0.3.0 (2022-04-13)
 
 **Add:**
 
-* Add x key for exact coords paste (GUI)
+* Add x key for exact coords paste (GUI) [80dde8d1]
 
 
 v0.2.3 (2022-04-07)
