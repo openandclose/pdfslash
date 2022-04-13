@@ -363,7 +363,7 @@ class _Stacker(object):
 
     def rollback(self):
         self._rollback(self._commands)
-        self._msg = ''
+        self._msg = None
 
     def _get_item(self, obj, key):
         if hasattr(obj, '__getitem__'):
@@ -794,11 +794,21 @@ class _Pages(object):
     def check_msg(self):
         return self.boxdata.stacker._msg
 
+    def _format_undo_msg(self, msg, which='undo'):
+        if not msg:
+            return
+        if '\n' in msg:
+            return '%s -\n%s' % (which, msg)
+        else:
+            return '%s - %s' % (which, msg)
+
     def undo(self):
-        return self.boxdata.undo()
+        msg = self.boxdata.undo()
+        return self._format_undo_msg(msg, 'undo')
 
     def redo(self):
-        return self.boxdata.redo()
+        msg = self.boxdata.redo()
+        return self._format_undo_msg(msg, 'redo')
 
     def verify(self, numbers, box=None):
         if not numbers:
@@ -2179,13 +2189,13 @@ class _Rects(object):
         self.rects = {}
         self.sel = _SelRect(self)
         self.active_index = 0
-        self.update()
+        self.update('')
 
-    def update(self):
-        msg = self.pages.check_msg()
-        if not msg:
-            return
-        print(msg)
+    def update(self, msg=None):
+        if msg is None:
+            msg = self.pages.check_msg()
+        if msg:  # when None or ''
+            print(msg)
 
         # let's not remove invalids rect during gui invocation.
         # for box in self.rects:
@@ -2331,16 +2341,12 @@ class _Rects(object):
 
     def undo(self):
         msg = self.pages.undo()
-        if msg is None:
-            return
-        self.update()
+        self.update(msg)
         return msg
 
     def redo(self):
         msg = self.pages.redo()
-        if msg is None:
-            return
-        self.update()
+        self.update(msg)
         return msg
 
 
@@ -2895,7 +2901,6 @@ class TkRunner(object):
             return
         self._reset_sel()
         self._get_image()
-        print('[gui] undo - %s' % msg)
 
     def _redo(self, event):
         msg = self.i.redo()
@@ -2906,7 +2911,6 @@ class TkRunner(object):
             return
         self._reset_sel()
         self._get_image()
-        print('[gui] redo - %s' % msg)
 
     def _set_info(self):
         self._set_title()

@@ -5,6 +5,10 @@ Changelog
 Unreleased
 ----------
 
+**Fix:**
+
+* Fix double printouts in GUI (undo and redo)
+
 ---
 
 v0.3.0 (2022-04-13)
