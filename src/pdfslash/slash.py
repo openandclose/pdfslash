@@ -798,9 +798,11 @@ class _Pages(object):
         if not msg:
             return
         if '\n' in msg:
-            return '%s -\n%s' % (which, msg)
+            start = ['# %s:' % which]
+            msg = ['# %s' % m for m in msg.split('\n')]
+            return '\n'.join(start + msg)
         else:
-            return '%s - %s' % (which, msg)
+            return '# %s - %s' % (which, msg)
 
     def undo(self):
         msg = self.boxdata.undo()
