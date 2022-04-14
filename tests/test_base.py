@@ -44,7 +44,8 @@ class TestStacker:
         assert stacker.undo() == 'adding'
         self.check(stacker, 1, [1, 1, 1])
         assert stacker._data == self.create_data()
-        assert stacker.undo() == None
+        with pytest.raises(slash.UndoError):
+            stacker.undo()
 
         assert stacker.redo() == 'adding'
         self.check(stacker, 1, [1, 55, 1, 1])
@@ -53,7 +54,8 @@ class TestStacker:
         assert stacker.redo() == 'removing'
         self.check(stacker, 1, [1, 1, 1])
         assert stacker._data == self.create_data()
-        assert stacker.redo() == None
+        with pytest.raises(slash.RedoError):
+            stacker.redo()
 
 
 class TestBoxData:

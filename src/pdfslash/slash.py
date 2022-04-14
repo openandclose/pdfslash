@@ -262,6 +262,18 @@ class NoBoxToProcessError(UserInputError):
     msg = 'cannot process non-existent box; page: %d'
 
 
+class UndoError(UserInputError):
+    """Raise when not undoable."""
+
+    msg = 'cannot undo (reached the first).'
+
+
+class RedoError(UserInputError):
+    """Raise when not redoable."""
+
+    msg = 'cannot redo (reached the last)'
+
+
 class _Stack(object):
     """Implement a stack for single branch undo and redo."""
 
@@ -275,16 +287,14 @@ class _Stack(object):
 
     def undo(self):
         if not self.undoable:
-            self.handle_err('undo')
-            return
+            raise UndoError
         data = self._stack[self.undo_pos]
         self.pos -= 1
         return data
 
     def redo(self):
         if not self.redoable:
-            self.handle_err('redo')
-            return
+            raise RedoError
         data = self._stack[self.pos + 1]
         self.pos += 1
         return data
@@ -300,9 +310,6 @@ class _Stack(object):
     @property
     def undo_pos(self):
         return self.pos
-
-    def handle_err(self, err_type=None):
-        pass
 
 
 class _StackContext(object):
@@ -456,16 +463,12 @@ class _Stacker(object):
 
     def undo(self):
         ret = self._stack.undo()
-        if ret is None:  # error on _stack
-            return
         commands, msg = ret
         self._rollback(commands)
         return msg
 
     def redo(self):
         ret = self._stack.redo()
-        if ret is None:  # error on _stack
-            return
         commands, msg = ret
         for command in commands:
             self.execute(command)
@@ -1272,16 +1275,12 @@ class _ImageData(object):
         self._stacker.set(commands)
 
     def undo(self):
-        msg = self._stacker.undo()
-        if msg is None:
-            return
+        self._stacker.undo()
         self._set_stack_data()
         return self.rects.undo()
 
     def redo(self):
-        msg = self._stacker.redo()
-        if msg is None:
-            return
+        self._stacker.redo()
         self._set_stack_data()
         return self.rects.redo()
 
@@ -1943,11 +1942,6 @@ class Document(object):
     """Manage page and img objects."""
 
     SUFFIX = '.slashed'
-
-    MSGS = {
-        'err_undo': 'cannot undo (reached the first).',
-        'err_redo': 'cannot redo (reached the last).',
-    }
 
     def __init__(self, fname, conf,
             backend=None,
@@ -2898,20 +2892,22 @@ class TkRunner(object):
         self._get_image()
 
     def _undo(self, event):
-        msg = self.i.undo()
-        if msg is None:
-            msg = self._doc.MSGS['err_undo']
-            print('[gui] %s' % msg)
+        try:
+            self.i.undo()
+        except UndoError as e:
+            msg = e.tostring()
+            print(msg)
             self._notify(msg)
             return
         self._reset_sel()
         self._get_image()
 
     def _redo(self, event):
-        msg = self.i.redo()
-        if msg is None:
-            msg = self._doc.MSGS['err_redo']
-            print('[gui] %s' % msg)
+        try:
+            self.i.redo()
+        except RedoError as e:
+            msg = e.tostring()
+            print(msg)
             self._notify(msg)
             return
         self._reset_sel()
@@ -3895,9 +3891,10 @@ class PDFSlashCmd(_PipeCmd):
 
         Undo box operations.
         """
-        msg = self._doc.pages.undo()
-        if msg is None:
-            msg = self._doc.MSGS['err_undo']
+        try:
+            msg = self._doc.pages.undo()
+        except UndoError as e:
+            msg = e.tostring()
         self._printout(msg)
 
     def do_redo(self, args):
@@ -3906,9 +3903,10 @@ class PDFSlashCmd(_PipeCmd):
 
         Redo box operations.
         """
-        msg = self._doc.pages.redo()
-        if msg is None:
-            msg = self._doc.MSGS['err_redo']
+        try:
+            msg = self._doc.pages.redo()
+        except RedoError as e:
+            msg = e.tostring()
         self._printout(msg)
 
     def do_Set(self, args):
