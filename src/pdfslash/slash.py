@@ -242,6 +242,9 @@ class PDFSlashError(Exception):
         message = self.msg % args
         super().__init__(message)
 
+    def tostring(self):
+        return '%s: %s' % (self.__class__.__name__, self.args[0])
+
 
 class UserInputError(PDFSlashError):
     """Errors on user interface, which the program should supress."""
@@ -331,7 +334,7 @@ class _StackContext(object):
 
     def handle_err(self, exc_type, exc, exc_tb):
         if issubclass(exc_type, UserInputError):
-            print('%s: %s' % (exc_type.__name__, exc))
+            print(exc.tostring())
             return True
         else:
             return False
