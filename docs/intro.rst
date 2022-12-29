@@ -29,6 +29,9 @@ Technical Overview
   `cmd <https://docs.python.org/3/library/cmd.html>`__
   and `tkinter <https://docs.python.org/3/library/tkinter.html>`__).
 
+Thanks to ``MuPDF`` and ``numpy``,
+this Python program is quite faster than ``briss`` (Java).
+
 
 Installation
 ------------

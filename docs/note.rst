@@ -26,9 +26,6 @@ box edit commands (``append``, ``overwrite``, ``modify``, ``discard``, ``clear``
 
 ---
 
-Thanks to ``MuPDF`` and ``numpy``, 
-This Python program is quite faster than ``briss`` (Java).
-
 I'd like to know if there are any PDF-crop programs with this merging feature,
 other than ``briss``.
 
