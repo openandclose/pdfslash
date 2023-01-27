@@ -1,0 +1,20 @@
+2023-01-27T20:21:38
+file: pdf_reference_1-7.pdf
+path: [...]/.local/bin/pdfslash
+numpy                         1.23.5
+PyMuPDF                       1.20.2
+pdfslash                      0.3.1
+    [time] conf init                       : 0.0002s
+    [time] doc init (fitz.open)            : 1.2252s
+    [time] Interpreter init                : 0.0000s
+    [time] PDF to image, 15 pages          : 0.0508s
+    [time] merge image, 15 pages           : 0.0284s
+    [time] PDF to image, 15 pages          : 0.0301s
+    [time] merge image, 15 pages           : 0.0277s
+    [time] PDF to image, 15 pages          : 0.0190s
+    [time] merge image, 15 pages           : 0.0302s
+    [time] tkinter init                    : 0.2707s
+Exiting...
+
+
+

@@ -4181,7 +4181,11 @@ class Runner(object):
                 raise ValueError(fmt % (oldhash, current))
 
     def run(self):
-        return self.pcmd.cmdloop()
+        if self.args._nobanner:
+            intro = ''
+        else:
+            intro = None
+        return self.pcmd.cmdloop(intro=intro)
 
 
 class DefaultRunner(Runner):
@@ -4216,6 +4220,9 @@ def _build_argument_parser():
 
     h = '[DEBUG] save merged image used for GUI in current directory'
     parser.add_argument('--_save', '-_s', action='store_true', help=h)
+
+    h = '[DEBUG] suspend interpreter banner (intro)'
+    parser.add_argument('--_nobanner', '-_b', action='store_true', help=h)
 
     return parser
 
