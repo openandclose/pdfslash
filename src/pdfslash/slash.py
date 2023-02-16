@@ -3996,7 +3996,7 @@ class PDFSlashCmd(_PipeCmd):
         It also prints file hash (crc32 to be exact) as comment,
         and 'replay' will fail if the hash is different
         from the current input PDF file ('some.pdf' in the example above).
-        You can use commandline option ``--nocheck`` in this case.
+        You can disable this check with commandline option ``--nocheck``.
         """
         t = time.strftime("%Y-%m-%d %H:%M:%S")
         fname = self._doc.fname
