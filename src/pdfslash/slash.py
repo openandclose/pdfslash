@@ -3539,6 +3539,8 @@ class PDFSlashCmd(_PipeCmd):
     pyhisname = '.python_history'  # Python history file name
     pyhisfile = None  # Python history file path
 
+    export_dir = 'exported'
+
     def __init__(self, *args, **kwargs):
         doc = kwargs.pop('doc', None)
         if doc is None:
@@ -3563,6 +3565,19 @@ class PDFSlashCmd(_PipeCmd):
                 with open(h, 'w'):  # create empty file
                     pass
             return h
+
+    def _get_export_file(self):
+        config_dir = self._doc.conf['_config_dir']
+        if not config_dir:
+            self.printout('Error: user directory is not defined.')
+            return
+
+        export_dir = os.path.join(config_dir, self.export_dir)
+        if not os.path.isdir(export_dir):
+            os.mkdir(export_dir)
+        t = time.strftime('%Y%m%d%H%M%S')
+        fname = '%s.%s.txt' % (os.path.basename(self._doc.fname), t)
+        return os.path.join(export_dir, fname)
 
     def _start_readline(self, fname):
         if readline and fname:
@@ -3997,17 +4012,31 @@ class PDFSlashCmd(_PipeCmd):
         and 'replay' will fail if the hash is different
         from the current input PDF file ('some.pdf' in the example above).
         You can disable this check with commandline option ``--nocheck``.
+
+        Options (optional):
+
+        ``-a``, ``--auto``:
+            write to a file automatically with the form of
+            '<user directory>/exported/<PDF file name>.<timestamp>.txt'
         """
         t = time.strftime("%Y-%m-%d %H:%M:%S")
         fname = self._doc.fname
         checksum = get_checksum(fname)
-        self.printout('# %s' % t)
-        self.printout('# %s' % fname)
-        self.printout('# hash: %s' % checksum)
-
+        msgs = []
+        msgs.append('# %s' % t)
+        msgs.append('# %s' % fname)
+        msgs.append('# hash: %s' % checksum)
         stacker = self._doc.pages.boxdata.stacker
-        msgs = stacker.export()
-        self.printout('\n'.join(msgs))
+        msgs.extend(stacker.export())
+        msgs = '\n'.join(msgs)
+
+        if args and args in ('-a', '--auto'):
+            fname = self._get_export_file()
+            if fname:
+                with open(fname, 'w') as f:
+                    f.write(msgs)
+        else:
+            self.printout(msgs)
 
     def do_free(self, args):
         """
