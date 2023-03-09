@@ -1949,12 +1949,14 @@ class Document(object):
             numparser=None,
             boxparser=None,
             imgmerger=None,
-            cropfinder=None):
+            cropfinder=None,
+            pdf_obj=None):
+
         self.fname = fname
         self.conf = conf
 
         backend = backend or PyMuPDFBackend
-        self.backend = backend(fname)
+        self.backend = backend(fname, pdf_obj=pdf_obj)
 
         boxes = self.backend.mediaboxes, self.backend.cropboxes
         self.pages = _Pages(*boxes)
@@ -4059,6 +4061,53 @@ class PDFSlashCmd(_PipeCmd):
         self._doc.free()
 
     def do__mediabox_reset(self, args):
+        """
+        Take one or two arguments, page numbers (optional) and tolerance.
+
+        (advanced, and experimental)
+
+        Some PDF has too many slightly different mediaboxes,
+        for this program to be useful (unable to group pages to preview).
+
+        One way to solve is to choose some bigger mediabox,
+        and align others to it, while discarding too different ones.
+        From the program's design,
+        It has to actually set new MediaBox to pages.
+        This is a very crude procedure.
+
+        PyMuPDF removes all other boxes, CropBox, BleedBox etc. (so it says).
+
+        The process basically loads a completely new PDF,
+        and resets the whole program (undo etc.), without exiting interpreter.
+        Something may be broken somewhere.
+
+        The output of 'info' command will change accordingly.
+
+        ---
+
+        Without optinal argument, it just reports a candidate mediabox.
+
+        It calculates to include maximum pages in some expanded mediabox,
+        excluding bigger or smaller than the tolerance given (a pixel number).
+
+        Options (optional):
+
+        ``-s``, ``--set``:
+            actually set MediaBox to included pages,
+            after reporting, using reported data.
+
+            do nothing to excluded pages.
+
+        Example:
+
+        .. code-block:: none
+
+            (pdfslash) _mediabox_reset 20           # Report for all pages,
+                                                    # tolerance: 20 pixel.
+            (pdfslash) _mediabox_reset 10-400 20    # Report for 10-400 pages.
+            (pdfslash) _mediabox_reset 20 --set     # Set MediaBox
+                                                    # for all included pages.
+        """
         ret, opts = self.cmdparser.parse(args, signature='nplus')
         numbers, tolerance = ret
         tolerance = int(tolerance)
@@ -4088,6 +4137,25 @@ class PDFSlashCmd(_PipeCmd):
 
         if not opts or len(opts) != 1 or opts[0] not in ('-s', '--set'):
             return
+
+        # actually set MediaBox
+        backend = self._doc.backend
+        pdf = backend.load_pdf()  # creating new pdf object
+        set_mediabox = backend._compat('set_mediabox', 'setMediaBox')
+
+        # TODO: need centering (minus value adjustment)?
+        for n in in_:
+            page = pdf[n - 1]
+            if page.rotation in (90, 270):
+                box = (0, 0, h_high, w_high)
+            else:  # 0 or 180 or others
+                box = (0, 0, w_high, h_high)
+            set_mediabox(page)(box)
+
+        self._doc.free()
+        fname, conf = self._doc.fname, self._doc.conf
+        doc = Document(fname, conf, pdf_obj=pdf)
+        self._doc = doc
 
     def do_exit(self, args):
         """
