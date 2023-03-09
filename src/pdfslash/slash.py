@@ -10,25 +10,25 @@
 # Use 'img' for numpy pixel data,
 # and 'image' for actual image (with header etc.).
 #
-# MediaBox and CropBox (PDF boxes):
+# 'MediaBox' and 'CropBox':
 # raw PDF values
-# ((left, bottom, right, top). y-ascendant. real number strings).
+# pre-rotation. (left, bottom, right, top). y-ascendant. real number strings.
 #
-# mbox and cbox (PyMuPDF boxes):
+# 'mbox' and 'cbox':
 # PyMuPDF values of Page.mediabox and Page.cropbox
-# pre-rotation. (left, top, right, bottm). y-descendant. Python floats.
+# pre-rotation. (left, top, right, bottom). y-descendant. Python floats.
 # While mbox values are superficially the same as PDF values,
 # cbox values are in the coords in which mbox's top (y0) is moved to 0.
 # see https://pymupdf.readthedocs.io/en/latest/glossary.html#MediaBox
 # (This is necessary, in general, when you transform y-axis direction).
 #
-# mediabox and cropbox (pdfslash boxes):
+# 'mediabox' and 'cropbox':
 # The values the program uses.
-# after-rotation. (left, top, right, bottm). y-descendant. integers.
+# after-rotation. (left, top, right, bottom). y-descendant. integers.
 # After y-axis transform, mediabox's left-top (x0, y0) is moved to (0, 0),
 # both for mediabox and cropbox (and then rotation is applied).
-# (This is necessary when you handle image or pixel rectangles, like in GUI,
-# but for consistency, they are used in all other interfaces).
+# (This is necessary, in general, when you handle image or pixel rectangles,
+# like in GUI, but for consistency, they are used in all other interfaces).
 #
 # Example:
 # When Mediabox and CropBox are both '[1 2 100.1 200.2]',
@@ -37,7 +37,8 @@
 # mediabox is (0, 0, 99, 198),
 # cropbox is (0, 0, 99, 198).
 #
-# A new box created in the program is just called 'box'.
+# 'box'
+# A new box (cropbox candidate) created in the program, is just called 'box'.
 #
 # Trying to use 'box' for one box in a page, 'boxes' for boxes in a page,
 # 'pageboxes' for list of boxes in a collection of pages.
