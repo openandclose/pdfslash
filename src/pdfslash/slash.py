@@ -3353,6 +3353,7 @@ class CommandParser(object):
             ('nb', '_parse_nb'),
             ('nbb', '_parse_nbb'),
             ('nB', '_parse_nB'),
+            ('nplus', '_parse_nplus'),
         )
 
         for sig, name in table:
@@ -3377,6 +3378,12 @@ class CommandParser(object):
 
         nstr = args[0]
         return self._get_numbers(nstr)
+
+    def _parse_nplus(self, args):
+        if len(args) == 1:
+            args = [':'] + args
+        numbers = self._get_numbers(args[0])
+        return numbers, *args[1:]
 
     def _parse_nb(self, args):  # append or overwrite
         if len(args) != 2:
@@ -4051,6 +4058,37 @@ class PDFSlashCmd(_PipeCmd):
         """
         self._doc.free()
 
+    def do__mediabox_reset(self, args):
+        ret, opts = self.cmdparser.parse(args, signature='nplus')
+        numbers, tolerance = ret
+        tolerance = int(tolerance)
+        if tolerance < 1:
+            self.printout('invalid tolerance: %d' % tolerance)
+            return
+
+        boxes, indices = [], []
+        for num, box in enumerate(self._pages.mediaboxes, start=1):
+            if num in numbers:
+                boxes.append(box)
+                indices.append(num)
+        in_, out, w_high, h_high = _get_max_box(boxes, tolerance)
+
+        in_ = [indices[i] for i in in_]
+        out = [indices[i] for i in out]
+        nstr = g_numparser.unparse(in_)
+
+        p = self.printout
+        p('expanded MediaBox size: 0,0,%d,%d' % (w_high, h_high))
+        p('included pages: %s' % nstr)
+        p('----')
+        p('excluded pages:')
+        for n in out:
+            box = boxes[n - 1]
+            p('%d: %d,%d,%d,%d' % (n, *box))
+
+        if not opts or len(opts) != 1 or opts[0] not in ('-s', '--set'):
+            return
+
     def do_exit(self, args):
         """
         Take no argument.
@@ -4067,6 +4105,56 @@ class PDFSlashCmd(_PipeCmd):
 
     do_quit = do_exit
     do_EOF = do_exit
+
+
+# used in PDFSlashCmd.do__mediabox_reset
+def _get_max_box(boxes, tolerance):
+    sizes = [getsize(box) for box in boxes]
+
+    w = sorted((s[0] for s in sizes))
+    w_low, w_high, w_out = _discard_outliers(w, tolerance)
+    h = sorted((s[1] for s in sizes))
+    h_low, h_high, h_out = _discard_outliers(h, tolerance)
+
+    in_, out = set(), set()
+    for i, size in enumerate(sizes):
+        if size[0] in w_out or size[1] in h_out:
+            out.add(i)
+        else:
+            in_.add(i)
+
+    in_ = sorted(in_)
+    out = sorted(out)
+
+    return in_, out, w_high, h_high
+
+
+# used in PDFSlashCmd.do__mediabox_reset
+def _discard_outliers(nums, tolerance):
+    out = []
+    n = len(nums)
+    low_index = 0
+    high_index = n - 1
+
+    while True:
+        low = nums[low_index]
+        high = nums[high_index]
+
+        if high - low < tolerance:
+            break
+
+        range_ = nums[low_index:high_index + 1]
+        median = range_[n // 2]  # median_high
+        is_low = abs(median - low) > abs(median - high)
+
+        if is_low:
+            out.append(low)
+            low_index += 1
+        else:
+            out.append(high)
+            high_index -= 1
+
+    return low, high, out
 
 
 class Conf(object):
