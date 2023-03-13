@@ -4115,42 +4115,16 @@ class PDFSlashCmd(_PipeCmd):
             self.printout('invalid tolerance: %d' % tolerance)
             return
 
-        boxes, indices = [], []
-        for num, box in enumerate(self._pages.mediaboxes, start=1):
-            if num in numbers:
-                boxes.append(box)
-                indices.append(num)
-        in_, out, w_high, h_high = _get_max_box(boxes, tolerance)
-
-        in_ = [indices[i] for i in in_]
-        out = [indices[i] for i in out]
-        nstr = g_numparser.unparse(in_)
-
-        p = self.printout
-        p('expanded MediaBox size: 0,0,%d,%d' % (w_high, h_high))
-        p('included pages: %s' % nstr)
-        p('----')
-        p('excluded pages:')
-        for n in out:
-            box = boxes[n - 1]
-            p('%d: %d,%d,%d,%d' % (n, *box))
+        setter = _PyMuPDFMediaBoxSetter(
+            self._pages.mediaboxes, numbers, tolerance)
+        setter.get_data()
+        setter.report(printout=self.printout)
 
         if not opts or len(opts) != 1 or opts[0] not in ('-s', '--set'):
             return
 
-        # actually set MediaBox
-        backend = self._doc.backend
-        pdf = backend.load_pdf()  # creating new pdf object
-        set_mediabox = backend._compat('set_mediabox', 'setMediaBox')
-
-        # TODO: need centering (minus value adjustment)?
-        for n in in_:
-            page = pdf[n - 1]
-            if page.rotation in (90, 270):
-                box = (0, 0, h_high, w_high)
-            else:  # 0 or 180 or others
-                box = (0, 0, w_high, h_high)
-            set_mediabox(page)(box)
+        # create new PDF with new Mediaboxes
+        pdf = setter.set_mediabox(self._doc.backend)
 
         self._doc.free()
         fname, conf = self._doc.fname, self._doc.conf
@@ -4175,54 +4149,110 @@ class PDFSlashCmd(_PipeCmd):
     do_EOF = do_exit
 
 
-# used in PDFSlashCmd.do__mediabox_reset
-def _get_max_box(boxes, tolerance):
-    sizes = [getsize(box) for box in boxes]
+class _PyMuPDFMediaBoxSetter(object):
+    """Manage PyMuPDF Mediabox modifications.
 
-    w = sorted((s[0] for s in sizes))
-    w_low, w_high, w_out = _discard_outliers(w, tolerance)
-    h = sorted((s[1] for s in sizes))
-    h_low, h_high, h_out = _discard_outliers(h, tolerance)
+    Only used for PDFSlashCmd.do__mediabox_reset (exceptional case).
+    """
 
-    in_, out = set(), set()
-    for i, size in enumerate(sizes):
-        if size[0] in w_out or size[1] in h_out:
-            out.add(i)
-        else:
-            in_.add(i)
+    def __init__(self, mediaboxes, numbers, tolerance):
+        self.mediaboxes = mediaboxes
+        self.numbers = numbers
+        self.tolerance = tolerance
 
-    in_ = sorted(in_)
-    out = sorted(out)
+    def get_data(self):
+        boxes, indices = [], []
+        for num, box in enumerate(self.mediaboxes, start=1):
+            if num in self.numbers:
+                boxes.append(box)
+                indices.append(num)
+        in_, out, w_high, h_high = self.get_max_box(boxes, self.tolerance)
 
-    return in_, out, w_high, h_high
+        in_ = [indices[i] for i in in_]
+        out = [indices[i] for i in out]
 
+        self.boxes, self.in_, self.out = boxes, in_, out
+        self.w, self.h = w_high, h_high
 
-# used in PDFSlashCmd.do__mediabox_reset
-def _discard_outliers(nums, tolerance):
-    out = []
-    n = len(nums)
-    low_index = 0
-    high_index = n - 1
+    def get_max_box(self, boxes, tolerance):
+        sizes = [getsize(box) for box in boxes]
 
-    while True:
-        low = nums[low_index]
-        high = nums[high_index]
+        w = sorted((s[0] for s in sizes))
+        w_low, w_high, w_out = self.discard_outliers(w, tolerance)
+        h = sorted((s[1] for s in sizes))
+        h_low, h_high, h_out = self.discard_outliers(h, tolerance)
 
-        if high - low < tolerance:
-            break
+        in_, out = set(), set()
+        for i, size in enumerate(sizes):
+            if size[0] in w_out or size[1] in h_out:
+                out.add(i)
+            else:
+                in_.add(i)
 
-        range_ = nums[low_index:high_index + 1]
-        median = range_[n // 2]  # median_high
-        is_low = abs(median - low) > abs(median - high)
+        in_ = sorted(in_)
+        out = sorted(out)
 
-        if is_low:
-            out.append(low)
-            low_index += 1
-        else:
-            out.append(high)
-            high_index -= 1
+        return in_, out, w_high, h_high
 
-    return low, high, out
+    def discard_outliers(self, nums, tolerance):
+        out = []
+        n = len(nums)
+        low_index = 0
+        high_index = n - 1
+
+        while True:
+            low = nums[low_index]
+            high = nums[high_index]
+
+            if high - low < tolerance:
+                break
+
+            range_ = nums[low_index:high_index + 1]
+            median = range_[n // 2]  # median_high
+            is_low = abs(median - low) > abs(median - high)
+
+            if is_low:
+                out.append(low)
+                low_index += 1
+            else:
+                out.append(high)
+                high_index -= 1
+
+        return low, high, out
+
+    def report(self, printout=print):
+        nstr = g_numparser.unparse(self.in_)
+        printout('expanded MediaBox size: 0,0,%d,%d' % (self.w, self.h))
+        printout('included pages: %s' % nstr)
+        printout('----')
+        printout('excluded pages:')
+        for n in self.out:
+            box = self.boxes[n - 1]
+            printout('%d: %d,%d,%d,%d' % (n, *box))
+
+    def set_mediabox(self, backend):
+        pdf = backend.load_pdf()
+        setter = backend._compat('set_mediabox', 'setMediaBox')
+        mbox = backend._compat('mediabox', 'MediaBox')
+
+        # TODO: need centering (minus value adjustment)?
+        for n in self.in_:
+            page = pdf[n - 1]
+            box = self.get_new_mediabox(
+                self.w, self.h, mbox(page), page.rotation)
+            setter(page)(box)
+
+        return pdf
+
+    def get_new_mediabox(self, w, h, box, rotation):
+        x0, y0 = box[:2]
+        x0, y0 = math.ceil(x0), math.ceil(y0)
+
+        if rotation in (90, 270):
+            box = (x0, y0, x0 + h, y0 + w)
+        else:  # 0 or 180 or others
+            box = (x0, y0, x0 + w, y0 + h)
+        return box
 
 
 class Conf(object):

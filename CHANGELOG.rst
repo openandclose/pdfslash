@@ -9,6 +9,8 @@ Unreleased
 
 * Add '--auto' option in 'export' command
 
+* Add '_mediabox_reset' command (experimental)
+
 ---
 
 v0.3.1 (2022-04-14)
