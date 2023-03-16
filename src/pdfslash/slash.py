@@ -3385,7 +3385,7 @@ class CommandParser(object):
         if len(args) == 1:
             args = [':'] + args
         numbers = self._get_numbers(args[0])
-        return numbers, *args[1:]
+        return (numbers, *args[1:])
 
     def _parse_nb(self, args):  # append or overwrite
         if len(args) != 2:
