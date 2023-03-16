@@ -5,6 +5,10 @@ Changelog
 Unreleased
 ----------
 
+**Add:**
+
+* Add '--auto' option in 'export' command
+
 ---
 
 v0.3.1 (2022-04-14)
