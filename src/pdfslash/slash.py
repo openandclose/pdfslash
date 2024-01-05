@@ -2505,7 +2505,7 @@ class TkRunner(object):
 
     def run(self):
         print('running tkinter...',
-            "type 'q' to quit, 'h' to see help in terminal")
+            "type 'q' to quit, 'H' to see help in terminal")
         self.root.mainloop()
 
     def build(self):
