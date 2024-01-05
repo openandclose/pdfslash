@@ -289,7 +289,7 @@ class _Stack(object):
     def undo(self):
         if not self.undoable:
             raise UndoError
-        data = self._stack[self.undo_pos]
+        data = self._stack[self.pos]
         self.pos -= 1
         return data
 
@@ -307,10 +307,6 @@ class _Stack(object):
     @property
     def redoable(self):
         return self.pos < len(self._stack) - 1
-
-    @property
-    def undo_pos(self):
-        return self.pos
 
 
 class _StackContext(object):
