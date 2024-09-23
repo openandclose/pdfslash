@@ -1608,13 +1608,13 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         data['info']['pages'] = {}  # pdfslash boxes data
 
         if getattr(self.pdf, 'xref_get_keys', None) is None:  # v1.18.7
-            return
+            return data
 
         try:
             self._get_data(data)
         except Exception as e:
             print(str(e))
-            return
+            return data
         return data
 
     def _get_data(self, data):
