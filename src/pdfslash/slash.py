@@ -1604,6 +1604,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         data = {}
         data['info'] = {}
         data['info']['doc'] = {}
+        data['info']['doc']['labels'] = {}
         data['info']['_pages'] = {}  # raw pdf boxes data
         data['info']['pages'] = {}  # pdfslash boxes data
 
@@ -1742,7 +1743,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             printout(ret)
 
     def _format_labels(self, numbers):
-        labels = self.data['info']['doc'].get('labels')
+        labels = self.data['info']['doc']['labels']
         if not labels:
             return ''
 
