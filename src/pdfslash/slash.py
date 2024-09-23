@@ -1611,17 +1611,23 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         if getattr(self.pdf, 'xref_get_keys', None) is None:  # v1.18.7
             return data
 
-        try:
-            self._get_data(data)
-        except Exception as e:
+        def eprint(e):
             print('%s: %s' % (type(e).__name__, str(e)))
-            return data
-        return data
 
-    def _get_data(self, data):
-        self._get_doc_info(data)
-        self._get_raw_page_info(data)
-        self._get_page_info(data)
+        try:
+            self._get_doc_info(data)
+        except Exception as e:
+            eprint(e)
+        try:
+            self._get_raw_page_info(data)
+        except Exception as e:
+            eprint(e)
+        try:
+            self._get_page_info(data)
+        except Exception as e:
+            eprint(e)
+
+        return data
 
     def _get_doc_info(self, data):
         self._get_labels(data)
