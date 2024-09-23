@@ -1613,7 +1613,7 @@ class PyMuPDFBackend(_PyMuPDFBackend):
         try:
             self._get_data(data)
         except Exception as e:
-            print(str(e))
+            print('%s: %s' % (type(e).__name__, str(e)))
             return data
         return data
 
