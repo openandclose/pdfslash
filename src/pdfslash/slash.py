@@ -1612,7 +1612,8 @@ class PyMuPDFBackend(_PyMuPDFBackend):
             return data
 
         def eprint(e):
-            print('%s: %s' % (type(e).__name__, str(e)))
+            fmt = 'Error while parsing PDF data, %s: %s'
+            print(fmt % (type(e).__name__, str(e)))
 
         try:
             self._get_doc_info(data)
