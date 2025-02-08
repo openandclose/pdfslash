@@ -68,42 +68,43 @@ def test_cropbox_pos():
         new_cbox = b.cropbox2cbox(new_cropbox)
         assert isclose(new_cbox, expected1)
         page.set_cropbox(new_cbox)
-        assert doc.xref_get_key(page.xref, 'CropBox')[1] == expected2
+        pdfbox = slash.pdfbox2box(doc.xref_get_key(page.xref, 'CropBox')[1])
+        assert isclose(pdfbox, expected2)
 
     mbox = 0, 0, 9, 14
     new_cropbox = 1, 2, 6, 10
     expected1 = 1, 2, 6, 10
-    expected2 = '[1 4 6 12]'
+    expected2 = 1, 4, 6, 12
     check(mbox, new_cropbox, expected1, expected2)
 
     mbox = 0, 0, 9.1, 14.1
     new_cropbox = 1, 2, 6, 10
     expected1 = 1, 2.1, 6, 10.1
-    expected2 = '[1 4 6 12]'
+    expected2 = 1, 4, 6, 12
     check(mbox, new_cropbox, expected1, expected2)
 
     mbox = 0.1, 0.1, 10, 15
     new_cropbox = 1, 2, 6, 10
     expected1 = 1.1, 2.9, 6.1, 10.9
-    expected2 = '[1.1 4 6.1 12]'
+    expected2 = 1.1, 4, 6.1, 12
     check(mbox, new_cropbox, expected1, expected2)
 
     mbox = 0.1, 0.1, 10.1, 15.1
     new_cropbox = 1, 2, 6, 10
     expected1 = 1.1, 2, 6.1, 10
-    expected2 = '[1.1 5 6.1 13]'
+    expected2 = 1.1, 5, 6.1, 13
     check(mbox, new_cropbox, expected1, expected2)
 
     mbox = 0.1, 0.1, 10.2, 15.2
     new_cropbox = 1, 2, 6, 10
     expected1 = 1.1, 2.1, 6.1, 10.1
-    expected2 = '[1.1 5 6.1 13]'
+    expected2 = 1.1, 5, 6.1, 13
     check(mbox, new_cropbox, expected1, expected2)
 
     mbox = -0.1, -0.1, 10, 15
     new_cropbox = 1, 2, 6, 10
     expected1 = 0.9, 2.1, 5.9, 10.1
-    expected2 = '[.9 5 5.9 13]'
+    expected2 = 0.9, 5, 5.9, 13
     check(mbox, new_cropbox, expected1, expected2)
 
 
