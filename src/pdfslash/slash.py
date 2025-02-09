@@ -156,6 +156,15 @@ def _time(msg=''):
             print('    [time] %-32s: %.4fs' % (msg, (t - t0)))
 
 
+def pdfbox2box(box):
+    # Convert formatted PDF box string to Python float tuple.
+    box = box.strip()
+    box = box[1:-1]
+    box = box.split()
+    box = [float(v) for v in box]
+    return box
+
+
 def num2ind(numbers):  # numbers to indices (1-based to 0-based)
     return tuple(n - 1 for n in numbers)
 
@@ -1925,15 +1934,8 @@ class _PyMuPDFImgBox(object):
         return shift_box(self.mbox, (0, -self.mbox[1]) * 2)
 
     def pdfbox2box(self, box):  # parse other PDF box string (TrimBox etc.)
-        box = self._parse_pdfbox(box)
+        box = pdfbox2box(box)
         box = self._shift_pdfbox(box)
-        return box
-
-    def _parse_pdfbox(self, box):
-        box = box.strip()
-        box = box[1:-1]
-        box = box.split()
-        box = [float(v) for v in box]
         return box
 
     def _shift_pdfbox(self, box):
