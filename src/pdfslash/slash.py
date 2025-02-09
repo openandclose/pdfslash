@@ -79,10 +79,15 @@ if numpy:
     INT = numpy.int_
 
 try:
-    import fitz
-    import fitz.utils
+    import pymupdf as fitz  # since v1.24.3 (2024/05/10)
 except ImportError:
-    fitz = None
+    try:
+        import fitz
+    except ImportError:
+        fitz = None
+
+if fitz:
+    import fitz.utils
 
 
 # Global NumParser instance
