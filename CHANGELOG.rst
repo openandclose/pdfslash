@@ -7,6 +7,12 @@ Unreleased
 
 ---
 
+v0.5.0 (2025-02-10)
+-------------------
+
+* Cut old Python support (3.6-3.9)
+
+
 v0.4.0 (2023-03-16)
 -------------------
 
@@ -15,6 +21,7 @@ v0.4.0 (2023-03-16)
 * Add '--auto' option in 'export' command [6836c780]
 
 * Add '_mediabox_reset' command (experimental) [8ae1e6b8]
+
 
 v0.3.1 (2022-04-14)
 -------------------
